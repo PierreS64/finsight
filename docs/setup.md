@@ -10,7 +10,7 @@ Create a new Supabase project for FinSight. Copy `.env.example` to `.env` locall
 
 ## Android
 
-Start `FinSight_API_35` in Android Studio or with the SDK emulator, then run `npm run android` in `frontend/mobile`. Expo Go compatibility for this pinned SDK must be checked on the emulator. UI rendering has not yet been verified on the emulator.
+Start `FinSight_API_35` in Android Studio or with the SDK emulator, then run `npm run android` in `frontend/mobile`. Expo Go bundled successfully and the screen was visually checked on this emulator.
 
 ## Docker
 
@@ -18,4 +18,4 @@ Start Docker Desktop, then run `docker compose up --build` for the local API dem
 
 ## Jenkins and external accounts
 
-`Jenkinsfile` targets a Windows agent labeled `windows-finsight`, with JDK 17, Git, Node/npm and Docker CLI available. The local controller was started and returned HTTP 200 at `http://127.0.0.1:8085`. Obtain its initial unlock password locally with `docker compose -f infrastructure/docker/compose.jenkins.yaml exec controller cat /var/jenkins_home/secrets/initialAdminPassword`; do not paste it into chat or commit it. Complete the setup wizard, set the controller executors to zero, attach a Windows agent, create a Pipeline job from the new GitHub repository, and run it. Keep Jenkins credentials in Jenkins, not this repository. Pipeline execution has not been verified. GitHub, Supabase and Jira projects require connected accounts; the local repository does not imply those resources exist.
+`Jenkinsfile` targets a Windows agent labeled `windows-finsight`. Jenkins controller and agent processes run on Java 21, while the job selects a separately configured Jenkins JDK tool named `jdk17` for the FinSight build. On this machine its path is `C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot`. Git, Node/npm and Docker CLI must also be available to the agent. The local controller was started and returned HTTP 200 at `http://127.0.0.1:8085`. Obtain its initial unlock password locally with `docker compose -f infrastructure/docker/compose.jenkins.yaml exec controller cat /var/jenkins_home/secrets/initialAdminPassword`; do not paste it into chat or commit it. Complete the setup wizard, set the controller executors to zero, attach a Windows agent, create a Pipeline job from the new GitHub repository, and run it. Keep Jenkins credentials in Jenkins, not this repository. Pipeline execution has not been verified. GitHub, Supabase and Jira projects require connected accounts; the local repository does not imply those resources exist.

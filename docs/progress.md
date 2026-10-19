@@ -16,6 +16,7 @@
 - Mobile `npx tsc --noEmit`, `npx expo lint` and `npx expo-doctor`: passed (18/18 doctor checks). Expo bundled on Android SDK 35 emulator and its rendered screen was visually checked.
 - Docker image built; Compose API reached healthy state. Health returned 200 and unauthenticated session returned 401 without a session cookie.
 - Local Jenkins controller started on `127.0.0.1:8085` and returned HTTP 200; setup wizard and agent remain pending.
+- Jenkinsfile now selects a dedicated `jdk17` build tool; Jenkins itself uses Java 21. Pipeline execution remains pending.
 
 ## In progress / blocked
 
@@ -29,7 +30,7 @@ See `docs/decisions/0001-initial-architecture.md`. Spring Initializr currently r
 
 ## Git
 
-Initial scaffold commit `561934f` on `develop`; local `main` points to the same stable scaffold. No remote or pull request exists yet.
+Initial scaffold commit `561934f` and milestone record `bc0c1dc` on `develop`; local `main` points to the stable scaffold. No remote or pull request exists yet.
 
 ## Next
 

@@ -1,5 +1,6 @@
 pipeline {
     agent { label 'windows-finsight' }
+    tools { jdk 'jdk17' }
     options { timestamps(); disableConcurrentBuilds() }
     stages {
         stage('Checkout Source') { steps { checkout scm } }
