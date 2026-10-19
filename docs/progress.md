@@ -18,6 +18,7 @@
 - Local Jenkins controller at `127.0.0.1:8085` was rebuilt with Pipeline/Git/JUnit/Timestamper plugins and a local secret-backed admin account. It returned HTTP 200; authenticated script-console check found zero controller executors and the `jdk17` tool.
 - Jenkinsfile selects the `jdk17` build tool; Jenkins itself uses Java 21. The `windows-finsight` inbound node was created but is offline. Pipeline execution remains pending.
 - Created a new private GitHub repository at `https://github.com/PierreS64/finsight`, pushed `main` and `develop`, and set `main` as the default branch.
+- Prepared the nine required Jira epics and first sprint candidate in `docs/jira-backlog.md` for creation after Jira access is available.
 
 ## In progress / blocked
 
