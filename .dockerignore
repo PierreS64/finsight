@@ -1,0 +1,10 @@
+.git
+.secrets
+.env
+.env.*
+**/node_modules
+**/target
+**/dist
+**/.expo
+**/build
+frontend/mobile/.git.scaffold-backup
