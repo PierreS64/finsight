@@ -25,7 +25,7 @@
 - Connected to the real Supabase PostgreSQL project through its Session pooler. Flyway V1 applied successfully with history in the `finsight` schema and `public.user_profiles` created. The real-database API returned 200 for health and 401 for an unauthenticated profile request.
 - Added a web Supabase Auth sign-up/sign-in/sign-out flow and a profile form that calls the API with the user's bearer token. Web lint and production build passed. The user signed in and saved a profile successfully through the local web app and real Supabase API, verifying the genuine user-token path end to end.
 - Added an Android Supabase Auth and profile screen with session persistence. Mobile TypeScript, lint, and Expo Doctor (18/18) passed; the sign-in screen rendered on the Android SDK 35 emulator. The user signed in with a real account and saw the profile created on web.
-- Flyway V2 created `public.financial_accounts` on the real Supabase project. The API now creates and lists virtual accounts scoped to the verified user, with exact decimal opening balances. Web and Android have account forms. Web lint/build and mobile typecheck/lint passed. The user added a test account on web and saw it persist after a page reload; Android cross-platform account retrieval still needs user verification.
+- Flyway V2 created `public.financial_accounts` on the real Supabase project. The API now creates and lists virtual accounts scoped to the verified user, with exact decimal opening balances. Web and Android have account forms. Web lint/build and mobile typecheck/lint passed. The user added a test account on web and saw it persist after a page reload. An Android render error caused by passing `BigInt` to Hermes `Intl.NumberFormat` was fixed by formatting the decimal string directly. The emulator then loaded the user's profile and displayed the same test account and 100,000 VND opening balance.
 
 ## In progress / blocked
 
@@ -43,4 +43,4 @@ The private `origin` remote is `https://github.com/PierreS64/finsight.git`. `mai
 
 ## Next
 
-Verify the same account appears on Android; connect the Jenkins Windows agent and run the pipeline; create the prepared Jira issues. Then implement account editing, transfers, categories, and transactions before intelligence and AI modules.
+Connect the Jenkins Windows agent and run the pipeline; create the prepared Jira issues. Then implement account editing, transfers, categories, and transactions before intelligence and AI modules.

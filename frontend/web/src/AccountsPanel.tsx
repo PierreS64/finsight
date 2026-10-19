@@ -13,7 +13,8 @@ function formatVnd(value: string) {
   const match = value.match(/^(-?)(\d+)(?:\.(\d+))?$/);
   if (!match) return `${value} VND`;
   const fraction = match[3]?.replace(/0+$/, "");
-  return `${match[1]}${new Intl.NumberFormat("vi-VN").format(BigInt(match[2]))}${fraction ? `,${fraction}` : ""} ₫`;
+  const integer = match[2].replace(/^0+(?=\d)/, "").replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return `${match[1]}${integer}${fraction ? `,${fraction}` : ""} ₫`;
 }
 
 export default function AccountsPanel({ session }: { session: Session }) {
