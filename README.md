@@ -1,0 +1,44 @@
+# FinSight
+
+FinSight is a personal finance intelligence platform under development. The repository contains a Java 17 Spring Boot API, React web app, and Expo Android app. Financial accounts will be user-maintained records; there is no live bank connection.
+
+## Current milestone
+
+Phase 0 scaffold is available. Web and Android show an honest project introduction. The API exposes public health and a protected session endpoint. Financial features and Supabase integration are **not implemented yet**. See [progress](docs/progress.md) and [roadmap](docs/development-workflow.md).
+
+## Quick start on Windows PowerShell
+
+Use JDK 17 for the backend. Maven is supplied by the wrapper.
+
+```powershell
+$env:JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot' # adjust if needed
+cd backend
+.\mvnw.cmd test
+$env:SPRING_PROFILES_ACTIVE = 'local'
+.\mvnw.cmd spring-boot:run
+```
+
+The local profile uses in-memory H2 and a nonfunctional JWKS URL. `GET http://localhost:8080/actuator/health` works; authenticated requests need a real Supabase environment.
+
+```powershell
+cd frontend/web
+npm ci
+npm run dev
+```
+
+```powershell
+cd frontend/mobile
+npm ci
+npx expo-doctor
+npm run android
+```
+
+For the Docker API demo: `docker compose up --build`. Docker Desktop must be running. See [setup](docs/setup.md) for real database and auth configuration.
+
+## Verification
+
+- Backend: `backend\mvnw.cmd -B -ntp verify`
+- Web: `npm run lint` and `npm run build` in `frontend/web`
+- Mobile: `npx tsc --noEmit` and `npx expo-doctor` in `frontend/mobile`
+
+Do not commit `.env`, credentials, financial data, or generated build output.

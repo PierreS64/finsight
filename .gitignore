@@ -1,0 +1,16 @@
+# Local credentials and generated files
+.env
+.env.*
+!.env.example
+**/node_modules/
+**/dist/
+**/target/
+**/.expo/
+**/build/
+*.log
+.idea/
+.vscode/
+.DS_Store
+frontend/mobile/.git.scaffold-backup/
+frontend/web/public/
+frontend/web/src/assets/

@@ -1,0 +1,404 @@
+﻿.page {
+  overflow: hidden;
+}
+.topbar,
+main,
+footer {
+  max-width: 1440px;
+  margin: auto;
+}
+.topbar {
+  height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6%;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  font:
+    800 23px "Segoe UI",
+    sans-serif;
+  letter-spacing: -0.06em;
+}
+.brand b {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 11px;
+  background: #0a6a55;
+  color: #fff;
+}
+.brand b span {
+  color: #bfe4a3;
+}
+.status {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 12px 17px;
+  border: 1px solid #d8e4d7;
+  border-radius: 99px;
+  color: #306754;
+  background: #f1f7ed;
+}
+.status i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 100%;
+  background: #67b66a;
+}
+.hero {
+  min-height: 660px;
+  display: grid;
+  grid-template-columns: 1.13fr 0.87fr;
+  align-items: center;
+  padding: 20px 6% 80px;
+  gap: 40px;
+}
+.copy {
+  position: relative;
+  z-index: 2;
+}
+.eyebrow {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  color: #0d8a68;
+}
+.hero h1,
+.roadmap h2 {
+  font-family: "Segoe UI", sans-serif;
+  letter-spacing: -0.065em;
+}
+.hero h1 {
+  font-size: clamp(46px, 5vw, 74px);
+  line-height: 1.14;
+  margin: 24px 0 25px;
+  font-weight: 800;
+}
+.hero h1 em {
+  font-style: normal;
+  color: #0c8b6a;
+}
+.intro {
+  font-size: 19px;
+  line-height: 1.7;
+  max-width: 615px;
+  color: #5b7068;
+}
+.action {
+  display: inline-flex;
+  gap: 35px;
+  align-items: center;
+  margin-top: 35px;
+  padding: 18px 21px 18px 25px;
+  border-radius: 13px;
+  background: #0b755d;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: 0 15px 35px #10684b28;
+}
+.action span {
+  font-size: 23px;
+  line-height: 15px;
+}
+.note {
+  margin-top: 22px;
+  color: #83948c;
+  font-size: 13px;
+}
+.visual {
+  position: relative;
+  min-height: 530px;
+  display: grid;
+  place-items: center;
+}
+.halo {
+  position: absolute;
+  width: 530px;
+  height: 530px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #d9f0d6 0, #e7f3e1 42%, transparent 68%);
+  border: 1px solid #cce1ca;
+}
+.card {
+  z-index: 1;
+  width: 315px;
+  height: 400px;
+  padding: 27px;
+  border: 1px solid #d2dfd0;
+  border-radius: 26px;
+  background: linear-gradient(160deg, #fff, #eff7ec);
+  box-shadow: 10px 35px 65px #264e3b24;
+  transform: rotate(-8deg);
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 50px;
+  color: #0c8062;
+  font: 800 25px "Segoe UI";
+}
+.card-head span {
+  color: #b8c9bc;
+  letter-spacing: 3px;
+}
+.skeleton {
+  height: 10px;
+  background: #d5e5d5;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.one {
+  width: 42%;
+}
+.two {
+  width: 68%;
+}
+.three {
+  width: 70%;
+  margin-top: 30px;
+}
+.bars {
+  height: 125px;
+  display: flex;
+  gap: 12px;
+  align-items: end;
+  margin-top: 38px;
+}
+.bars i {
+  flex: 1;
+  border-radius: 8px 8px 2px 2px;
+  background: #0f8468;
+}
+.bars i:nth-child(1) {
+  height: 38%;
+}
+.bars i:nth-child(2) {
+  height: 59%;
+  opacity: 0.7;
+}
+.bars i:nth-child(3) {
+  height: 48%;
+}
+.bars i:nth-child(4) {
+  height: 74%;
+  opacity: 0.75;
+}
+.bars i:nth-child(5) {
+  height: 62%;
+}
+.bars i:nth-child(6) {
+  height: 91%;
+  opacity: 0.8;
+}
+.bars i:nth-child(7) {
+  height: 100%;
+}
+.chip {
+  position: absolute;
+  z-index: 2;
+  border-radius: 10px;
+  padding: 13px 18px;
+  background: #fff;
+  color: #0c755b;
+  box-shadow: 0 16px 35px #31513b22;
+  font-size: 13px;
+  font-weight: 700;
+}
+.chip-a {
+  top: 17%;
+  left: 1%;
+}
+.chip-b {
+  bottom: 17%;
+  right: 0;
+}
+.principles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  padding: 48px 6% 64px;
+  border-top: 1px solid #e0e8dd;
+  border-bottom: 1px solid #e0e8dd;
+}
+.principles > div {
+  padding: 10px 24px;
+  border-left: 2px solid #a9d3a6;
+}
+.principles small {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #0c8b6a;
+}
+.principles h2 {
+  font: 700 19px/1.55 "Segoe UI";
+  margin: 15px 0 0;
+  letter-spacing: -0.025em;
+}
+.roadmap {
+  padding: 105px 6% 125px;
+  display: grid;
+  grid-template-columns: 1fr 1.15fr;
+  gap: 75px;
+}
+.roadmap h2 {
+  font-size: clamp(36px, 3.6vw, 52px);
+  line-height: 1.2;
+  margin: 16px 0;
+}
+.roadmap-intro {
+  color: #61766a;
+  line-height: 1.7;
+  max-width: 375px;
+}
+.milestone {
+  display: grid;
+  grid-template-columns: 55px 1fr auto;
+  align-items: center;
+  gap: 15px;
+  border-bottom: 1px solid #dce6db;
+  padding: 22px 0;
+}
+.milestone:first-child {
+  border-top: 1px solid #dce6db;
+}
+.milestone > span {
+  font: 800 13px "Segoe UI";
+  color: #0b8f69;
+}
+.milestone h3 {
+  font: 700 17px "Segoe UI";
+  margin: 0 0 5px;
+}
+.milestone p {
+  font-size: 13px;
+  color: #718378;
+  margin: 0;
+}
+.milestone small {
+  font-size: 11px;
+  color: #598572;
+  padding: 8px 10px;
+  background: #ebf4e8;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+footer {
+  border-top: 1px solid #e0e8dd;
+  padding: 35px 6% 55px;
+  display: flex;
+  justify-content: space-between;
+  gap: 25px;
+  align-items: center;
+  color: #718378;
+  font-size: 12px;
+}
+footer .brand {
+  font-size: 18px;
+  color: #152d28;
+  white-space: nowrap;
+}
+footer .brand b {
+  width: 28px;
+  height: 28px;
+  font-size: 17px;
+  border-radius: 8px;
+}
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding-top: 60px;
+  }
+  .visual {
+    min-height: 400px;
+  }
+  .halo {
+    width: 440px;
+    height: 440px;
+  }
+  .card {
+    transform: rotate(-5deg) scale(0.85);
+  }
+  .principles {
+    gap: 10px;
+  }
+  .roadmap {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+@media (max-width: 600px) {
+  .topbar {
+    height: 75px;
+  }
+  .brand {
+    font-size: 20px;
+  }
+  .status {
+    font-size: 10px;
+    padding: 10px;
+  }
+  .hero {
+    padding-bottom: 15px;
+    gap: 0;
+  }
+  .hero h1 {
+    font-size: 42px;
+  }
+  .intro {
+    font-size: 17px;
+  }
+  .visual {
+    min-height: 360px;
+  }
+  .halo {
+    width: 370px;
+    height: 370px;
+  }
+  .card {
+    transform: rotate(-6deg) scale(0.75);
+  }
+  .chip-a {
+    left: -4%;
+  }
+  .chip-b {
+    right: -2%;
+  }
+  .principles {
+    grid-template-columns: 1fr;
+    padding-top: 35px;
+    padding-bottom: 35px;
+  }
+  .principles > div {
+    padding: 8px 20px;
+  }
+  .principles h2 br {
+    display: none;
+  }
+  .roadmap {
+    padding-top: 70px;
+    padding-bottom: 80px;
+  }
+  .milestone {
+    grid-template-columns: 35px 1fr;
+    row-gap: 5px;
+  }
+  .milestone small {
+    grid-column: 2;
+    width: max-content;
+  }
+  footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

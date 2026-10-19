@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:finsight;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://example.invalid/auth/v1
+          jwk-set-uri: https://example.invalid/.well-known/jwks.json
