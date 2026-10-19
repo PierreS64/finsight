@@ -12,11 +12,11 @@ Copy `.env.example` to a root `.env` locally. In the Supabase project, click **C
 
 From the repository root, run `powershell -ExecutionPolicy Bypass -File .\scripts\start-supabase-api.ps1`. This loads the ignored `.env`, selects the `supabase` profile, and starts the API on port 8086 using JDK 17. Flyway stores its migration history in the separate `finsight` schema because Supabase's `public` schema already contains managed objects. Migration V1 has been applied to this project's database. Check `http://localhost:8086/actuator/health` for a healthy API.
 
-For web sign-in, copy `frontend/web/.env.example` to `frontend/web/.env.local`, set its publishable key, and set `VITE_API_BASE_URL=http://localhost:8086`. Run `npm run dev -- --host 127.0.0.1 --port 5173` from `frontend/web`, then open `http://127.0.0.1:5173/#account`. Sign up or sign in with your own email and password, confirm the email if requested, and save a display name. Do not paste credentials or access tokens into chat. A real user-token round trip still needs manual verification.
+For web sign-in, copy `frontend/web/.env.example` to `frontend/web/.env.local`, set its publishable key, and set `VITE_API_BASE_URL=http://localhost:8086`. Run `npm run dev -- --host 127.0.0.1 --port 5173` from `frontend/web`, then open `http://127.0.0.1:5173/#account`. Sign up or sign in with your own email and password, confirm the email if requested, and save a display name. Do not paste credentials or access tokens into chat. A user has completed this flow against the real Supabase project.
 
 ## Android
 
-Start `FinSight_API_35` in Android Studio or with the SDK emulator, then run `npm run android` in `frontend/mobile`. Expo Go bundled successfully and the screen was visually checked on this emulator.
+Copy `frontend/mobile/.env.example` to `frontend/mobile/.env.local` and set `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project's publishable key. For the Android emulator, `EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:8086` reaches the API on the Windows host. Start `FinSight_API_35` in Android Studio, then run `npx expo start --android --port 8082` in `frontend/mobile`. If Expo Go retains an old bundle, run `adb reverse tcp:8082 tcp:8082` and open `exp://127.0.0.1:8082` on the emulator. The sign-in screen rendered successfully on Android SDK 35; real account sign-in there still needs verification.
 
 ## Docker
 

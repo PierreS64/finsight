@@ -11,7 +11,7 @@
 
 ## Verified
 
-- `backend/mvnw.cmd verify`: 7 tests passed using local H2 and mocked principals, including missing/malformed token rejection, two distinct profile owners, invalid profile input, and web CORS preflight. Real Supabase user-token verification remains pending.
+- `backend/mvnw.cmd verify`: 7 tests passed using local H2 and mocked principals, including missing/malformed token rejection, two distinct profile owners, invalid profile input, and web CORS preflight.
 - Web `npm run build` and `npm run lint`: passed; Vite returned HTTP 200 and Chrome screenshot was visually checked.
 - Mobile `npx tsc --noEmit`, `npx expo lint` and `npx expo-doctor`: passed (18/18 doctor checks). Expo bundled on Android SDK 35 emulator and its rendered screen was visually checked.
 - Docker image built; Compose API reached healthy state. Health returned 200 and unauthenticated session returned 401 without a session cookie.
@@ -23,12 +23,13 @@
 - Configured Spring to trust ES256 JWTs with audience `authenticated`. Added Flyway V1 for owner-scoped user profiles and GET/PUT `/api/v1/profile`.
 - PostgreSQL V1 was applied to a disposable local PostgreSQL 17 instance: Flyway history recorded version 1, row level security was enabled, and `anon`/`authenticated` had zero table grants. The API health endpoint returned 200 and an unauthenticated profile request returned 401 against this local instance.
 - Connected to the real Supabase PostgreSQL project through its Session pooler. Flyway V1 applied successfully with history in the `finsight` schema and `public.user_profiles` created. The real-database API returned 200 for health and 401 for an unauthenticated profile request.
-- Added a web Supabase Auth sign-up/sign-in/sign-out flow and a profile form that calls the API with the user's bearer token. Web lint and production build passed; the local Vite server was restarted with the project's public config. A real user sign-in/profile save still requires browser verification.
+- Added a web Supabase Auth sign-up/sign-in/sign-out flow and a profile form that calls the API with the user's bearer token. Web lint and production build passed. The user signed in and saved a profile successfully through the local web app and real Supabase API, verifying the genuine user-token path end to end.
+- Added an Android Supabase Auth and profile screen with session persistence. Mobile TypeScript, lint, and Expo Doctor (18/18) passed; the sign-in screen rendered on the Android SDK 35 emulator. Login with a real account on Android is pending user verification.
 
 ## In progress / blocked
 
 - Jenkins Windows agent and full pipeline are not complete. The controller itself is running with setup bootstrapped. Automatic approval review rejected the command to retrieve/store the node secret and start the agent process; the rejection did not provide a specific reason.
-- Jira issues and real user-token verification are still pending. Direct Jira/Supabase dashboard access is unavailable in this session; project creation is confirmed by user-supplied URLs and the Supabase database connection by the successful migration.
+- Jira issues and Android real-account verification are still pending. Direct Jira/Supabase dashboard access is unavailable in this session; project creation is confirmed by user-supplied URLs and the Supabase database connection by the successful migration.
 - Expo SDK 53 dependency audit reported 35 vulnerabilities (14 moderate, 21 high). `npm audit fix` did not reduce this count; remaining suggested fixes require breaking Expo/React Native version changes. SDK 53 is pinned for target SDK 35; assess advisories and upgrade strategy before production use.
 
 ## Decisions
@@ -41,4 +42,4 @@ The private `origin` remote is `https://github.com/PierreS64/finsight.git`. `mai
 
 ## Next
 
-Verify web sign-in and profile save with a genuine Supabase user token; implement mobile sign-in; connect the Jenkins Windows agent and run the pipeline; create the prepared Jira issues. Prioritize a complete core MVP before intelligence and AI modules.
+Verify Android sign-in and profile retrieval with a real account; connect the Jenkins Windows agent and run the pipeline; create the prepared Jira issues. Then implement accounts, categories, and transactions before intelligence and AI modules.

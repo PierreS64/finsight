@@ -4,7 +4,7 @@ FinSight is a personal finance intelligence platform under development. The repo
 
 ## Current milestone
 
-Phase 0 scaffold is available. Phase 2 has started: the API connects to the real Supabase PostgreSQL project, Flyway V1 creates owner-scoped profiles, and the web has Supabase Auth and a profile form. A real user sign-in/profile save still needs verification. Android authentication and financial features remain upcoming. See [progress](docs/progress.md) and [roadmap](docs/development-workflow.md).
+Phase 0 scaffold is available. Phase 2 has started: the API connects to the real Supabase PostgreSQL project, Flyway V1 creates owner-scoped profiles, and web and Android have Supabase Auth and profile forms. A real user completed sign-in and profile save on web; Android real-account verification and financial features remain upcoming. See [progress](docs/progress.md) and [roadmap](docs/development-workflow.md).
 
 ## Quick start on Windows PowerShell
 

@@ -1,5 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import AuthPanel from "./AuthPanel";
 
 export default function App() {
   return (
@@ -24,18 +25,7 @@ export default function App() {
           Theo dõi thu chi, lập kế hoạch và hiểu thói quen tài chính của bạn
           trong một ứng dụng.
         </Text>
-        <View style={styles.panel}>
-          <Text style={styles.label}>BẢN KHỞI TẠO</Text>
-          <Text style={styles.panelTitle}>Một nơi cho mọi kế hoạch.</Text>
-          <Text style={styles.body}>
-            Tính năng đăng nhập và quản lý dữ liệu cá nhân sẽ được bổ sung ở
-            giai đoạn tiếp theo.
-          </Text>
-          <View style={styles.line} />
-          <Text style={styles.footer}>
-            Không kết nối trực tiếp với ngân hàng.
-          </Text>
-        </View>
+        <AuthPanel />
         <Text style={styles.footnote}>
           Số dư trong FinSight sẽ do bạn tự cập nhật.
         </Text>
@@ -101,27 +91,6 @@ const styles = StyleSheet.create({
   },
   accent: { color: "#0C8B6A" },
   subtitle: { color: "#64776D", fontSize: 16, lineHeight: 25, marginTop: 20 },
-  panel: {
-    backgroundColor: "#E6F2E6",
-    borderRadius: 24,
-    padding: 27,
-    marginTop: 48,
-  },
-  label: {
-    color: "#0B8966",
-    fontWeight: "800",
-    fontSize: 11,
-    letterSpacing: 2,
-  },
-  panelTitle: {
-    color: "#173D32",
-    fontSize: 22,
-    fontWeight: "800",
-    marginTop: 17,
-  },
-  body: { color: "#567366", fontSize: 14, lineHeight: 22, marginTop: 12 },
-  line: { height: 1, backgroundColor: "#C8DEC9", marginVertical: 25 },
-  footer: { color: "#4B705D", fontSize: 12, fontWeight: "600" },
   footnote: {
     color: "#8A9B8E",
     fontSize: 12,
