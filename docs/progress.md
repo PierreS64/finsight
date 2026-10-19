@@ -27,6 +27,10 @@
 
 See `docs/decisions/0001-initial-architecture.md`. Spring Initializr currently rejects Spring Boot 3.x generation, so backend POM and Maven Wrapper were created directly.
 
+## Git
+
+Initial scaffold commit `561934f` on `develop`; local `main` points to the same stable scaffold. No remote or pull request exists yet.
+
 ## Next
 
 Connect GitHub, Jira/Atlassian and Supabase; complete the Jenkins setup wizard and Windows agent; run the pipeline; then begin Phase 2 migrations/authentication. Prioritize a complete core MVP before intelligence and AI modules.
