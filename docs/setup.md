@@ -16,7 +16,7 @@ For web sign-in, copy `frontend/web/.env.example` to `frontend/web/.env.local`, 
 
 ## Android
 
-Copy `frontend/mobile/.env.example` to `frontend/mobile/.env.local` and set `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project's publishable key. For the Android emulator, `EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:8086` reaches the API on the Windows host. Start `FinSight_API_35` in Android Studio, then run `npx expo start --android --port 8082` in `frontend/mobile`. If Expo Go retains an old bundle, run `adb reverse tcp:8082 tcp:8082` and open `exp://127.0.0.1:8082` on the emulator. The sign-in screen rendered successfully on Android SDK 35; real account sign-in there still needs verification.
+Copy `frontend/mobile/.env.example` to `frontend/mobile/.env.local` and set `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project's publishable key. For the Android emulator, `EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:8086` reaches the API on the Windows host. Start `FinSight_API_35` in Android Studio, then run `npx expo start --android --port 8082` in `frontend/mobile`. If Expo Go retains an old bundle, run `adb reverse tcp:8082 tcp:8082` and open `exp://127.0.0.1:8082` on the emulator. The user signed in on Android SDK 35 and saw the profile created on web.
 
 ## Docker
 
