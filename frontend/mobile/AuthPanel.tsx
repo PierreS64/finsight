@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { supabase } from "./supabase";
+import AccountsPanel from "./AccountsPanel";
 
 type Profile = { userId: string; displayName: string | null; currencyCode: string };
 const apiBase = process.env.EXPO_PUBLIC_API_BASE_URL || "http://10.0.2.2:8086";
@@ -117,6 +118,7 @@ export default function AuthPanel() {
             <Text style={styles.buttonText}>Lưu hồ sơ</Text>
           </Pressable>
           <Pressable style={styles.secondary} onPress={signOut} disabled={busy}><Text style={styles.secondaryText}>Đăng xuất</Text></Pressable>
+          <AccountsPanel session={session} />
         </>
       ) : (
         <>

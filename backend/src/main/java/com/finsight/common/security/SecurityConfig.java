@@ -33,7 +33,7 @@ public class SecurityConfig {
             @Value("${FINSIGHT_CORS_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}") String origins) {
         CorsConfiguration cors = new CorsConfiguration();
         cors.setAllowedOrigins(Arrays.stream(origins.split(",")).map(String::trim).toList());
-        cors.setAllowedMethods(List.of("GET", "PUT", "OPTIONS"));
+        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "OPTIONS"));
         cors.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", cors);

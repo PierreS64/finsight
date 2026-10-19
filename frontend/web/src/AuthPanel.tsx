@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
+import AccountsPanel from "./AccountsPanel";
 import "./AuthPanel.css";
 
 type Profile = { userId: string; displayName: string | null; currencyCode: string };
@@ -112,7 +113,7 @@ export default function AuthPanel() {
       <div className="account-intro">
         <p className="eyebrow">TÀI KHOẢN FINSIGHT</p>
         <h2>Bắt đầu với dữ liệu của chính bạn.</h2>
-        <p>Đăng nhập để tạo hồ sơ cá nhân. Tài khoản tài chính và giao dịch sẽ được bổ sung trong các bước tiếp theo.</p>
+        <p>Đăng nhập để quản lý hồ sơ và tài khoản tài chính do chính bạn nhập. Giao dịch sẽ được bổ sung trong bước tiếp theo.</p>
       </div>
       <div className="account-panel">
         {!supabase ? (
@@ -129,6 +130,7 @@ export default function AuthPanel() {
               <input id="display-name" value={displayName} onChange={(event) => setDisplayName(event.target.value)} required maxLength={80} />
               <button type="submit" disabled={busy || !displayName.trim()}>Lưu hồ sơ</button>
             </form>
+            <AccountsPanel session={session} />
           </>
         ) : (
           <>
