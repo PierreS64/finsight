@@ -4,7 +4,7 @@ FinSight is a personal finance intelligence platform under development. The repo
 
 ## Current milestone
 
-Phase 0 scaffold is available. Web and Android show an honest project introduction. The API exposes public health and a protected session endpoint. Financial features and Supabase integration are **not implemented yet**. See [progress](docs/progress.md) and [roadmap](docs/development-workflow.md).
+Phase 0 scaffold is available. Phase 2 has started: the API connects to the real Supabase PostgreSQL project, Flyway V1 creates owner-scoped profiles, and the web has Supabase Auth and a profile form. A real user sign-in/profile save still needs verification. Android authentication and financial features remain upcoming. See [progress](docs/progress.md) and [roadmap](docs/development-workflow.md).
 
 ## Quick start on Windows PowerShell
 
@@ -19,6 +19,8 @@ $env:SPRING_PROFILES_ACTIVE = 'local'
 ```
 
 The local profile uses in-memory H2 and a nonfunctional JWKS URL. `GET http://localhost:8080/actuator/health` works; authenticated requests need a real Supabase environment.
+
+For the real Supabase project, fill the ignored root `.env` and run `powershell -ExecutionPolicy Bypass -File .\scripts\start-supabase-api.ps1` from the repository root. The API listens on `localhost:8086`. See [setup](docs/setup.md) for web configuration and sign-in.
 
 ```powershell
 cd frontend/web

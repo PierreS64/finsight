@@ -11,7 +11,7 @@
 
 ## Verified
 
-- `backend/mvnw.cmd verify`: 4 tests passed using local H2 and mock authenticated principal, including missing/malformed token rejection.
+- `backend/mvnw.cmd verify`: 7 tests passed using local H2 and mocked principals, including missing/malformed token rejection, two distinct profile owners, invalid profile input, and web CORS preflight. Real Supabase user-token verification remains pending.
 - Web `npm run build` and `npm run lint`: passed; Vite returned HTTP 200 and Chrome screenshot was visually checked.
 - Mobile `npx tsc --noEmit`, `npx expo lint` and `npx expo-doctor`: passed (18/18 doctor checks). Expo bundled on Android SDK 35 emulator and its rendered screen was visually checked.
 - Docker image built; Compose API reached healthy state. Health returned 200 and unauthenticated session returned 401 without a session cookie.
@@ -19,11 +19,16 @@
 - Jenkinsfile selects the `jdk17` build tool; Jenkins itself uses Java 21. The `windows-finsight` inbound node was created but is offline. Pipeline execution remains pending.
 - Created a new private GitHub repository at `https://github.com/PierreS64/finsight`, pushed `main` and `develop`, and set `main` as the default branch.
 - Prepared the nine required Jira epics and first sprint candidate in `docs/jira-backlog.md` for creation after Jira access is available.
+- User created the Supabase project `xxdvusmvvrnqicorjczo` and Jira Software Scrum space `F1nS1ght` (`FNS`). The Supabase public JWKS endpoint returns one ES256 EC key.
+- Configured Spring to trust ES256 JWTs with audience `authenticated`. Added Flyway V1 for owner-scoped user profiles and GET/PUT `/api/v1/profile`.
+- PostgreSQL V1 was applied to a disposable local PostgreSQL 17 instance: Flyway history recorded version 1, row level security was enabled, and `anon`/`authenticated` had zero table grants. The API health endpoint returned 200 and an unauthenticated profile request returned 401 against this local instance.
+- Connected to the real Supabase PostgreSQL project through its Session pooler. Flyway V1 applied successfully with history in the `finsight` schema and `public.user_profiles` created. The real-database API returned 200 for health and 401 for an unauthenticated profile request.
+- Added a web Supabase Auth sign-up/sign-in/sign-out flow and a profile form that calls the API with the user's bearer token. Web lint and production build passed; the local Vite server was restarted with the project's public config. A real user sign-in/profile save still requires browser verification.
 
 ## In progress / blocked
 
 - Jenkins Windows agent and full pipeline are not complete. The controller itself is running with setup bootstrapped. Automatic approval review rejected the command to retrieve/store the node secret and start the agent process; the rejection did not provide a specific reason.
-- Jira project/issues, Supabase project and real PostgreSQL/JWT verification: external account connections are still needed. No Jira or Supabase resource has been claimed as created.
+- Jira issues and real user-token verification are still pending. Direct Jira/Supabase dashboard access is unavailable in this session; project creation is confirmed by user-supplied URLs and the Supabase database connection by the successful migration.
 - Expo SDK 53 dependency audit reported 35 vulnerabilities (14 moderate, 21 high). `npm audit fix` did not reduce this count; remaining suggested fixes require breaking Expo/React Native version changes. SDK 53 is pinned for target SDK 35; assess advisories and upgrade strategy before production use.
 
 ## Decisions
@@ -36,4 +41,4 @@ The private `origin` remote is `https://github.com/PierreS64/finsight.git`. `mai
 
 ## Next
 
-Connect Jira/Atlassian and Supabase; complete the Jenkins setup wizard and Windows agent; run the pipeline; then begin Phase 2 migrations/authentication. Prioritize a complete core MVP before intelligence and AI modules.
+Verify web sign-in and profile save with a genuine Supabase user token; implement mobile sign-in; connect the Jenkins Windows agent and run the pipeline; create the prepared Jira issues. Prioritize a complete core MVP before intelligence and AI modules.

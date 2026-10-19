@@ -1,6 +1,6 @@
 # Development workflow and backlog
 
-Use Scrum sprints with small issues, each with acceptance criteria and actual test evidence. Suggested Git flow: stable `main`, integration `develop`, and `feature/FIN-XX-description` or `fix/FIN-XX-description` branches. Do not merge to `main` automatically.
+Use Scrum sprints with small issues, each with acceptance criteria and actual test evidence. Suggested Git flow: stable `main`, integration `develop`, and `feature/FNS-XX-description` or `fix/FNS-XX-description` branches, matching the actual Jira project key. Do not merge to `main` automatically.
 
 | Phase | Deliverable | Acceptance criteria |
 | --- | --- | --- |

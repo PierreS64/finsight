@@ -1,4 +1,5 @@
 import "./App.css";
+import AuthPanel from "./AuthPanel";
 
 const milestones = [
   ["01", "Nền tảng", "Web, Android và API bảo mật", "Đang triển khai"],
@@ -70,6 +71,7 @@ function App() {
             <span className="chip chip-b">Lập kế hoạch</span>
           </div>
         </section>
+        <AuthPanel />
         <section className="principles">
           <div>
             <small>01 / GHI NHẬN</small>

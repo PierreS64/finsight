@@ -1,6 +1,6 @@
 # FinSight Jira backlog seed
 
-Target: a new Jira Software Scrum project named **FinSight**, key **FIN**. This file is a preparation artifact; no issue is claimed to exist in Jira until it is created there. Use the project's own generated issue keys after import.
+Target: the Jira Software Scrum space **F1nS1ght**, key **FNS**, at `https://finsight-team.atlassian.net/jira/software/projects/FNS/summary`. This file is a preparation artifact; no issue is claimed to exist in Jira until it is created there. Use the project's own generated issue keys after import.
 
 ## Epics
 

@@ -9,7 +9,7 @@ Expo Android ───┘                         │
                                          └─ business rules and analysis
 ```
 
-The API is the only path for financial writes and reads. The web/mobile scaffold currently has no Supabase client or financial data. Production configuration requires database URL, username, password, JWT issuer URI and JWKS URI. The local profile uses H2 only for startup and tests; its placeholder JWKS endpoint cannot authenticate real users.
+The API is the only path for financial writes and reads. Web now has a Supabase Auth client and profile form; mobile has not yet integrated authentication. Neither client has financial data flows yet. Production configuration requires database URL, username, password, JWT issuer URI and JWKS URI. The local profile uses H2 only for startup and tests; its placeholder JWKS endpoint cannot authenticate real users.
 
 Packages are created only as features are implemented. Current packages: `common.security` and `auth`. Future account, transaction, budget, goal, analytics and automation packages will be added when their code exists.
 
