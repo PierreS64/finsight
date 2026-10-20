@@ -1,4 +1,4 @@
-# Progress — 2026-10-19
+# Progress — 2026-10-20
 
 ## Completed
 
@@ -16,9 +16,12 @@
 - Mobile `npx tsc --noEmit`, `npx expo lint` and `npx expo-doctor`: passed (18/18 doctor checks). Expo bundled on Android SDK 35 emulator and its rendered screen was visually checked.
 - Docker image built; Compose API reached healthy state. Health returned 200 and unauthenticated session returned 401 without a session cookie.
 - Local Jenkins controller at `127.0.0.1:8085` was rebuilt with Pipeline/Git/JUnit/Timestamper plugins and a local secret-backed admin account. It returned HTTP 200; authenticated script-console check found zero controller executors and the `jdk17` tool.
-- Jenkinsfile selects the `jdk17` build tool; Jenkins itself uses Java 21. The `windows-finsight` inbound node was created but is offline. Pipeline execution remains pending.
+- Jenkinsfile selects the `jdk17` build tool; Jenkins controller and inbound agent use Java 21. The user connected the `windows-finsight` agent over WebSocket. A read-only GitHub deploy key was added for this repository and stored as a Jenkins SSH credential. Job `finsight-develop` checks out the private `develop` branch and ran build [#2](http://127.0.0.1:8085/job/finsight-develop/2/) successfully at commit `5e2532d5ac211b9d42895e1cd9163319fad6c584`. Jenkins archived JUnit results: 9 passed, 0 failed, 0 skipped. Web lint/build, mobile TypeScript/Expo Doctor (18/18), and Docker image `finsight-api:ci` also passed. Build duration was 274.4 seconds. Initial build #1 failed before the pipeline because the private repository credential had not yet been configured.
 - Created a new private GitHub repository at `https://github.com/PierreS64/finsight`, pushed `main` and `develop`, and set `main` as the default branch.
 - Prepared the nine required Jira epics and first sprint candidate in `docs/jira-backlog.md` for creation after Jira access is available.
+- Connected to Jira and verified FNS-1 (DevOps Epic) and FNS-2 (Jenkins agent Task) created by the user. Created FNS-3 through FNS-10 for the remaining eight Epics, and FNS-11 through FNS-18 for the remaining first-sprint candidate Tasks. Verified the Task parent relationships in the Epic views. Jira has an empty, unstarted FNS Sprint 1; all nine Tasks are still To Do.
+- Published and re-opened the Jira board configuration to verify the five columns To Do, In Progress, Code Review, Testing, and Done. Code Review and Testing use the In progress status category.
+- Read the five-person work assignment table in `bcao_devapp.docx` and created FNS-19 through FNS-37 as feature Tasks with scope, acceptance checks, planned owner, and Epic parent. Jira List confirmed the 19 new task titles/parents and assignment state. Assigned FNS-19 through FNS-23 and existing FNS-14/FNS-15 to Nguyễn Thuận Phong; left the 14 new tasks for the four other members unassigned for the user to assign after adding them. See `docs/jira-backlog.md` for the mapping. The report's draft Node.js references were treated as source context; Jira descriptions follow the repository's Spring Boot/Supabase decision.
 - User created the Supabase project `xxdvusmvvrnqicorjczo` and Jira Software Scrum space `F1nS1ght` (`FNS`). The Supabase public JWKS endpoint returns one ES256 EC key.
 - Configured Spring to trust ES256 JWTs with audience `authenticated`. Added Flyway V1 for owner-scoped user profiles and GET/PUT `/api/v1/profile`.
 - PostgreSQL V1 was applied to a disposable local PostgreSQL 17 instance: Flyway history recorded version 1, row level security was enabled, and `anon`/`authenticated` had zero table grants. The API health endpoint returned 200 and an unauthenticated profile request returned 401 against this local instance.
@@ -29,8 +32,9 @@
 
 ## In progress / blocked
 
-- Jenkins Windows agent and full pipeline are not complete. The controller itself is running with setup bootstrapped. Automatic approval review rejected the command to retrieve/store the node secret and start the agent process; the rejection did not provide a specific reason.
-- Jira issues are still pending. Direct Jira/Supabase dashboard access is unavailable in this session; project creation is confirmed by user-supplied URLs and the Supabase database connection by the successful migration.
+- The local Jenkins agent stays online only while the user's PowerShell agent process remains open. Automatic approval review rejected agent-secret retrieval/start with “blocked by policy”; the user connected it manually without sharing the secret. Install a persistent agent service only if continuous CI is needed.
+- Jira Sprint 1 remains unplanned and unstarted; Task statuses need review against the actual acceptance criteria and verification evidence.
+- New team Tasks FNS-19 through FNS-37 remain To Do in the backlog; the four other members are planned owners in descriptions, pending manual assignment by the user.
 - Expo SDK 53 dependency audit reported 35 vulnerabilities (14 moderate, 21 high). `npm audit fix` did not reduce this count; remaining suggested fixes require breaking Expo/React Native version changes. SDK 53 is pinned for target SDK 35; assess advisories and upgrade strategy before production use.
 
 ## Decisions
@@ -43,4 +47,4 @@ The private `origin` remote is `https://github.com/PierreS64/finsight.git`. `mai
 
 ## Next
 
-Connect the Jenkins Windows agent and run the pipeline; create the prepared Jira issues. Then implement account editing, transfers, categories, and transactions before intelligence and AI modules.
+Review Jira Task statuses against the successful Jenkins evidence and plan Sprint 1. Then implement account editing, transfers, categories, and transactions before intelligence and AI modules.
