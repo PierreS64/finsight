@@ -32,7 +32,7 @@
 
 ## In progress / blocked
 
-- Registered the Windows Task Scheduler task `FinSight Jenkins Agent` for the current user's sign-in, using Java 21, WebSocket, and the existing ignored secret file. After manually starting the task, Jenkins reported `windows-finsight` Online. A sign-out/restart has not yet been tested. Docker Desktop's auto-start setting is currently off; the user must enable it in Docker Desktop Settings → General for the controller to return automatically after sign-in.
+- The user prefers to avoid Docker Desktop's RAM use at startup. Disabled Docker Desktop's `AutoStart` setting and the sign-in trigger of the `FinSight Jenkins Agent` scheduled task. Added on-demand start/stop scripts. The start script launched Docker Desktop, the controller, and agent, and Jenkins reported `windows-finsight` Online. The stop script stopped the agent and controller and correctly left Docker Desktop running while unrelated containers were active. Docker Desktop was then stopped explicitly to restore the prior off state. A full sign-out/restart has not been tested.
 - Jira Sprint 1 remains unplanned and unstarted; Task statuses need review against the actual acceptance criteria and verification evidence.
 - New team Tasks FNS-19 through FNS-37 remain To Do in the backlog; the four other members are planned owners in descriptions, pending manual assignment by the user.
 - Expo SDK 53 dependency audit reported 35 vulnerabilities (14 moderate, 21 high). `npm audit fix` did not reduce this count; remaining suggested fixes require breaking Expo/React Native version changes. SDK 53 is pinned for target SDK 35; assess advisories and upgrade strategy before production use.

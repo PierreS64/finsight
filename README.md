@@ -37,6 +37,13 @@ npm run android
 
 For the Docker API demo: `docker compose up --build`. Docker Desktop must be running. See [setup](docs/setup.md) for real database and auth configuration.
 
+Jenkins is available on demand without starting Docker Desktop at Windows sign-in:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start-jenkins-local.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\stop-jenkins-local.ps1
+```
+
 ## Verification
 
 - Backend: `backend\mvnw.cmd -B -ntp verify`
