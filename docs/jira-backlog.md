@@ -47,3 +47,5 @@ The report's **phân chia công việc** table assigns five feature areas. Jira 
 | Chu Đức Ngọc Minh | [FNS-35](https://finsight-team.atlassian.net/browse/FNS-35) account lifecycle; [FNS-36](https://finsight-team.atlassian.net/browse/FNS-36) categories; [FNS-37](https://finsight-team.atlassian.net/browse/FNS-37) budget alerts. Existing FNS-16 through FNS-18 cover part of the account flow and should be reviewed before implementation. | Assigned to Minh Chu |
 
 On 2026-10-21, Jira confirmed all 14 Tasks FNS-24 through FNS-37 assigned to their planned owners above. FNS-24, FNS-25, FNS-28, FNS-29, and FNS-36 remained in Testing; the other nine remained To Do. FNS-19 through FNS-23 and FNS-14/FNS-15 remain assigned to Nguyễn Thuận Phong.
+
+The eight initially unassigned Epics FNS-3 through FNS-10 and six Tasks FNS-11, FNS-12, FNS-13, FNS-16, FNS-17, and FNS-18 were assigned to Nguyễn Thuận Phong on 2026-10-21. Jira JQL `project = FNS AND assignee is EMPTY` then returned no issues. [FNS-38](https://finsight-team.atlassian.net/browse/FNS-38) tracks owner-scoped transfers between accounts under the Transaction Management Epic and is assigned to Nguyễn Thuận Phong.

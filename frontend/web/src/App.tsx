@@ -5,11 +5,12 @@ import AuthPanel, { ProfilePanel } from "./AuthPanel";
 import AccountsPanel, { type Account } from "./AccountsPanel";
 import CategoriesPanel from "./CategoriesPanel";
 import TransactionsPanel from "./TransactionsPanel";
+import TransfersPanel from "./TransfersPanel";
 import BudgetPanel from "./BudgetPanel";
 import DashboardPanel from "./DashboardPanel";
 import "./App.css";
 
-type Page = "overview" | "accounts" | "transactions" | "categories" | "budgets" | "profile";
+type Page = "overview" | "accounts" | "transactions" | "transfers" | "categories" | "budgets" | "profile";
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 export function Brand({ light = false }: { light?: boolean }) {
@@ -80,7 +81,7 @@ function Workspace({ session, signOut }: { session: Session; signOut: () => Prom
     return () => controller.abort();
   }, [session.access_token]);
   const nav: { id: Page; label: string; symbol: string }[] = [
-    { id: "overview", label: "Tổng quan", symbol: "◫" }, { id: "transactions", label: "Giao dịch", symbol: "▤" }, { id: "accounts", label: "Tài khoản", symbol: "▣" }, { id: "budgets", label: "Ngân sách", symbol: "◩" }, { id: "profile", label: "Hồ sơ", symbol: "◉" },
+    { id: "overview", label: "Tổng quan", symbol: "◫" }, { id: "transactions", label: "Giao dịch", symbol: "▤" }, { id: "transfers", label: "Chuyển khoản", symbol: "↔" }, { id: "accounts", label: "Tài khoản", symbol: "▣" }, { id: "budgets", label: "Ngân sách", symbol: "◩" }, { id: "profile", label: "Hồ sơ", symbol: "◉" },
   ];
   const title = nav.find((item) => item.id === page)?.label ?? "Danh mục";
   return <div className="workspace">
@@ -89,11 +90,12 @@ function Workspace({ session, signOut }: { session: Session; signOut: () => Prom
       <main className="workspace-content">
         {page === "overview" && <DashboardPanel session={session} displayName={displayName} accounts={accounts} accountsLoaded={accountsLoaded} accountsError={accountsError} onNavigate={setPage} />}
         {page === "accounts" && <><div className="page-heading"><p className="eyebrow">TÀI KHOẢN CỦA BẠN</p><h1>Quản lý tài khoản</h1><p>Tài khoản trong FinSight là bản ghi do bạn tự tạo, không liên kết ngân hàng.</p></div><AccountsPanel session={session} accounts={accounts} onCreated={(account) => setAccounts((current) => [...current, account])} /></>}
-        {page === "transactions" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Giao dịch</h1><p>Ghi khoản thu, chi và xem lịch sử từ dữ liệu bạn tự nhập.</p></div><TransactionsPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} onCategories={() => setPage("categories")} /></>}
+        {page === "transactions" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Giao dịch</h1><p>Ghi khoản thu, chi và xem lịch sử từ dữ liệu bạn tự nhập.</p><button className="button-outline" onClick={() => setPage("transfers")}>Chuyển khoản giữa tài khoản →</button></div><TransactionsPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} onCategories={() => setPage("categories")} /></>}
+        {page === "transfers" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Chuyển khoản</h1><p>Di chuyển tiền giữa các tài khoản do bạn tự quản lý.</p></div><TransfersPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} /></>}
         {page === "categories" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN / DANH MỤC</p><h1>Danh mục thu chi</h1><p>Tổ chức các khoản thu nhập và chi tiêu theo cách bạn quen dùng.</p></div><CategoriesPanel session={session} /></>}
         {page === "budgets" && <><div className="page-heading"><p className="eyebrow">KẾ HOẠCH TÀI CHÍNH</p><h1>Ngân sách</h1><p>Đặt hạn mức tổng và theo danh mục cho từng tháng.</p></div><BudgetPanel session={session} /></>}
         {page === "profile" && <><div className="page-heading"><p className="eyebrow">CÀI ĐẶT CÁ NHÂN</p><h1>Hồ sơ của bạn</h1><p>Cập nhật tên hiển thị và kiểm tra thông tin tài khoản.</p></div><ProfilePanel session={session} onDisplayName={setDisplayName} /></>}
-      </main><nav className="workspace-mobile-nav" aria-label="Điều hướng ứng dụng trên điện thoại">{nav.map((item) => <button key={item.id} className={page === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}</nav>
+      </main><nav className="workspace-mobile-nav" aria-label="Điều hướng ứng dụng trên điện thoại">{nav.filter((item) => item.id !== "transfers").map((item) => <button key={item.id} className={page === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}</nav>
     </div>
   </div>;
 }

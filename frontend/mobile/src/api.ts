@@ -11,6 +11,7 @@ export type Category = { id: string; name: string; categoryType: CategoryType; i
 export type Transaction = { id: string; accountId: string; categoryId: string; kind: CategoryType; amount: string; occurredOn: string; note: string | null; hasReceipt: boolean };
 export type TransactionHistoryFilters = { search: string; from: string; to: string; month: string; kind: CategoryType | ''; categoryId: string; sort: 'asc' | 'desc' };
 export type TransactionHistory = { items: Transaction[]; page: number; size: number; totalElements: number; totalPages: number };
+export type Transfer = { id: string; fromAccountId: string; toAccountId: string; amount: string; occurredOn: string; note: string | null };
 export type BudgetLine = { limitAmount: string; spent: string; remaining: string; usedPercent: string };
 export type CategoryBudgetLine = { categoryId: string; categoryName: string; values: BudgetLine };
 export type BudgetSummary = { month: string; totalSpent: string; total: BudgetLine | null; categories: CategoryBudgetLine[] };
@@ -91,6 +92,26 @@ export async function saveTransaction(session: Session, transaction: { accountId
 export async function deleteTransaction(session: Session, id: string): Promise<void> {
   const response = await fetch(`${apiBase}/api/v1/transactions/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
   if (!response.ok) throw new Error(`Không xóa được giao dịch (HTTP ${response.status}).`);
+}
+
+export async function getTransfers(session: Session, signal?: AbortSignal): Promise<Transfer[]> {
+  const response = await fetch(`${apiBase}/api/v1/transfers`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được chuyển khoản (HTTP ${response.status}).`);
+  return (await response.json()) as Transfer[];
+}
+
+export async function saveTransfer(session: Session, transfer: { fromAccountId: string; toAccountId: string; amount: string; occurredOn: string; note: string | null }): Promise<Transfer> {
+  const response = await fetch(`${apiBase}/api/v1/transfers`, {
+    method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(transfer),
+  });
+  if (!response.ok) throw new Error(`Không lưu được chuyển khoản (HTTP ${response.status}).`);
+  return (await response.json()) as Transfer;
+}
+
+export async function deleteTransfer(session: Session, id: string): Promise<void> {
+  const response = await fetch(`${apiBase}/api/v1/transfers/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
+  if (!response.ok) throw new Error(`Không xóa được chuyển khoản (HTTP ${response.status}).`);
 }
 
 export async function uploadReceipt(session: Session, id: string, uri: string, mimeType: string): Promise<void> {

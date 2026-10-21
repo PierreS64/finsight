@@ -4,7 +4,7 @@ FinSight is a personal finance intelligence platform under development. The repo
 
 ## Current milestone
 
-Phase 0 scaffold is available. The API connects to the real Supabase PostgreSQL project. Web and Android have Supabase Auth, profiles, virtual accounts, owner-scoped income/expense categories, transaction CRUD, private receipt image attachments, searchable transaction history, monthly budgets, and a monthly financial dashboard. A real user signed in and accessed their profile on both platforms, saved it on web, and added an account that persisted after reload and appeared on Android. The local Jenkins `finsight-develop` pipeline passed backend tests, web and mobile checks, and Docker image build on its Windows agent. Transfers and advanced insights remain upcoming. See [progress](docs/progress.md) and [roadmap](docs/development-workflow.md).
+Phase 0 scaffold is available. The API connects to the real Supabase PostgreSQL project. Web and Android have Supabase Auth, profiles, virtual accounts, owner-scoped income/expense categories, transaction CRUD, private receipt image attachments, searchable transaction history, account transfers, monthly budgets, and a monthly financial dashboard. A real user signed in and accessed their profile on both platforms, saved it on web, and added an account that persisted after reload and appeared on Android. The local Jenkins `finsight-develop` pipeline passed backend tests, web and mobile checks, and Docker image build on its Windows agent. Advanced insights remain upcoming. See [progress](docs/progress.md) and [roadmap](docs/development-workflow.md).
 
 ## Quick start on Windows PowerShell
 

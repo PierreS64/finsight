@@ -37,6 +37,8 @@
 - FNS-24: Added total and per-expense-category monthly budgets, Flyway V6 tables, exact spent/remaining/usage calculations, and owner-scoped API and web/Android forms. Spending sums only expense transactions in the selected calendar month; income and other users' records do not affect it. Remaining can be negative when over budget. The existing FinSight card, chip, and navy/emerald styles were used because the reference folders do not include a budget screen. Supabase V6 migrated successfully without adding personal budget data.
 - FNS-25: Added owner-scoped monthly dashboard API for current account balance, account and transaction counts, monthly income/expense/net flow, and remaining total budget. Web and Android dashboards select a month, show loading/error/empty states, and use the existing FinSight card layout. Android reloads on screen focus so changes made in transactions or budgets appear when returning to the dashboard; web reloads when the overview is opened.
 - Assigned and verified all 14 Tasks FNS-24 through FNS-37 in Jira after the four members joined: Tiến Thành Nguyễn (FNS-24–27), Minh Anh Nguyễn (FNS-28–30), Hoshino Meito / Hàn Minh Tùng (FNS-31–34), and Minh Chu / Chu Đức Ngọc Minh (FNS-35–37). Five Tasks are in Testing and nine in To Do; assignee changes did not alter status.
+- Assigned the remaining eight Epics FNS-3–10 and six Tasks FNS-11–13/FNS-16–18 to Nguyễn Thuận Phong. Verified Jira has no unassigned FNS issues. Created FNS-38 for transfers and assigned it to him.
+- FNS-38: Added owner-scoped transfers between two distinct accounts with Flyway V7, exact two-sided account balances, and separate web/Android screens using the existing FinSight navy/emerald design. Transfers remain outside income, expense, budgets, and dashboard cash-flow totals. API supports list, create, and delete; account ownership and amount/date input are checked.
 
 ## In progress / blocked
 
@@ -56,6 +58,7 @@
 - FNS-29 verification: Backend verify passed 16 tests, including combined filters, inclusive dates, stable page boundaries, empty last page, invalid range/size, and owner isolation. Web lint/build and Android TypeScript/lint passed. The restarted API served the authenticated empty history against the real Supabase project; Android SDK 35 displayed the history and expanded filter card. No user transaction data was added for this check.
 - FNS-24 verification: Backend verify passed 18 tests, including exact totals, month boundaries, overrun, updated source transactions, owner isolation, invalid limits, and category deletion conflict. Web lint/build and Android TypeScript/lint passed. The restarted real Supabase API applied V6 and the Android SDK 35 emulator displayed the authenticated empty budget screen and month controls. Budget create/update/delete were verified in H2 tests, not by writing to the user's real account.
 - FNS-25 verification: Backend verify passed 19 tests, including exact balance and monthly sums, budget remainder, month boundaries, owner isolation, and recalculation after deleting a transaction. Web lint/build and Android TypeScript/lint passed. The authenticated Android dashboard displayed the user's existing 100,000 VND account balance, zero monthly transactions, and no budget against the real Supabase API; no user financial data was changed.
+- FNS-38 verification: Backend verify passed 21 tests, including exact debit/credit, unchanged dashboard totals, delete reversal, cross-owner denial, invalid amounts, and unauthenticated denial. Web lint/build and Android TypeScript/lint passed. Flyway V7 migrated the real Supabase PostgreSQL project; the API health endpoint returned HTTP 200 and unauthenticated transfers returned 401. No transfer was created on the real user account and the new screens have not yet been visually checked on an authenticated session.
 
 ## Decisions
 
@@ -67,4 +70,4 @@ The private `origin` remote is `https://github.com/PierreS64/finsight.git`. `mai
 
 ## Next
 
-Continue with transfers, goals, recurring/reconciliation, and dependent insight features. Keep each completed feature in a separate commit for review.
+Continue with goals, recurring/reconciliation, and dependent insight features. Keep each completed feature in a separate commit for review.
