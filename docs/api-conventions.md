@@ -16,6 +16,7 @@ This records the behavior implemented on `develop` as of 2026-10-21. Use it when
 - Month parameters are ISO `YYYY-MM`; dates are ISO `YYYY-MM-DD`. Monthly queries use an inclusive first day and exclusive first day of the next month. Reports that depend on today's date use Asia/Bangkok.
 - `GET /api/v1/transactions/history` is the paged transaction endpoint: zero-based `page`, `size` from 1 to 50 (default 10), `sort=asc|desc`, and stable order by occurrence date, creation time, then ID. It returns `items`, `page`, `size`, `totalElements`, and `totalPages`. The basic transaction list is unpaged and intended for existing small-screen flows; use history for large lists.
 - `POST /api/v1/receipts/recognize` accepts an authenticated multipart image and returns OCR suggestions without creating a transaction. `GET/POST /api/v1/goals` and `PUT/DELETE /api/v1/goals/{id}` manage owner-scoped savings goals.
+- `GET/POST /api/v1/accounts/{accountId}/reconciliations` and `DELETE /api/v1/accounts/{accountId}/reconciliations/{id}` record and manage owner-scoped balance snapshots. Each snapshot returns its expected, observed and signed difference amounts.
 
 ## Money and calculations
 
@@ -23,6 +24,7 @@ This records the behavior implemented on `develop` as of 2026-10-21. Use it when
 - Income and expense affect cash flow and budgets. Transfers move value between two owned accounts and must not change total balance, income, expense, or budgets. Account current balance is opening balance plus income minus expense plus incoming transfers minus outgoing transfers.
 - Keep reporting formulas and missing-data behavior visible in the API and UI. Do not infer a savings rate without income or a trend without a comparison base. Hypothetical values never become stored transactions or budgets.
 - Savings goals store a manually reported saved amount as planning data. Their progress and remaining amount use decimal arithmetic; goal edits do not move account funds or change cash flow.
+- Reconciliation difference is observed minus the account's computed balance at recording time. It is an audit value and never changes account balances or transactions.
 
 ## Schema and review
 

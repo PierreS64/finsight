@@ -31,6 +31,29 @@ export type UpcomingExpenses = { from: string; to: string; total: string; count:
 export type SafeToSpend = { month: string; remainingDays: number; budgetLimit: string | null; spent: string; budgetRemaining: string | null; upcomingExpense: string; availableAfterReservations: string | null; safePerDay: string | null; status: 'NO_BUDGET' | 'BUDGET_EXHAUSTED' | 'UPCOMING_EXCEEDS_BUDGET' | 'AVAILABLE'; calculationRule: string };
 export type FinancialGoal = { id: string; name: string; targetAmount: string; savedAmount: string; remainingAmount: string; progressPercent: string; targetDate: string | null; note: string | null; achieved: boolean; overdue: boolean };
 export type FinancialGoalInput = Pick<FinancialGoal, 'name' | 'targetAmount' | 'savedAmount' | 'targetDate' | 'note'>;
+export type AccountReconciliation = { id: string; accountId: string; expectedBalance: string; observedBalance: string; differenceAmount: string; status: 'BALANCED' | 'SURPLUS' | 'SHORTFALL'; note: string | null; recordedAt: string };
+
+export async function getReconciliations(session: Session, accountId: string, signal?: AbortSignal): Promise<AccountReconciliation[]> {
+  const response = await fetch(`${apiBase}/api/v1/accounts/${accountId}/reconciliations`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được lịch sử đối soát (HTTP ${response.status}).`);
+  return await response.json() as AccountReconciliation[];
+}
+
+export async function saveReconciliation(session: Session, accountId: string, observedBalance: string, note: string | null): Promise<AccountReconciliation> {
+  const response = await fetch(`${apiBase}/api/v1/accounts/${accountId}/reconciliations`, {
+    method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ observedBalance, note }),
+  });
+  if (!response.ok) throw new Error(`Không lưu được lần đối soát (HTTP ${response.status}).`);
+  return await response.json() as AccountReconciliation;
+}
+
+export async function deleteReconciliation(session: Session, accountId: string, id: string): Promise<void> {
+  const response = await fetch(`${apiBase}/api/v1/accounts/${accountId}/reconciliations/${id}`, {
+    method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+  if (!response.ok) throw new Error(`Không xóa được lần đối soát (HTTP ${response.status}).`);
+}
 
 export async function getGoals(session: Session, signal?: AbortSignal): Promise<FinancialGoal[]> {
   const response = await fetch(`${apiBase}/api/v1/goals`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });

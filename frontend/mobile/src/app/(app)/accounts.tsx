@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
+import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { createAccount, getAccounts, type Account, type AccountType } from '../../api';
 import { formatVnd, sumBalances } from '../../money';
 import { useSession } from '../../session';
-import { Brand, Card, Page, PrimaryButton, common } from '../../components/Ui';
+import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
 import { color } from '../../theme';
 
 const types: { value: AccountType; label: string; icon: React.ComponentProps<typeof Ionicons>['name'] }[] = [
@@ -38,7 +39,7 @@ export default function Accounts() {
     finally { setBusy(false); }
   }
 
-  return <Page><Brand subtitle="TÀI KHOẢN" /><Text style={[common.title, styles.title]}>Tài khoản của bạn</Text><Text style={[common.subtitle, styles.subtitle]}>Bạn tự tạo và cập nhật dữ liệu. FinSight không kết nối ngân hàng.</Text>
+  return <Page><Brand subtitle="TÀI KHOẢN" /><Text style={[common.title, styles.title]}>Tài khoản của bạn</Text><Text style={[common.subtitle, styles.subtitle]}>Bạn tự tạo và cập nhật dữ liệu. FinSight không kết nối ngân hàng.</Text><SecondaryButton onPress={() => router.push('/reconcile')}>Đối soát số dư →</SecondaryButton>
     <View style={styles.summary}><Text style={styles.summaryLabel}>TỔNG SỐ DƯ HIỆN TẠI</Text><Text style={styles.summaryValue}>{loaded ? formatVnd(sumBalances(accounts.map((item) => item.currentBalance))) : '—'}</Text><Text style={styles.summaryFoot}>{accounts.length} tài khoản do bạn quản lý</Text></View>
     <Text style={[common.sectionTitle, styles.sectionTitle]}>Danh sách tài khoản</Text><Card>{accounts.length ? accounts.map((account, index) => <View key={account.id} style={[styles.row, index > 0 && styles.divider]}><View style={styles.icon}><Ionicons name={types.find((item) => item.value === account.accountType)?.icon ?? 'wallet-outline'} size={22} color={color.greenDark} /></View><View style={styles.rowMain}><Text style={styles.rowName}>{account.name}</Text><Text style={styles.rowType}>{types.find((item) => item.value === account.accountType)?.label}</Text></View><Text style={styles.amount}>{formatVnd(account.currentBalance)}</Text></View>) : <View style={styles.empty}><Ionicons name="wallet-outline" size={29} color={color.greenDark} /><Text style={styles.emptyTitle}>Chưa có tài khoản</Text><Text style={common.helper}>Dùng biểu mẫu bên dưới để thêm tài khoản đầu tiên.</Text></View>}</Card>
     <Text style={[common.sectionTitle, styles.sectionTitle]}>Thêm tài khoản</Text><Card><Text style={common.label}>Tên tài khoản</Text><TextInput style={common.input} value={name} onChangeText={setName} maxLength={80} placeholder="Ví dụ: Tiền mặt" placeholderTextColor="#94a3b8" /><Text style={[common.label, styles.labelGap]}>Loại tài khoản</Text><View style={styles.types}>{types.map((item) => <Pressable accessibilityRole="button" key={item.value} onPress={() => setType(item.value)} style={[styles.type, type === item.value && styles.typeActive]}><Text style={[styles.typeText, type === item.value && styles.typeTextActive]}>{item.label}</Text></Pressable>)}</View><Text style={[common.label, styles.labelGap]}>Số dư đầu kỳ (VND)</Text><TextInput style={common.input} value={openingBalance} onChangeText={setOpeningBalance} keyboardType="decimal-pad" /><Text style={styles.formHint}>Đây là số dư bạn tự khai báo, không đồng bộ tự động.</Text><PrimaryButton onPress={submit} disabled={busy || !name.trim()}>{busy ? 'Đang lưu...' : 'Thêm tài khoản'}</PrimaryButton>{!!message && <Text accessibilityRole="alert" style={common.message}>{message}</Text>}</Card>
