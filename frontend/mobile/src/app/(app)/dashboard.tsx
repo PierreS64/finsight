@@ -1,40 +1,55 @@
-import { useEffect, useState } from 'react';
-import { router } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { getAccounts, getProfile, type Account } from '../../api';
+import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { getAccounts, getDashboard, getProfile, type Account, type DashboardSummary } from '../../api';
 import { Brand, Card, Page, PrimaryButton, Kicker, common } from '../../components/Ui';
-import { formatVnd, sumBalances } from '../../money';
+import { formatVnd } from '../../money';
 import { useSession } from '../../session';
 import { color } from '../../theme';
+
+const currentMonth = () => { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; };
 
 export default function Dashboard() {
   const { session } = useSession();
   const [accounts, setAccounts] = useState<Account[]>([]);
+  const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
+  const [month, setMonth] = useState(currentMonth);
+  const [monthInput, setMonthInput] = useState(currentMonth);
   const [name, setName] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState('');
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!session) return;
     const controller = new AbortController();
-    Promise.all([getAccounts(session, controller.signal), getProfile(session, controller.signal)])
-      .then(([foundAccounts, profile]) => { setAccounts(foundAccounts); setName(profile?.displayName || String(session.user.user_metadata?.display_name || '')); setLoaded(true); })
+    setLoaded(false); setError('');
+    Promise.all([getAccounts(session, controller.signal), getProfile(session, controller.signal), getDashboard(session, month, controller.signal)])
+      .then(([foundAccounts, profile, summary]) => { setAccounts(foundAccounts); setDashboard(summary); setName(profile?.displayName || String(session.user.user_metadata?.display_name || '')); setLoaded(true); })
       .catch((reason: unknown) => { if (!controller.signal.aborted) { setError(reason instanceof Error ? reason.message : 'Không thể tải dữ liệu.'); setLoaded(true); } });
     return () => controller.abort();
-  }, [session]);
-  const total = sumBalances(accounts.map((account) => account.currentBalance));
+  }, [session, month]));
+  function viewMonth() {
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(monthInput)) { setError('Tháng phải có dạng YYYY-MM.'); return; }
+    setMonth(monthInput); setDashboard(null); setError('');
+  }
   return <Page><View style={styles.header}><Brand subtitle="TỔNG QUAN" /><Pressable accessibilityRole="button" onPress={() => router.replace('/profile')} style={styles.avatar}><Ionicons name="person-outline" size={23} color={color.navy} /></Pressable></View>
     <Text style={styles.hello}>Chào {name || 'bạn'} 👋</Text><Text style={styles.intro}>Dữ liệu tài chính bạn đã lưu trong FinSight.</Text>
-    <View style={styles.balanceCard}><View style={styles.balanceHead}><Text style={styles.balanceLabel}>TỔNG SỐ DƯ HIỆN TẠI</Text><Ionicons name="wallet-outline" size={22} color="#b8e7dc" /></View><Text style={styles.balanceValue}>{loaded && !error ? formatVnd(total) : '—'}</Text><Text style={styles.balanceFoot}>Số dư đầu kỳ cộng thu, trừ chi đã ghi nhận · không đồng bộ ngân hàng</Text><View style={styles.balanceDivider} /><View style={styles.balanceDetails}><View><Text style={styles.balanceSmall}>Tài khoản</Text><Text style={styles.balanceSmallValue}>{loaded && !error ? accounts.length : '—'}</Text></View><View><Text style={styles.balanceSmall}>Giao dịch</Text><Text style={styles.balanceSmallValue}>Thu & chi</Text></View></View></View>
-    {!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}
-    <Text style={[common.sectionTitle, styles.section]}>Bắt đầu từ đây</Text><View style={styles.quickRow}><Pressable accessibilityRole="button" onPress={() => router.replace('/accounts')} style={styles.quick}><View style={styles.quickIcon}><Ionicons name="wallet-outline" size={23} color={color.greenDark} /></View><Text style={styles.quickLabel}>Tài khoản</Text></Pressable><Pressable accessibilityRole="button" onPress={() => router.replace('/transactions')} style={styles.quick}><View style={[styles.quickIcon, { backgroundColor: color.blueLight }]}><Ionicons name="receipt-outline" size={23} color={color.blue} /></View><Text style={styles.quickLabel}>Giao dịch</Text></Pressable><Pressable accessibilityRole="button" onPress={() => router.replace('/profile')} style={styles.quick}><View style={[styles.quickIcon, { backgroundColor: '#f1f5f9' }]}><Ionicons name="person-outline" size={23} color={color.navy} /></View><Text style={styles.quickLabel}>Hồ sơ</Text></Pressable></View>
-    <Card style={styles.notice}><View style={styles.noticeIcon}><Ionicons name="information-circle-outline" size={23} color={color.greenDark} /></View><View style={{ flex: 1 }}><Kicker>DỮ LIỆU MINH BẠCH</Kicker><Text style={styles.noticeText}>FinSight chỉ tính từ thông tin bạn đã nhập. Bạn có thể thêm giao dịch thu chi; báo cáo nâng cao sẽ được bổ sung sau.</Text></View></Card>
+    <Card style={styles.monthCard}><Text style={common.label}>Tháng xem báo cáo (YYYY-MM)</Text><View style={styles.monthRow}><TextInput style={[common.input, styles.monthInput]} value={monthInput} onChangeText={setMonthInput} placeholder="2026-10" placeholderTextColor="#94a3b8" /><Pressable accessibilityRole="button" onPress={viewMonth} style={styles.monthButton}><Text style={styles.monthButtonText}>Xem</Text></Pressable></View></Card>
+    <View style={styles.balanceCard}><View style={styles.balanceHead}><Text style={styles.balanceLabel}>TỔNG SỐ DƯ HIỆN TẠI</Text><Ionicons name="wallet-outline" size={22} color="#b8e7dc" /></View><Text style={styles.balanceValue}>{loaded && dashboard && !error ? formatVnd(dashboard.totalBalance) : '—'}</Text><Text style={styles.balanceFoot}>Số dư đầu kỳ cộng thu, trừ chi đã ghi nhận · không đồng bộ ngân hàng</Text><View style={styles.balanceDivider} /><View style={styles.balanceDetails}><View><Text style={styles.balanceSmall}>Tài khoản</Text><Text style={styles.balanceSmallValue}>{loaded && dashboard && !error ? dashboard.accountCount : '—'}</Text></View><View><Text style={styles.balanceSmall}>Giao dịch tháng</Text><Text style={styles.balanceSmallValue}>{loaded && dashboard && !error ? dashboard.transactionCount : '—'}</Text></View></View></View>
+    {!loaded && <Text style={common.helper}>Đang tải tổng quan...</Text>}{!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}
+    <View style={styles.metrics}><Card style={styles.metric}><Text style={styles.metricLabel}>THU NHẬP THÁNG</Text><Text style={[styles.metricValue, styles.income]}>{dashboard && !error ? formatVnd(dashboard.income) : '—'}</Text></Card><Card style={styles.metric}><Text style={styles.metricLabel}>CHI TIÊU THÁNG</Text><Text style={[styles.metricValue, styles.expense]}>{dashboard && !error ? formatVnd(dashboard.expense) : '—'}</Text></Card></View>
+    <Card style={styles.budgetCard}><Text style={styles.metricLabel}>NGÂN SÁCH CÒN LẠI</Text><Text style={[styles.metricValue, dashboard?.budget?.remaining.startsWith('-') && styles.over]}>{dashboard?.budget ? formatVnd(dashboard.budget.remaining) : '—'}</Text><Text style={common.helper}>{dashboard?.budget ? `Hạn mức ${formatVnd(dashboard.budget.limitAmount)} · đã dùng ${dashboard.budget.usedPercent}%` : 'Chưa đặt ngân sách tổng cho tháng này'}</Text><Pressable accessibilityRole="button" onPress={() => router.replace('/budgets')}><Text style={styles.seeAll}>Xem ngân sách ›</Text></Pressable></Card>
+    {dashboard && dashboard.accountCount === 0 && dashboard.transactionCount === 0 && <Card style={styles.emptySummary}><Text style={styles.emptyTitle}>Chưa có dữ liệu tài chính</Text><Text style={common.helper}>Thêm tài khoản và giao dịch đầu tiên để xem tổng quan tháng.</Text></Card>}
+    <Text style={[common.sectionTitle, styles.section]}>Bắt đầu từ đây</Text><View style={styles.quickRow}><Pressable accessibilityRole="button" onPress={() => router.replace('/accounts')} style={styles.quick}><View style={styles.quickIcon}><Ionicons name="wallet-outline" size={23} color={color.greenDark} /></View><Text style={styles.quickLabel}>Tài khoản</Text></Pressable><Pressable accessibilityRole="button" onPress={() => router.replace('/transactions')} style={styles.quick}><View style={[styles.quickIcon, { backgroundColor: color.blueLight }]}><Ionicons name="receipt-outline" size={23} color={color.blue} /></View><Text style={styles.quickLabel}>Giao dịch</Text></Pressable><Pressable accessibilityRole="button" onPress={() => router.replace('/budgets')} style={styles.quick}><View style={[styles.quickIcon, { backgroundColor: '#f1f5f9' }]}><Ionicons name="pie-chart-outline" size={23} color={color.navy} /></View><Text style={styles.quickLabel}>Ngân sách</Text></Pressable></View>
+    <Card style={styles.notice}><View style={styles.noticeIcon}><Ionicons name="information-circle-outline" size={23} color={color.greenDark} /></View><View style={{ flex: 1 }}><Kicker>DỮ LIỆU MINH BẠCH</Kicker><Text style={styles.noticeText}>Chỉ số tháng tính từ giao dịch bạn đã nhập. Số dư hiện tại tính từ mọi giao dịch đã lưu.</Text></View></Card>
     <View style={styles.sectionHead}><Text style={common.sectionTitle}>Tài khoản gần đây</Text><Pressable accessibilityRole="button" onPress={() => router.replace('/accounts')}><Text style={styles.seeAll}>Xem tất cả ›</Text></Pressable></View>
     <Card>{accounts.length ? accounts.slice(0, 4).map((account, index) => <View key={account.id} style={[styles.accountRow, index > 0 && styles.rowDivider]}><View style={styles.accountIcon}><Ionicons name={account.accountType === 'CASH' ? 'cash-outline' : 'wallet-outline'} size={21} color={color.greenDark} /></View><View style={{ flex: 1 }}><Text style={styles.accountName}>{account.name}</Text><Text style={styles.accountCaption}>Số dư hiện tại</Text></View><Text style={styles.accountAmount}>{formatVnd(account.currentBalance)}</Text></View>) : <View style={styles.empty}><Text style={styles.emptyTitle}>Chưa có tài khoản</Text><Text style={common.helper}>Thêm tài khoản đầu tiên để xem dữ liệu của bạn ở đây.</Text><PrimaryButton onPress={() => router.replace('/accounts')}>Thêm tài khoản</PrimaryButton></View>}</Card>
   </Page>;
 }
 
 const styles = StyleSheet.create({
+  monthCard: { marginBottom: 16 }, monthRow: { flexDirection: 'row', gap: 10 }, monthInput: { flex: 1 }, monthButton: { minWidth: 70, backgroundColor: color.green, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, monthButtonText: { color: color.white, fontWeight: '800' },
+  metrics: { flexDirection: 'row', gap: 10, marginBottom: 10 }, metric: { flex: 1 }, metricLabel: { color: color.muted, fontSize: 10, fontWeight: '800', letterSpacing: 1 }, metricValue: { color: color.navy, fontSize: 20, fontWeight: '800', marginTop: 12 }, income: { color: color.greenDark }, expense: { color: '#b45309' }, over: { color: '#b91c1c' }, budgetCard: { gap: 9, marginBottom: 13 }, emptySummary: { gap: 8, marginBottom: 14 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 }, avatar: { width: 39, height: 39, borderRadius: 20, backgroundColor: color.blueLight, alignItems: 'center', justifyContent: 'center' },
   hello: { color: color.navy, fontSize: 27, fontWeight: '800', letterSpacing: -0.8 }, intro: { color: color.muted, fontSize: 13, marginTop: 4, marginBottom: 22 },
   balanceCard: { backgroundColor: color.darkCard, borderRadius: 19, padding: 22, marginBottom: 24 }, balanceHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }, balanceLabel: { color: '#bad4df', fontSize: 11, fontWeight: '800', letterSpacing: 1.1 }, balanceValue: { color: color.white, fontSize: 33, fontWeight: '800', marginTop: 18, fontVariant: ['tabular-nums'] }, balanceFoot: { color: '#c2d3d9', fontSize: 11, lineHeight: 17, marginTop: 8 }, balanceDivider: { height: 1, backgroundColor: '#ffffff30', marginVertical: 19 }, balanceDetails: { flexDirection: 'row', justifyContent: 'space-between' }, balanceSmall: { color: '#bad4df', fontSize: 11, marginBottom: 5 }, balanceSmallValue: { color: '#6ee7b7', fontSize: 16, fontWeight: '800' },

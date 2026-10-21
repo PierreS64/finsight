@@ -6,7 +6,7 @@ import AccountsPanel, { type Account } from "./AccountsPanel";
 import CategoriesPanel from "./CategoriesPanel";
 import TransactionsPanel from "./TransactionsPanel";
 import BudgetPanel from "./BudgetPanel";
-import { formatVnd, sumBalances } from "./money";
+import DashboardPanel from "./DashboardPanel";
 import "./App.css";
 
 type Page = "overview" | "accounts" | "transactions" | "categories" | "budgets" | "profile";
@@ -83,16 +83,11 @@ function Workspace({ session, signOut }: { session: Session; signOut: () => Prom
     { id: "overview", label: "Tổng quan", symbol: "◫" }, { id: "transactions", label: "Giao dịch", symbol: "▤" }, { id: "accounts", label: "Tài khoản", symbol: "▣" }, { id: "budgets", label: "Ngân sách", symbol: "◩" }, { id: "profile", label: "Hồ sơ", symbol: "◉" },
   ];
   const title = nav.find((item) => item.id === page)?.label ?? "Danh mục";
-  const total = sumBalances(accounts.map((account) => account.currentBalance));
   return <div className="workspace">
     <aside className="workspace-sidebar"><Brand /><p className="sidebar-caption">KHÔNG GIAN CỦA BẠN</p><nav aria-label="Điều hướng ứng dụng">{nav.map((item) => <button key={item.id} className={page === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}</nav><div className="sidebar-bottom"><span className="sidebar-avatar">{(displayName || session.user.email || "F").slice(0, 1).toUpperCase()}</span><span><strong>{displayName || "Tài khoản FinSight"}</strong><small>{session.user.email}</small></span></div></aside>
     <div className="workspace-main"><header className="workspace-topbar"><div><span className="mobile-brand"><Brand /></span><small>FINSIGHT / {title.toUpperCase()}</small></div><div className="topbar-actions"><span className="data-badge"><span className="live-dot" /> Dữ liệu do bạn nhập</span><button className="button-quiet" onClick={signOut}>Đăng xuất</button></div></header>
       <main className="workspace-content">
-        {page === "overview" && <><div className="page-heading"><p className="eyebrow">TỔNG QUAN CỦA BẠN</p><h1>Chào {displayName || "bạn"}!</h1><p>Đây là những thông tin đã được lưu trong FinSight.</p></div>
-          <div className="metric-grid"><article className="metric-card featured"><small>TỔNG SỐ DƯ HIỆN TẠI</small><strong>{accountsLoaded && !accountsError ? formatVnd(total) : "—"}</strong><span>Số dư đầu kỳ cộng thu, trừ chi đã ghi nhận</span></article><article className="metric-card"><small>TÀI KHOẢN TÀI CHÍNH</small><strong>{accountsLoaded && !accountsError ? accounts.length : "—"}</strong><span>{accounts.length ? "Tài khoản do bạn quản lý" : "Bắt đầu bằng tài khoản đầu tiên"}</span></article><article className="metric-card"><small>GIAO DỊCH</small><strong>↗</strong><span>Thêm và xem giao dịch của bạn</span></article></div>
-          {accountsError && <p className="inline-error" role="alert">{accountsError}</p>}
-          <div className="workspace-grid"><section className="surface-card"><div className="section-head"><div><p className="eyebrow">TÀI KHOẢN</p><h2>Tài khoản của bạn</h2></div><button className="link-button" onClick={() => setPage("accounts")}>Xem tất cả →</button></div>{accounts.length ? <div className="mini-list">{accounts.slice(0, 4).map((account) => <div key={account.id}><span className="list-icon">▣</span><span><strong>{account.name}</strong><small>Số dư hiện tại</small></span><b>{formatVnd(account.currentBalance)}</b></div>)}</div> : <div className="empty-state compact"><span>▣</span><h3>Chưa có tài khoản</h3><p>Thêm tài khoản đầu tiên để xây dựng bức tranh tài chính của bạn.</p><button className="button-primary" onClick={() => setPage("accounts")}>Thêm tài khoản</button></div>}</section><section className="surface-card next-card"><p className="eyebrow">DÒNG TIỀN</p><h2>Giao dịch thu chi</h2><p>Ghi lại thu nhập và chi tiêu do bạn tự nhập. Số dư tài khoản được tính lại từ các giao dịch đã lưu.</p><button className="button-outline" onClick={() => setPage("transactions")}>Xem giao dịch</button></section></div>
-        </>}
+        {page === "overview" && <DashboardPanel session={session} displayName={displayName} accounts={accounts} accountsLoaded={accountsLoaded} accountsError={accountsError} onNavigate={setPage} />}
         {page === "accounts" && <><div className="page-heading"><p className="eyebrow">TÀI KHOẢN CỦA BẠN</p><h1>Quản lý tài khoản</h1><p>Tài khoản trong FinSight là bản ghi do bạn tự tạo, không liên kết ngân hàng.</p></div><AccountsPanel session={session} accounts={accounts} onCreated={(account) => setAccounts((current) => [...current, account])} /></>}
         {page === "transactions" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Giao dịch</h1><p>Ghi khoản thu, chi và xem lịch sử từ dữ liệu bạn tự nhập.</p></div><TransactionsPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} onCategories={() => setPage("categories")} /></>}
         {page === "categories" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN / DANH MỤC</p><h1>Danh mục thu chi</h1><p>Tổ chức các khoản thu nhập và chi tiêu theo cách bạn quen dùng.</p></div><CategoriesPanel session={session} /></>}

@@ -14,6 +14,7 @@ export type TransactionHistory = { items: Transaction[]; page: number; size: num
 export type BudgetLine = { limitAmount: string; spent: string; remaining: string; usedPercent: string };
 export type CategoryBudgetLine = { categoryId: string; categoryName: string; values: BudgetLine };
 export type BudgetSummary = { month: string; totalSpent: string; total: BudgetLine | null; categories: CategoryBudgetLine[] };
+export type DashboardSummary = { month: string; accountCount: number; transactionCount: number; totalBalance: string; income: string; expense: string; netFlow: string; budget: { limitAmount: string; remaining: string; usedPercent: string } | null };
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
@@ -142,4 +143,11 @@ export async function deleteBudget(session: Session, month: string, categoryId?:
   const response = await fetch(`${apiBase}/api/v1/budgets${path}`,
     { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
   if (!response.ok) throw new Error(`Không xóa được ngân sách (HTTP ${response.status}).`);
+}
+
+export async function getDashboard(session: Session, month: string, signal?: AbortSignal): Promise<DashboardSummary> {
+  const response = await fetch(`${apiBase}/api/v1/dashboard?month=${month}`,
+    { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được tổng quan (HTTP ${response.status}).`);
+  return (await response.json()) as DashboardSummary;
 }
