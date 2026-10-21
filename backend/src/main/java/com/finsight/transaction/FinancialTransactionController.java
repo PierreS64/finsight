@@ -3,6 +3,7 @@ package com.finsight.transaction;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import com.finsight.account.FinancialAccount;
@@ -15,6 +16,8 @@ import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +31,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.RequestPart;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v1/transactions")
@@ -35,25 +41,28 @@ public class FinancialTransactionController {
     private final FinancialTransactionRepository transactions;
     private final FinancialAccountRepository accounts;
     private final CategoryRepository categories;
+    private final TransactionReceiptStore receipts;
 
     public FinancialTransactionController(FinancialTransactionRepository transactions,
-                                          FinancialAccountRepository accounts, CategoryRepository categories) {
+                                          FinancialAccountRepository accounts, CategoryRepository categories,
+                                          TransactionReceiptStore receipts) {
         this.transactions = transactions;
         this.accounts = accounts;
         this.categories = categories;
+        this.receipts = receipts;
     }
 
     @GetMapping
     @Transactional(readOnly = true)
     public List<TransactionResponse> list(@AuthenticationPrincipal Jwt jwt) {
         return transactions.findAllByOwnerUserIdOrderByOccurredOnDescCreatedAtDescIdDesc(userId(jwt))
-                .stream().map(TransactionResponse::from).toList();
+                .stream().map(this::response).toList();
     }
 
     @GetMapping("/{id}")
     @Transactional(readOnly = true)
     public TransactionResponse detail(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
-        return TransactionResponse.from(owned(id, userId(jwt)));
+        return response(owned(id, userId(jwt)));
     }
 
     @PostMapping
@@ -65,7 +74,7 @@ public class FinancialTransactionController {
         validateReferences(owner, request);
         FinancialTransaction transaction = new FinancialTransaction(owner, request.accountId(), request.categoryId(),
                 request.kind(), request.amount(), request.occurredOn(), request.note());
-        return TransactionResponse.from(transactions.save(transaction));
+        return response(transactions.save(transaction));
     }
 
     @PutMapping("/{id}")
@@ -77,7 +86,7 @@ public class FinancialTransactionController {
         validateReferences(owner, request);
         transaction.update(request.accountId(), request.categoryId(), request.kind(), request.amount(),
                 request.occurredOn(), request.note());
-        return TransactionResponse.from(transactions.save(transaction));
+        return response(transactions.save(transaction));
     }
 
     @DeleteMapping("/{id}")
@@ -85,6 +94,57 @@ public class FinancialTransactionController {
     @Transactional
     public void delete(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
         transactions.delete(owned(id, userId(jwt)));
+    }
+
+    @PostMapping(value = "/{id}/receipt", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
+    public void uploadReceipt(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id,
+                              @RequestPart("file") MultipartFile file) throws IOException {
+        owned(id, userId(jwt));
+        if (file.isEmpty() || file.getSize() > 5_000_000)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Receipt must be at most 5 MB");
+        byte[] bytes = file.getBytes();
+        String type = file.getContentType();
+        if (!validImage(type, bytes))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Receipt must be a JPEG, PNG or WebP image");
+        receipts.replace(id, type, bytes);
+    }
+
+    @GetMapping("/{id}/receipt")
+    @Transactional(readOnly = true)
+    public ResponseEntity<byte[]> getReceipt(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+        owned(id, userId(jwt));
+        TransactionReceiptStore.Receipt receipt = receipts.find(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Receipt not found"));
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(receipt.contentType()))
+                .header("Cache-Control", "private, no-store")
+                .header("X-Content-Type-Options", "nosniff")
+                .body(receipt.bytes());
+    }
+
+    @DeleteMapping("/{id}/receipt")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Transactional
+    public void deleteReceipt(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID id) {
+        owned(id, userId(jwt));
+        receipts.delete(id);
+    }
+
+    private static boolean validImage(String type, byte[] bytes) {
+        if ("image/jpeg".equals(type))
+            return bytes.length >= 3 && (bytes[0] & 255) == 255 && (bytes[1] & 255) == 216 && (bytes[2] & 255) == 255;
+        if ("image/png".equals(type))
+            return bytes.length >= 8 && Arrays.equals(Arrays.copyOf(bytes, 8),
+                    new byte[] {(byte) 137, 80, 78, 71, 13, 10, 26, 10});
+        if ("image/webp".equals(type))
+            return bytes.length >= 12 && "RIFF".equals(new String(bytes, 0, 4, java.nio.charset.StandardCharsets.US_ASCII))
+                    && "WEBP".equals(new String(bytes, 8, 4, java.nio.charset.StandardCharsets.US_ASCII));
+        return false;
+    }
+
+    private TransactionResponse response(FinancialTransaction transaction) {
+        return TransactionResponse.from(transaction, receipts.exists(transaction.getId()));
     }
 
     private FinancialTransaction owned(UUID id, UUID owner) {
@@ -122,11 +182,12 @@ public class FinancialTransactionController {
                                      @NotNull LocalDate occurredOn, @Size(max = 500) String note) {}
 
     public record TransactionResponse(UUID id, UUID accountId, UUID categoryId, FinancialTransaction.Kind kind,
-                                      String amount, LocalDate occurredOn, String note, Instant createdAt) {
-        static TransactionResponse from(FinancialTransaction transaction) {
+                                      String amount, LocalDate occurredOn, String note, Instant createdAt,
+                                      boolean hasReceipt) {
+        static TransactionResponse from(FinancialTransaction transaction, boolean hasReceipt) {
             return new TransactionResponse(transaction.getId(), transaction.getAccountId(), transaction.getCategoryId(),
                     transaction.getKind(), transaction.getAmount().toPlainString(), transaction.getOccurredOn(),
-                    transaction.getNote(), transaction.getCreatedAt());
+                    transaction.getNote(), transaction.getCreatedAt(), hasReceipt);
         }
     }
 }

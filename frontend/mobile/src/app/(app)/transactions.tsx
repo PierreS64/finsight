@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { deleteTransaction, getAccounts, getCategories, getTransactions, saveTransaction, type Account, type Category, type CategoryType, type Transaction } from '../../api';
+import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
+import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { deleteReceipt, deleteTransaction, downloadReceipt, getAccounts, getCategories, getTransactions, saveTransaction, uploadReceipt, type Account, type Category, type CategoryType, type Transaction } from '../../api';
 import { formatVnd, sumBalances } from '../../money';
 import { useSession } from '../../session';
 import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
@@ -29,6 +31,10 @@ export default function Transactions() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const [receiptId, setReceiptId] = useState<string | null>(null);
+  const [receiptUri, setReceiptUri] = useState<string | null>(null);
+  const [receiptVersion, setReceiptVersion] = useState(0);
+  const [receiptBusy, setReceiptBusy] = useState(false);
 
   useEffect(() => {
     if (!session) return;
@@ -38,6 +44,25 @@ export default function Transactions() {
       .catch((reason: unknown) => { if (!controller.signal.aborted) { setMessage(reason instanceof Error ? reason.message : 'Không tải được giao dịch.'); setLoaded(true); } });
     return () => controller.abort();
   }, [session]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let localUri: string | null = null;
+    setReceiptUri(null);
+    if (session && receiptId && transactions.some((item) => item.id === receiptId && item.hasReceipt)) {
+      downloadReceipt(session, receiptId).then((uri) => {
+        localUri = uri;
+        if (!cancelled) setReceiptUri(uri);
+        else void FileSystem.deleteAsync(uri, { idempotent: true });
+      }).catch((reason: unknown) => { if (!cancelled) setMessage(reason instanceof Error ? reason.message : 'Không xem được hóa đơn.'); });
+    }
+    return () => {
+      cancelled = true;
+      if (localUri) void FileSystem.deleteAsync(localUri, { idempotent: true });
+    };
+    // A changed receipt version triggers a fresh private download.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, receiptId, receiptVersion]);
 
   const availableCategories = categories.filter((category) => category.categoryType === kind);
   const selectedCategory = availableCategories.some((category) => category.id === categoryId) ? categoryId : availableCategories[0]?.id ?? '';
@@ -49,6 +74,7 @@ export default function Transactions() {
   function edit(transaction: Transaction) {
     setEditingId(transaction.id); setKind(transaction.kind); setAccountId(transaction.accountId); setCategoryId(transaction.categoryId);
     setAmount(transaction.amount); setOccurredOn(transaction.occurredOn); setNote(transaction.note || ''); setDeletingId(null); setMessage('Đang sửa giao dịch bên dưới.');
+    setReceiptId(transaction.id);
   }
   async function save() {
     if (!session || busy || !selectedAccount || !selectedCategory) return;
@@ -60,6 +86,7 @@ export default function Transactions() {
       const saved = await saveTransaction(session, { accountId: selectedAccount, categoryId: selectedCategory, kind, amount: value, occurredOn, note: note.trim() || null }, editingId ?? undefined);
       setTransactions((current) => (editingId ? current.map((item) => item.id === editingId ? saved : item) : [...current, saved])
         .sort((a, b) => b.occurredOn.localeCompare(a.occurredOn) || b.id.localeCompare(a.id)));
+      setReceiptId(saved.id);
       reset(); setMessage('Đã lưu giao dịch.');
       getAccounts(session).then(setAccounts).catch(() => setMessage('Đã lưu giao dịch, nhưng chưa làm mới được số dư tài khoản.'));
     } catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Không lưu được giao dịch.'); }
@@ -70,17 +97,47 @@ export default function Transactions() {
     setBusy(true); setMessage('');
     try {
       await deleteTransaction(session, id); setTransactions((current) => current.filter((item) => item.id !== id));
+      if (receiptId === id) { setReceiptId(null); setReceiptUri(null); }
       if (editingId === id) reset(); setDeletingId(null); setMessage('Đã xóa giao dịch.');
       getAccounts(session).then(setAccounts).catch(() => setMessage('Đã xóa giao dịch, nhưng chưa làm mới được số dư tài khoản.'));
     } catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Không xóa được giao dịch.'); }
     finally { setBusy(false); }
   }
 
+  async function addReceipt() {
+    if (!session || !receiptId || receiptBusy) return;
+    const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 0.85 });
+    if (result.canceled || !result.assets[0]) return;
+    const asset = result.assets[0];
+    if (!asset.mimeType || !['image/jpeg', 'image/png', 'image/webp'].includes(asset.mimeType)) {
+      setMessage('Chỉ hỗ trợ ảnh JPEG, PNG hoặc WebP.'); return;
+    }
+    if (asset.fileSize && asset.fileSize > 5_000_000) { setMessage('Ảnh hóa đơn tối đa 5 MB.'); return; }
+    setReceiptBusy(true); setMessage('');
+    try {
+      await uploadReceipt(session, receiptId, asset.uri, asset.mimeType);
+      setTransactions((current) => current.map((item) => item.id === receiptId ? { ...item, hasReceipt: true } : item));
+      setReceiptVersion((value) => value + 1); setMessage('Đã lưu ảnh hóa đơn.');
+    } catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Không tải được ảnh hóa đơn.'); }
+    finally { setReceiptBusy(false); }
+  }
+  async function removeReceipt() {
+    if (!session || !receiptId || receiptBusy) return;
+    setReceiptBusy(true); setMessage('');
+    try {
+      await deleteReceipt(session, receiptId);
+      setTransactions((current) => current.map((item) => item.id === receiptId ? { ...item, hasReceipt: false } : item));
+      setReceiptVersion((value) => value + 1); setMessage('Đã xóa ảnh hóa đơn.');
+    } catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Không xóa được ảnh hóa đơn.'); }
+    finally { setReceiptBusy(false); }
+  }
+
   return <Page><View style={styles.header}><Brand subtitle="GIAO DỊCH" /><Pressable accessibilityRole="button" onPress={() => router.push('/categories')} style={styles.categoryShortcut}><Ionicons name="pricetags-outline" size={22} color={color.greenDark} /></Pressable></View>
     <Text style={common.title}>Lịch sử giao dịch</Text><Text style={[common.subtitle, styles.subtitle]}>Ghi khoản thu, chi và xem lịch sử từ dữ liệu bạn tự nhập.</Text>
     <View style={styles.summary}><Card style={styles.summaryCard}><Text style={styles.summaryLabel}>TỔNG THU</Text><Text style={[styles.summaryValue, styles.income]}>{loaded ? formatVnd(income) : '—'}</Text><Text style={common.helper}>Giao dịch đã lưu</Text></Card><Card style={styles.summaryCard}><Text style={styles.summaryLabel}>TỔNG CHI</Text><Text style={[styles.summaryValue, styles.expense]}>{loaded ? formatVnd(expense) : '—'}</Text><Text style={common.helper}>Giao dịch đã lưu</Text></Card></View>
     <View style={styles.sectionHead}><Text style={common.sectionTitle}>Giao dịch của bạn</Text><Text style={styles.count}>{transactions.length} giao dịch</Text></View>
-    <Card>{!loaded ? <Text style={common.helper}>Đang tải giao dịch...</Text> : transactions.length ? transactions.map((transaction, index) => <View key={transaction.id} style={[styles.row, index > 0 && styles.divider]}><View style={[styles.rowIcon, transaction.kind === 'INCOME' ? styles.incomeBg : styles.expenseBg]}><Ionicons name={transaction.kind === 'INCOME' ? 'arrow-up-outline' : 'arrow-down-outline'} size={23} color={transaction.kind === 'INCOME' ? color.greenDark : '#b45309'} /></View><View style={styles.rowMain}><Text style={styles.rowName}>{categories.find((category) => category.id === transaction.categoryId)?.name ?? 'Danh mục'}</Text><Text style={styles.rowDetail}>{transaction.occurredOn.split('-').reverse().join('/')} · {accounts.find((account) => account.id === transaction.accountId)?.name ?? 'Tài khoản'}</Text>{!!transaction.note && <Text style={styles.rowDetail}>{transaction.note}</Text>}<View style={styles.rowActions}><Pressable accessibilityRole="button" onPress={() => edit(transaction)}><Text style={styles.link}>Sửa</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setDeletingId(transaction.id)}><Text style={styles.delete}>Xóa</Text></Pressable></View></View><Text style={[styles.rowAmount, transaction.kind === 'INCOME' ? styles.income : styles.expense]}>{transaction.kind === 'INCOME' ? '+' : '−'}{formatVnd(transaction.amount)}</Text>{deletingId === transaction.id && <View style={styles.confirm}><Text style={common.helper}>Xóa giao dịch này?</Text><Pressable accessibilityRole="button" onPress={() => remove(transaction.id)} disabled={busy}><Text style={styles.delete}>Xác nhận xóa</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setDeletingId(null)}><Text style={styles.link}>Hủy</Text></Pressable></View>}</View>) : <View style={styles.empty}><Ionicons name="receipt-outline" size={35} color={color.greenDark} /><Text style={styles.emptyTitle}>Chưa có giao dịch</Text><Text style={common.helper}>Giao dịch bạn nhập sẽ xuất hiện ở đây.</Text></View>}</Card>
+    <Card>{!loaded ? <Text style={common.helper}>Đang tải giao dịch...</Text> : transactions.length ? transactions.map((transaction, index) => <View key={transaction.id} style={[styles.row, index > 0 && styles.divider]}><View style={[styles.rowIcon, transaction.kind === 'INCOME' ? styles.incomeBg : styles.expenseBg]}><Ionicons name={transaction.kind === 'INCOME' ? 'arrow-up-outline' : 'arrow-down-outline'} size={23} color={transaction.kind === 'INCOME' ? color.greenDark : '#b45309'} /></View><View style={styles.rowMain}><Text style={styles.rowName}>{categories.find((category) => category.id === transaction.categoryId)?.name ?? 'Danh mục'}</Text><Text style={styles.rowDetail}>{transaction.occurredOn.split('-').reverse().join('/')} · {accounts.find((account) => account.id === transaction.accountId)?.name ?? 'Tài khoản'}</Text>{!!transaction.note && <Text style={styles.rowDetail}>{transaction.note}</Text>}<View style={styles.rowActions}><Pressable accessibilityRole="button" onPress={() => setReceiptId(transaction.id)}><Text style={styles.link}>{transaction.hasReceipt ? 'Xem hóa đơn' : 'Thêm hóa đơn'}</Text></Pressable><Pressable accessibilityRole="button" onPress={() => edit(transaction)}><Text style={styles.link}>Sửa</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setDeletingId(transaction.id)}><Text style={styles.delete}>Xóa</Text></Pressable></View></View><Text style={[styles.rowAmount, transaction.kind === 'INCOME' ? styles.income : styles.expense]}>{transaction.kind === 'INCOME' ? '+' : '−'}{formatVnd(transaction.amount)}</Text>{deletingId === transaction.id && <View style={styles.confirm}><Text style={common.helper}>Xóa giao dịch này?</Text><Pressable accessibilityRole="button" onPress={() => remove(transaction.id)} disabled={busy}><Text style={styles.delete}>Xác nhận xóa</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setDeletingId(null)}><Text style={styles.link}>Hủy</Text></Pressable></View>}</View>) : <View style={styles.empty}><Ionicons name="receipt-outline" size={35} color={color.greenDark} /><Text style={styles.emptyTitle}>Chưa có giao dịch</Text><Text style={common.helper}>Giao dịch bạn nhập sẽ xuất hiện ở đây.</Text></View>}</Card>
+    {receiptId && <Card style={styles.receiptCard}><View style={styles.receiptHead}><Text style={common.sectionTitle}>Ảnh hóa đơn</Text><Pressable accessibilityRole="button" onPress={() => setReceiptId(null)}><Text style={styles.link}>Đóng</Text></Pressable></View>{receiptUri && <Image source={{ uri: receiptUri }} style={styles.receiptImage} resizeMode="contain" />}<Text style={common.helper}>JPEG, PNG hoặc WebP · tối đa 5 MB</Text><PrimaryButton onPress={addReceipt} disabled={receiptBusy}>{receiptBusy ? 'Đang xử lý...' : 'Chọn ảnh từ thư viện'}</PrimaryButton>{transactions.find((item) => item.id === receiptId)?.hasReceipt && <Pressable accessibilityRole="button" onPress={removeReceipt} disabled={receiptBusy}><Text style={styles.delete}>Xóa ảnh hóa đơn</Text></Pressable>}</Card>}
     <Text style={[common.sectionTitle, styles.sectionTitle]}>{editingId ? 'Sửa giao dịch' : 'Thêm giao dịch'}</Text><Card><View style={styles.kindTabs}><Pressable accessibilityRole="button" onPress={() => { setKind('EXPENSE'); setCategoryId(''); }} style={[styles.kindTab, kind === 'EXPENSE' && styles.kindActive]}><Text style={[styles.kindText, kind === 'EXPENSE' && styles.kindActiveText]}>Chi tiêu</Text></Pressable><Pressable accessibilityRole="button" onPress={() => { setKind('INCOME'); setCategoryId(''); }} style={[styles.kindTab, kind === 'INCOME' && styles.kindActive]}><Text style={[styles.kindText, kind === 'INCOME' && styles.kindActiveText]}>Thu nhập</Text></Pressable></View>
       <Text style={common.label}>Số tiền (VND)</Text><TextInput style={common.input} value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder="Ví dụ: 50000" placeholderTextColor="#94a3b8" />
       <Text style={[common.label, styles.labelGap]}>Tài khoản</Text><View style={styles.chips}>{accounts.map((account) => <Pressable accessibilityRole="button" key={account.id} onPress={() => setAccountId(account.id)} style={[styles.chip, selectedAccount === account.id && styles.chipActive]}><Text style={[styles.chipText, selectedAccount === account.id && styles.chipTextActive]}>{account.name}</Text></Pressable>)}</View>{!accounts.length && <Text style={common.helper}>Hãy thêm tài khoản trước khi ghi giao dịch.</Text>}
@@ -97,4 +154,5 @@ const styles = StyleSheet.create({
   summary: { flexDirection: 'row', gap: 10, marginBottom: 23 }, summaryCard: { flex: 1 }, summaryLabel: { color: color.muted, fontSize: 10, fontWeight: '800', letterSpacing: 1 }, summaryValue: { fontSize: 20, fontWeight: '800', marginVertical: 15 }, income: { color: color.greenDark }, expense: { color: '#b45309' }, incomeBg: { backgroundColor: color.greenLight }, expenseBg: { backgroundColor: '#fff5e9' },
   sectionHead: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }, count: { color: color.greenDark, fontSize: 11, fontWeight: '800' }, row: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'flex-start', paddingVertical: 13, gap: 10 }, divider: { borderTopWidth: 1, borderColor: color.border }, rowIcon: { width: 41, height: 41, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, rowMain: { flex: 1 }, rowName: { color: color.navy, fontWeight: '800', fontSize: 13 }, rowDetail: { color: color.muted, fontSize: 10, lineHeight: 16, marginTop: 3 }, rowAmount: { fontSize: 12, fontWeight: '800', maxWidth: 105, textAlign: 'right' }, rowActions: { flexDirection: 'row', gap: 12, marginTop: 6 }, link: { color: color.greenDark, fontSize: 12, fontWeight: '800' }, delete: { color: '#b91c1c', fontSize: 12, fontWeight: '800' }, confirm: { width: '100%', flexDirection: 'row', flexWrap: 'wrap', gap: 12, backgroundColor: '#fff7f7', padding: 10, borderRadius: 9 }, empty: { alignItems: 'center', paddingVertical: 24, gap: 9 }, emptyTitle: { color: color.navy, fontSize: 17, fontWeight: '800' },
   sectionTitle: { marginTop: 27, marginBottom: 13 }, kindTabs: { flexDirection: 'row', gap: 8, marginBottom: 19 }, kindTab: { borderColor: color.border, borderWidth: 1, backgroundColor: color.canvas, borderRadius: 11, paddingHorizontal: 18, paddingVertical: 11 }, kindActive: { borderColor: '#6ee7b7', backgroundColor: color.greenLight }, kindText: { color: color.muted, fontSize: 13, fontWeight: '700' }, kindActiveText: { color: color.greenDark }, labelGap: { marginTop: 18 }, chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 7 }, chip: { borderRadius: 18, borderWidth: 1, borderColor: color.border, paddingHorizontal: 12, paddingVertical: 8 }, chipActive: { borderColor: '#6ee7b7', backgroundColor: color.greenLight }, chipText: { color: color.muted, fontSize: 11, fontWeight: '700' }, chipTextActive: { color: color.greenDark }, manage: { marginTop: 12 }, noteInput: { minHeight: 83, textAlignVertical: 'top', paddingTop: 13 },
+  receiptCard: { marginTop: 14, gap: 12 }, receiptHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, receiptImage: { width: '100%', height: 240, backgroundColor: color.canvas, borderRadius: 12 },
 });

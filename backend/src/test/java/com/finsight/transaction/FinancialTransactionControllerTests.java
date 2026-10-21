@@ -4,6 +4,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -118,5 +120,64 @@ class FinancialTransactionControllerTests {
                 .andExpect(status().isNoContent());
         mvc.perform(delete("/api/v1/categories/{id}", categoryId).with(jwt().jwt(token -> token.subject(ALICE))))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void receiptIsPrivateReplaceableAndDeletedWithTransaction() throws Exception {
+        String account = account(ALICE, "Receipt Alice");
+        String created = mvc.perform(post("/api/v1/transactions").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .contentType(MediaType.APPLICATION_JSON).content(body(account, FOOD, "EXPENSE", "12")))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.hasReceipt").value(false))
+                .andReturn().getResponse().getContentAsString();
+        String id = json.readTree(created).get("id").asText();
+        byte[] png = new byte[] {(byte) 137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3};
+        mvc.perform(multipart("/api/v1/transactions/{id}/receipt", id)
+                        .file(new MockMultipartFile("file", "receipt.png", "image/png", png))
+                        .with(jwt().jwt(token -> token.subject(BOB))))
+                .andExpect(status().isNotFound());
+        mvc.perform(multipart("/api/v1/transactions/{id}/receipt", id)
+                        .file(new MockMultipartFile("file", "receipt.png", "image/png", png))
+                        .with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/transactions/{id}", id).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(jsonPath("$.hasReceipt").value(true));
+        mvc.perform(get("/api/v1/transactions").with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(jsonPath("$[?(@.id == '" + id + "')].hasReceipt").value(hasItem(true)));
+        mvc.perform(get("/api/v1/transactions/{id}/receipt", id).with(jwt().jwt(token -> token.subject(BOB))))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/transactions/{id}/receipt", id))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/transactions/{id}/receipt", id).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isOk()).andExpect(result -> org.junit.jupiter.api.Assertions.assertArrayEquals(
+                        png, result.getResponse().getContentAsByteArray()));
+        byte[] jpeg = new byte[] {(byte) 255, (byte) 216, (byte) 255, 1, 2, 3};
+        mvc.perform(multipart("/api/v1/transactions/{id}/receipt", id)
+                        .file(new MockMultipartFile("file", "replacement.jpg", "image/jpeg", jpeg))
+                        .with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/transactions/{id}/receipt", id).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isOk()).andExpect(result -> org.junit.jupiter.api.Assertions.assertArrayEquals(
+                        jpeg, result.getResponse().getContentAsByteArray()));
+        mvc.perform(multipart("/api/v1/transactions/{id}/receipt", id)
+                        .file(new MockMultipartFile("file", "fake.png", "image/png", new byte[] {1, 2, 3}))
+                        .with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/transactions/{id}/receipt", id).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isOk()).andExpect(result -> org.junit.jupiter.api.Assertions.assertArrayEquals(
+                        jpeg, result.getResponse().getContentAsByteArray()));
+        mvc.perform(delete("/api/v1/transactions/{id}/receipt", id).with(jwt().jwt(token -> token.subject(BOB))))
+                .andExpect(status().isNotFound());
+        mvc.perform(delete("/api/v1/transactions/{id}/receipt", id).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/transactions/{id}/receipt", id).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isNotFound());
+        mvc.perform(multipart("/api/v1/transactions/{id}/receipt", id)
+                        .file(new MockMultipartFile("file", "receipt.png", "image/png", png))
+                        .with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isNoContent());
+        mvc.perform(delete("/api/v1/transactions/{id}", id).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/transactions/{id}/receipt", id).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isNotFound());
     }
 }
