@@ -19,6 +19,7 @@ export type DashboardSummary = { month: string; accountCount: number; transactio
 export type InsightCard = { type: string; title: string; content: string; severity: 'WARNING' | 'CRITICAL'; period: string; currentAmount: string; referenceAmount: string; thresholdPercent: string };
 export type Insights = { month: string; cards: InsightCard[] };
 export type SpendingExplanation = { month: string; previousMonth: string; currentTotal: string; previousTotal: string; changeAmount: string; categories: { categoryId: string; categoryName: string; currentAmount: string; previousAmount: string; changeAmount: string; contributionPercent: string | null }[]; calculationRule: string };
+export type SpendingProfile = { month: string; elapsedDays: number; income: string; expense: string; savingsRatePercent: string | null; averageDailyExpense: string | null; stabilityScore: string | null; topExpenseCategory: { categoryId: string; categoryName: string; amount: string } | null; trend: 'INCREASE' | 'DECREASE' | 'STABLE' | 'INSUFFICIENT_DATA'; trendPercent: string | null; previousMonth: string; calculationRule: string };
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
@@ -188,4 +189,11 @@ export async function getSpendingExplanation(session: Session, month: string, si
     { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
   if (!response.ok) throw new Error(`Không tải được giải thích chi tiêu (HTTP ${response.status}).`);
   return (await response.json()) as SpendingExplanation;
+}
+
+export async function getSpendingProfile(session: Session, month: string, signal?: AbortSignal): Promise<SpendingProfile> {
+  const response = await fetch(`${apiBase}/api/v1/spending-profile?month=${month}`,
+    { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được hồ sơ chi tiêu (HTTP ${response.status}).`);
+  return (await response.json()) as SpendingProfile;
 }
