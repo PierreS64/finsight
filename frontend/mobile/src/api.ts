@@ -25,6 +25,8 @@ export type Charts = { month: string; granularity: 'week' | 'month'; incomeTotal
 export type TrendComparison = { from: string; to: string; previousFrom: string; previousTo: string; expense: string; previousExpense: string; changeAmount: string; changePercent: string | null; direction: 'INCREASE' | 'DECREASE' | 'STABLE' | 'INSUFFICIENT_DATA' };
 export type SpendingTrends = { month: string; week: TrendComparison; monthComparison: TrendComparison; calculationRule: string };
 export type ExpenseForecast = { month: string; elapsedDays: number; remainingDays: number; spendingDays: number; spent: string; averageDaily: string | null; projectedMonthEnd: string | null; expectedAdditional: string | null; confidence: 'HIGH' | 'MEDIUM' | 'LOW' | 'INSUFFICIENT_DATA'; calculationRule: string };
+export type RecurringRule = { id: string; accountId: string; categoryId: string; name: string; kind: CategoryType; amount: string; cadence: 'WEEKLY' | 'MONTHLY'; nextDueOn: string; active: boolean; note: string | null };
+export type RecurringRuleInput = Omit<RecurringRule, 'id'>;
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
@@ -234,4 +236,28 @@ export async function getExpenseForecast(session: Session, signal?: AbortSignal)
     { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
   if (!response.ok) throw new Error(`Không tải được dự báo (HTTP ${response.status}).`);
   return (await response.json()) as ExpenseForecast;
+}
+
+export async function getRecurringRules(session: Session, signal?: AbortSignal): Promise<RecurringRule[]> {
+  const response = await fetch(`${apiBase}/api/v1/recurring-rules`,
+    { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được lịch định kỳ (HTTP ${response.status}).`);
+  return (await response.json()) as RecurringRule[];
+}
+
+export async function saveRecurringRule(session: Session, input: RecurringRuleInput, id?: string): Promise<RecurringRule> {
+  const response = await fetch(`${apiBase}/api/v1/recurring-rules${id ? `/${id}` : ''}`, {
+    method: id ? 'PUT' : 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) throw new Error(`Không lưu được lịch định kỳ (HTTP ${response.status}).`);
+  return (await response.json()) as RecurringRule;
+}
+
+export async function processRecurringRule(session: Session, id: string): Promise<{ createdTransactions: number; nextDueOn: string }> {
+  const response = await fetch(`${apiBase}/api/v1/recurring-rules/${id}/process`, {
+    method: 'POST', headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+  if (!response.ok) throw new Error(response.status === 409 ? 'Có quá nhiều kỳ đến hạn; hãy sửa ngày đến hạn trước.' : `Không ghi nhận được kỳ đến hạn (HTTP ${response.status}).`);
+  return (await response.json()) as { createdTransactions: number; nextDueOn: string };
 }

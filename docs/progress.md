@@ -48,6 +48,7 @@
 - FNS-37: Unified budget alert thresholds at 80%, 90%, and 100% for total and category budgets. The API returns the highest reached threshold per budget using exact decimal comparisons; insight cards and web/Android budget screens display that level without multiple cards for the same budget. Alerts update from current stored expenses and limits whenever those views reload. Income and transfers do not count toward spend.
 - FNS-27: Added owner-scoped weekly and monthly spending trend comparisons to API and web/Android dashboards. The response includes both date ranges, exact expense totals and difference, percentage when the earlier period has spending, and increase/decrease/stable classification at ±10%. Current incomplete periods compare the elapsed portion to the corresponding earlier portion; future months are rejected. No income or transfers count as expense.
 - FNS-32: Added owner-scoped current-month expense forecast API and web/Android dashboard cards. The forecast extends average recorded expense per elapsed calendar day to remaining days using exact decimal arithmetic. It labels confidence from elapsed and active spending days; fewer than three elapsed days, fewer than two spending days, or no expense gives an explicit insufficient-data result. Day-zero-spend gaps remain in the denominator. The UI distinguishes expected remaining expense from safe-to-spend money.
+- FNS-30: Added owner-scoped weekly/monthly recurring rules with account, category, amount, next due date, and pause state. Flyway V8 records each processed occurrence with a unique rule/date key. Web and Android can create, edit, pause/resume, and explicitly process due periods; processing writes transactions once, with a 52-period catch-up limit. Monthly anchors preserve end-of-month and leap-year behavior. There is no background scheduler yet.
 
 ## In progress / blocked
 
@@ -77,6 +78,7 @@
 - FNS-37 verification: Backend verify passed 33 tests, including exact 79.99/80/89.99/90/100% boundaries, overrun, owner isolation, and total/category response thresholds. Web lint/build and Android TypeScript/Expo lint passed. The authenticated warning UI has not yet been visually checked.
 - FNS-27 verification: Backend verify passed 35 tests. New tests cover leap-day and truncated weekly range, exact 10% weekly increase, prior-period zero, owner isolation, future/invalid month, and missing auth. Web lint/build and Android TypeScript/Expo lint passed. The authenticated trend UI has not yet been visually checked.
 - FNS-32 verification: Backend verify passed 37 tests, including leap February, last day of month, sparse/zero data, exact projected money, owner isolation, and missing auth. Web lint/build and Android TypeScript/Expo lint passed before final wording-only UI change. The authenticated forecast cards and real Supabase token path have not yet been visually checked.
+- FNS-30 verification: Backend verify passed 39 tests (0 failures/errors), including explicit/idempotent processing, owner isolation, pause, category mismatch, unauthenticated denial, and monthly/weekly date boundaries. Web lint/build and Android TypeScript/Expo lint passed. Flyway V8 migrated the real Supabase project; the restarted API returned health 200 and unauthenticated recurring list 401. Authenticated recurring screens have not yet been visually checked; no recurring transaction was created in the real user account.
 
 ## Decisions
 
@@ -88,4 +90,4 @@ The private `origin` remote is `https://github.com/PierreS64/finsight.git`. `mai
 
 ## Next
 
-Continue with remaining assigned features including recurring transactions, upcoming expenses, and safe-to-spend; return to FNS-23 when a PR is available for review. Keep each completed feature in a separate commit for review.
+Continue with upcoming expenses and safe-to-spend, then remaining assigned features; return to FNS-23 when a PR is available for review. Keep each completed feature in a separate commit for review.
