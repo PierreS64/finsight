@@ -6,7 +6,8 @@ COPY src src
 RUN mvn -B -ntp -DskipTests package
 
 FROM eclipse-temurin:17-jre
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends curl tesseract-ocr tesseract-ocr-eng tesseract-ocr-vie && rm -rf /var/lib/apt/lists/*
+ENV FINSIGHT_OCR_LANGUAGES=vie+eng
 WORKDIR /app
 RUN useradd --system --uid 10001 finsight
 COPY --from=build /workspace/target/finsight-api-0.1.0-SNAPSHOT.jar app.jar

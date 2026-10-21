@@ -29,6 +29,16 @@ if (-not (Test-Path -LiteralPath (Join-Path $jdk 'bin\java.exe'))) {
 $env:JAVA_HOME = $jdk
 $env:SPRING_PROFILES_ACTIVE = 'supabase'
 $env:SERVER_PORT = "$Port"
+$tesseract = 'C:\Program Files\Tesseract-OCR\tesseract.exe'
+$tessdata = Join-Path $env:LOCALAPPDATA 'FinSight\tessdata'
+if (Test-Path -LiteralPath $tesseract) {
+    $env:FINSIGHT_TESSERACT_COMMAND = $tesseract
+    if ((Test-Path -LiteralPath (Join-Path $tessdata 'eng.traineddata')) -and
+        (Test-Path -LiteralPath (Join-Path $tessdata 'vie.traineddata'))) {
+        $env:FINSIGHT_TESSDATA_DIR = $tessdata
+        $env:FINSIGHT_OCR_LANGUAGES = 'vie+eng'
+    }
+}
 Push-Location (Join-Path $root 'backend')
 try {
     & .\mvnw.cmd spring-boot:run

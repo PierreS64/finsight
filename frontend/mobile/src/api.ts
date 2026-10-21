@@ -137,6 +137,17 @@ export async function uploadReceipt(session: Session, id: string, uri: string, m
   if (result.status !== 204) throw new Error(`Không tải được ảnh hóa đơn (HTTP ${result.status}).`);
 }
 
+export type ReceiptRecognition = { merchant: string | null; occurredOn: string | null; amount: string | null; duplicateTransactionId: string | null; readable: boolean };
+export async function recognizeReceipt(session: Session, uri: string, mimeType: string): Promise<ReceiptRecognition> {
+  const result = await FileSystem.uploadAsync(`${apiBase}/api/v1/receipts/recognize`, uri, {
+    uploadType: FileSystem.FileSystemUploadType.MULTIPART,
+    fieldName: 'file', mimeType,
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+  if (result.status !== 200) throw new Error(`Không đọc được hóa đơn (HTTP ${result.status}). Hãy nhập tay.`);
+  return JSON.parse(result.body) as ReceiptRecognition;
+}
+
 export async function downloadReceipt(session: Session, id: string): Promise<string> {
   if (!FileSystem.cacheDirectory) throw new Error('Thiết bị không có vùng lưu ảnh tạm.');
   const localPath = `${FileSystem.cacheDirectory}receipt-${id}-${Date.now()}`;

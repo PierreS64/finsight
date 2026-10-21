@@ -205,7 +205,7 @@ public class FinancialTransactionController {
         receipts.delete(id);
     }
 
-    private static boolean validImage(String type, byte[] bytes) {
+    static boolean validImage(String type, byte[] bytes) {
         if ("image/jpeg".equals(type))
             return bytes.length >= 3 && (bytes[0] & 255) == 255 && (bytes[1] & 255) == 216 && (bytes[2] & 255) == 255;
         if ("image/png".equals(type))
