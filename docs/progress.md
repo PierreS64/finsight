@@ -42,6 +42,7 @@
 - FNS-19: Added deterministic owner-scoped insight cards for at least 20% month-over-month expense growth and 80%/100% total or category budget use. Each card includes a type, title, explanatory content, severity, period, exact amounts, and threshold. Web and Android show the cards in the monthly dashboard with loading, error, and no-insight states.
 - FNS-20: Added month-over-month spending explanations by category on the API and web/Android dashboards. The API returns exact category and total deltas plus signed contribution percentages; category deltas sum to the net change. Only positive expense records count. Income, including refunds recorded as income, and transfers are excluded by the explicit calculation rule.
 - FNS-21: Added an owner-scoped monthly spending profile API and web/Android dashboard cards for savings rate, top expense category, average daily spending, daily spending stability, and month-over-month trend. Current-month averages use elapsed days in Asia/Bangkok; historical months use all calendar days. The response explains the formulas and returns explicit missing-data states for zero income, fewer than seven days, no spending, future periods, and absent prior-month spending. Calculations use decimal arithmetic; transfers are excluded from income and expense.
+- FNS-22: Added a read-only What-if API and web/Android dashboard forms. A signed expense adjustment and optional hypothetical total-budget limit produce projected expense, account balance, budget remaining, usage, and warnings for negative balance or nearing/exceeding budget. Scenarios exist only in UI memory and API responses; neither transactions nor budgets are written. Exact decimal validation rejects invalid precision, nonpositive limits, and projected expense below zero.
 
 ## In progress / blocked
 
@@ -65,6 +66,7 @@
 - FNS-19 verification: Backend verify passed 23 tests, including exact 20% and 80% boundaries, reached-budget severity, empty months, category cards, owner isolation, invalid month, and unauthenticated denial. Web lint/build and Android TypeScript/lint passed. The restarted Supabase-backed API returned health 200 and unauthenticated insights 401. The authenticated insight UI has not yet been visually checked; no test financial data was written to the real project.
 - FNS-20 verification: Backend verify passed 25 tests, including category increases and decreases that offset, exact sum of contributions, year boundary, empty periods, owner isolation, income exclusion, invalid month, and unauthenticated denial. Web lint/build and Android TypeScript/lint passed. The authenticated explanation UI has not yet been visually checked; no test financial data was written to the real project.
 - FNS-21 verification: Backend verify passed 28 tests, including savings rate, category ranking, daily average, stability, trend, empty/zero-income months, invalid month, owner isolation, and unauthenticated denial. Web lint/build and Android TypeScript/Expo lint passed. The authenticated profile cards have not yet been visually checked; no test financial data was written to the real project.
+- FNS-22 verification: Backend verify passed 30 tests, including 0, negative and positive adjustments, exact decimal results, 80% and over-limit alerts, owner isolation, invalid input, no authentication, and saved dashboard values unchanged after simulations. Web lint/build and Android TypeScript/Expo lint passed. The authenticated simulator UI and real Supabase token path have not yet been visually checked; no scenario was submitted against the real project.
 
 ## Decisions
 
@@ -76,4 +78,4 @@ The private `origin` remote is `https://github.com/PierreS64/finsight.git`. `mai
 
 ## Next
 
-Continue with FNS-22 What-if Simulator, then goals, recurring/reconciliation, and dependent insight features. Keep each completed feature in a separate commit for review.
+Continue with FNS-23 architecture/API conventions and integration, then remaining assigned features including charts, spending trends, recurring transactions, forecast, and alerts. Keep each completed feature in a separate commit for review.
