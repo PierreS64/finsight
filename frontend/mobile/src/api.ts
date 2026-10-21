@@ -27,6 +27,7 @@ export type SpendingTrends = { month: string; week: TrendComparison; monthCompar
 export type ExpenseForecast = { month: string; elapsedDays: number; remainingDays: number; spendingDays: number; spent: string; averageDaily: string | null; projectedMonthEnd: string | null; expectedAdditional: string | null; confidence: 'HIGH' | 'MEDIUM' | 'LOW' | 'INSUFFICIENT_DATA'; calculationRule: string };
 export type RecurringRule = { id: string; accountId: string; categoryId: string; name: string; kind: CategoryType; amount: string; cadence: 'WEEKLY' | 'MONTHLY'; nextDueOn: string; active: boolean; note: string | null };
 export type RecurringRuleInput = Omit<RecurringRule, 'id'>;
+export type UpcomingExpenses = { from: string; to: string; total: string; count: number; items: { ruleId: string; name: string; amount: string; dueOn: string; overdue: boolean }[]; calculationRule: string };
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
@@ -260,4 +261,11 @@ export async function processRecurringRule(session: Session, id: string): Promis
   });
   if (!response.ok) throw new Error(response.status === 409 ? 'Có quá nhiều kỳ đến hạn; hãy sửa ngày đến hạn trước.' : `Không ghi nhận được kỳ đến hạn (HTTP ${response.status}).`);
   return (await response.json()) as { createdTransactions: number; nextDueOn: string };
+}
+
+export async function getUpcomingExpenses(session: Session, from: string, to: string, signal?: AbortSignal): Promise<UpcomingExpenses> {
+  const response = await fetch(`${apiBase}/api/v1/upcoming-expenses?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`,
+    { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(response.status === 400 ? 'Chọn khoảng ngày hợp lệ, tối đa 366 ngày.' : `Không tải được khoản đến hạn (HTTP ${response.status}).`);
+  return (await response.json()) as UpcomingExpenses;
 }

@@ -9,6 +9,7 @@ import WhatIfCard from '../../components/WhatIfCard';
 import ChartsCard from '../../components/ChartsCard';
 import SpendingTrendsCard from '../../components/SpendingTrendsCard';
 import ExpenseForecastCard from '../../components/ExpenseForecastCard';
+import UpcomingExpensesCard from '../../components/UpcomingExpensesCard';
 import { formatVnd } from '../../money';
 import { useSession } from '../../session';
 import { color } from '../../theme';
@@ -66,6 +67,7 @@ export default function Dashboard() {
     <ChartsCard month={month} />
     <SpendingTrendsCard month={month} />
     {month === currentMonth() && <ExpenseForecastCard />}
+    <UpcomingExpensesCard />
     <WhatIfCard month={month} />
     {dashboard && dashboard.accountCount === 0 && dashboard.transactionCount === 0 && <Card style={styles.emptySummary}><Text style={styles.emptyTitle}>Chưa có dữ liệu tài chính</Text><Text style={common.helper}>Thêm tài khoản và giao dịch đầu tiên để xem tổng quan tháng.</Text></Card>}
     <Text style={[common.sectionTitle, styles.section]}>Bắt đầu từ đây</Text><View style={styles.quickRow}><Pressable accessibilityRole="button" onPress={() => router.replace('/accounts')} style={styles.quick}><View style={styles.quickIcon}><Ionicons name="wallet-outline" size={23} color={color.greenDark} /></View><Text style={styles.quickLabel}>Tài khoản</Text></Pressable><Pressable accessibilityRole="button" onPress={() => router.replace('/transactions')} style={styles.quick}><View style={[styles.quickIcon, { backgroundColor: color.blueLight }]}><Ionicons name="receipt-outline" size={23} color={color.blue} /></View><Text style={styles.quickLabel}>Giao dịch</Text></Pressable><Pressable accessibilityRole="button" onPress={() => router.replace('/budgets')} style={styles.quick}><View style={[styles.quickIcon, { backgroundColor: '#f1f5f9' }]}><Ionicons name="pie-chart-outline" size={23} color={color.navy} /></View><Text style={styles.quickLabel}>Ngân sách</Text></Pressable></View>
