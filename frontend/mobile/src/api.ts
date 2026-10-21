@@ -11,6 +11,9 @@ export type Category = { id: string; name: string; categoryType: CategoryType; i
 export type Transaction = { id: string; accountId: string; categoryId: string; kind: CategoryType; amount: string; occurredOn: string; note: string | null; hasReceipt: boolean };
 export type TransactionHistoryFilters = { search: string; from: string; to: string; month: string; kind: CategoryType | ''; categoryId: string; sort: 'asc' | 'desc' };
 export type TransactionHistory = { items: Transaction[]; page: number; size: number; totalElements: number; totalPages: number };
+export type BudgetLine = { limitAmount: string; spent: string; remaining: string; usedPercent: string };
+export type CategoryBudgetLine = { categoryId: string; categoryName: string; values: BudgetLine };
+export type BudgetSummary = { month: string; totalSpent: string; total: BudgetLine | null; categories: CategoryBudgetLine[] };
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
@@ -115,4 +118,28 @@ export async function deleteReceipt(session: Session, id: string): Promise<void>
   const response = await fetch(`${apiBase}/api/v1/transactions/${id}/receipt`,
     { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
   if (!response.ok) throw new Error(`Không xóa được ảnh hóa đơn (HTTP ${response.status}).`);
+}
+
+export async function getBudget(session: Session, month: string, signal?: AbortSignal): Promise<BudgetSummary> {
+  const response = await fetch(`${apiBase}/api/v1/budgets?month=${month}`,
+    { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được ngân sách (HTTP ${response.status}).`);
+  return (await response.json()) as BudgetSummary;
+}
+
+export async function saveBudget(session: Session, month: string, limitAmount: string, categoryId?: string): Promise<BudgetSummary> {
+  const path = categoryId ? `/categories/${month}/${categoryId}` : `/total/${month}`;
+  const response = await fetch(`${apiBase}/api/v1/budgets${path}`, {
+    method: 'PUT', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ limitAmount }),
+  });
+  if (!response.ok) throw new Error(`Không lưu được ngân sách (HTTP ${response.status}).`);
+  return (await response.json()) as BudgetSummary;
+}
+
+export async function deleteBudget(session: Session, month: string, categoryId?: string): Promise<void> {
+  const path = categoryId ? `/categories/${month}/${categoryId}` : `/total/${month}`;
+  const response = await fetch(`${apiBase}/api/v1/budgets${path}`,
+    { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
+  if (!response.ok) throw new Error(`Không xóa được ngân sách (HTTP ${response.status}).`);
 }

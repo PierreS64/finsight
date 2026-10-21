@@ -5,10 +5,11 @@ import AuthPanel, { ProfilePanel } from "./AuthPanel";
 import AccountsPanel, { type Account } from "./AccountsPanel";
 import CategoriesPanel from "./CategoriesPanel";
 import TransactionsPanel from "./TransactionsPanel";
+import BudgetPanel from "./BudgetPanel";
 import { formatVnd, sumBalances } from "./money";
 import "./App.css";
 
-type Page = "overview" | "accounts" | "transactions" | "categories" | "profile";
+type Page = "overview" | "accounts" | "transactions" | "categories" | "budgets" | "profile";
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 export function Brand({ light = false }: { light?: boolean }) {
@@ -43,8 +44,8 @@ function Landing({ openAuth }: { openAuth: (mode: "signin" | "signup") => void }
       <section className="landing-band"><div className="shell-width"><span>01 <strong>Ghi nhận</strong> tài khoản cá nhân</span><span>02 <strong>Quan sát</strong> dòng tiền rõ ràng</span><span>03 <strong>Chủ động</strong> lập kế hoạch</span></div></section>
       <section className="feature-section shell-width" id="features"><p className="eyebrow">TÍNH NĂNG CỦA FINSIGHT</p><h2>Một nơi để bắt đầu quản lý tài chính</h2><p className="section-lead">Các phần đang hoạt động được phân biệt rõ với những tính năng trong lộ trình phát triển.</p><div className="feature-grid">
         <article><span className="feature-icon">▣</span><small>ĐÃ CÓ</small><h3>Tài khoản tài chính</h3><p>Tạo và xem tài khoản tiền mặt, ngân hàng hoặc ví điện tử do bạn tự nhập. Số dư đầu kỳ được lưu chính xác.</p></article>
-        <article><span className="feature-icon blue">↗</span><small>ĐANG PHÁT TRIỂN</small><h3>Giao dịch & dòng tiền</h3><p>Ghi thu chi, phân loại và nhìn lại các khoản giao dịch trong một giao diện dễ đọc.</p></article>
-        <article><span className="feature-icon violet">◫</span><small>TRONG LỘ TRÌNH</small><h3>Kế hoạch & báo cáo</h3><p>Ngân sách, mục tiêu và báo cáo sẽ được bổ sung khi dữ liệu nền tảng hoàn thiện.</p></article>
+        <article><span className="feature-icon blue">↗</span><small>ĐÃ CÓ</small><h3>Giao dịch & dòng tiền</h3><p>Ghi thu chi, phân loại, đính kèm hóa đơn và tìm lại giao dịch đã lưu.</p></article>
+        <article><span className="feature-icon violet">◫</span><small>ĐÃ CÓ</small><h3>Ngân sách tháng</h3><p>Đặt hạn mức tổng và theo danh mục, xem số đã chi và phần còn lại.</p></article>
       </div></section>
       <section className="approach-section" id="approach"><div className="shell-width approach-card"><div><p className="eyebrow">BẮT ĐẦU TỪ ĐIỀU QUAN TRỌNG</p><h2>Tài chính rõ ràng bắt đầu từ dữ liệu đáng tin.</h2><p>FinSight chỉ hiển thị số liệu bạn đã lưu. Các biểu đồ và chỉ số chưa có dữ liệu sẽ được đánh dấu rõ ràng.</p></div><button className="button-primary" onClick={() => openAuth("signup")}>Tạo tài khoản <span aria-hidden="true">→</span></button></div></section>
     </main><footer className="landing-footer shell-width"><Brand /><p>FinSight không kết nối ngân hàng và không tự cập nhật số dư tài khoản.</p></footer>
@@ -79,7 +80,7 @@ function Workspace({ session, signOut }: { session: Session; signOut: () => Prom
     return () => controller.abort();
   }, [session.access_token]);
   const nav: { id: Page; label: string; symbol: string }[] = [
-    { id: "overview", label: "Tổng quan", symbol: "◫" }, { id: "transactions", label: "Giao dịch", symbol: "▤" }, { id: "accounts", label: "Tài khoản", symbol: "▣" }, { id: "profile", label: "Hồ sơ", symbol: "◉" },
+    { id: "overview", label: "Tổng quan", symbol: "◫" }, { id: "transactions", label: "Giao dịch", symbol: "▤" }, { id: "accounts", label: "Tài khoản", symbol: "▣" }, { id: "budgets", label: "Ngân sách", symbol: "◩" }, { id: "profile", label: "Hồ sơ", symbol: "◉" },
   ];
   const title = nav.find((item) => item.id === page)?.label ?? "Danh mục";
   const total = sumBalances(accounts.map((account) => account.currentBalance));
@@ -95,6 +96,7 @@ function Workspace({ session, signOut }: { session: Session; signOut: () => Prom
         {page === "accounts" && <><div className="page-heading"><p className="eyebrow">TÀI KHOẢN CỦA BẠN</p><h1>Quản lý tài khoản</h1><p>Tài khoản trong FinSight là bản ghi do bạn tự tạo, không liên kết ngân hàng.</p></div><AccountsPanel session={session} accounts={accounts} onCreated={(account) => setAccounts((current) => [...current, account])} /></>}
         {page === "transactions" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Giao dịch</h1><p>Ghi khoản thu, chi và xem lịch sử từ dữ liệu bạn tự nhập.</p></div><TransactionsPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} onCategories={() => setPage("categories")} /></>}
         {page === "categories" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN / DANH MỤC</p><h1>Danh mục thu chi</h1><p>Tổ chức các khoản thu nhập và chi tiêu theo cách bạn quen dùng.</p></div><CategoriesPanel session={session} /></>}
+        {page === "budgets" && <><div className="page-heading"><p className="eyebrow">KẾ HOẠCH TÀI CHÍNH</p><h1>Ngân sách</h1><p>Đặt hạn mức tổng và theo danh mục cho từng tháng.</p></div><BudgetPanel session={session} /></>}
         {page === "profile" && <><div className="page-heading"><p className="eyebrow">CÀI ĐẶT CÁ NHÂN</p><h1>Hồ sơ của bạn</h1><p>Cập nhật tên hiển thị và kiểm tra thông tin tài khoản.</p></div><ProfilePanel session={session} onDisplayName={setDisplayName} /></>}
       </main><nav className="workspace-mobile-nav" aria-label="Điều hướng ứng dụng trên điện thoại">{nav.map((item) => <button key={item.id} className={page === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}</nav>
     </div>

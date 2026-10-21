@@ -8,6 +8,7 @@ const items = [
   { href: '/dashboard' as const, label: 'Tổng quan', icon: 'grid-outline' as const },
   { href: '/transactions' as const, label: 'Giao dịch', icon: 'receipt-outline' as const },
   { href: '/accounts' as const, label: 'Tài khoản', icon: 'wallet-outline' as const },
+  { href: '/budgets' as const, label: 'Ngân sách', icon: 'pie-chart-outline' as const },
   { href: '/profile' as const, label: 'Cá nhân', icon: 'person-outline' as const },
 ];
 
