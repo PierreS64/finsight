@@ -37,6 +37,8 @@ npm run android
 
 For the Docker API demo: `docker compose up --build`. Docker Desktop must be running. See [setup](docs/setup.md) for real database and auth configuration.
 
+API and integration rules are in [API conventions](docs/api-conventions.md).
+
 Jenkins is available on demand without starting Docker Desktop at Windows sign-in:
 
 ```powershell
