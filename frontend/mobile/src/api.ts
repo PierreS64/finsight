@@ -2,11 +2,12 @@ import type { Session } from '@supabase/supabase-js';
 
 const apiBase = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8086';
 export type AccountType = 'CASH' | 'BANK' | 'E_WALLET' | 'OTHER';
-export type Account = { id: string; name: string; accountType: AccountType; openingBalance: string; currencyCode: string };
+export type Account = { id: string; name: string; accountType: AccountType; openingBalance: string; currentBalance: string; currencyCode: string };
 export type Profile = { userId: string; displayName: string | null; currencyCode: string };
 export type CategoryType = 'INCOME' | 'EXPENSE';
 export type CategoryIcon = 'wallet' | 'gift' | 'other' | 'food' | 'transport' | 'home' | 'shopping' | 'health' | 'education';
 export type Category = { id: string; name: string; categoryType: CategoryType; icon: CategoryIcon; isDefault: boolean };
+export type Transaction = { id: string; accountId: string; categoryId: string; kind: CategoryType; amount: string; occurredOn: string; note: string | null };
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
@@ -52,4 +53,23 @@ export async function deleteCategory(session: Session, id: string): Promise<void
   const response = await fetch(`${apiBase}/api/v1/categories/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
   if (response.status === 409) throw new Error('Danh mục đang được giao dịch hoặc ngân sách sử dụng. Hãy đổi danh mục của các mục đó trước khi xóa.');
   if (!response.ok) throw new Error(`Không xóa được danh mục (HTTP ${response.status}).`);
+}
+
+export async function getTransactions(session: Session, signal?: AbortSignal): Promise<Transaction[]> {
+  const response = await fetch(`${apiBase}/api/v1/transactions`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được giao dịch (HTTP ${response.status}).`);
+  return (await response.json()) as Transaction[];
+}
+
+export async function saveTransaction(session: Session, transaction: { accountId: string; categoryId: string; kind: CategoryType; amount: string; occurredOn: string; note: string | null }, id?: string): Promise<Transaction> {
+  const response = await fetch(`${apiBase}/api/v1/transactions${id ? `/${id}` : ''}`, {
+    method: id ? 'PUT' : 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(transaction),
+  });
+  if (!response.ok) throw new Error(`Không lưu được giao dịch (HTTP ${response.status}).`);
+  return (await response.json()) as Transaction;
+}
+
+export async function deleteTransaction(session: Session, id: string): Promise<void> {
+  const response = await fetch(`${apiBase}/api/v1/transactions/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
+  if (!response.ok) throw new Error(`Không xóa được giao dịch (HTTP ${response.status}).`);
 }

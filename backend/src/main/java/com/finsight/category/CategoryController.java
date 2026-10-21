@@ -56,6 +56,9 @@ public class CategoryController {
                                    @Valid @RequestBody CategoryRequest request) {
         UUID owner = userId(jwt);
         Category category = owned(id, owner);
+        if (category.getCategoryType() != request.categoryType())
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Category type cannot change; create another category instead");
         String name = request.name().trim();
         requireUnique(owner, name, request.categoryType(), id);
         category.update(name, request.categoryType(), request.icon());

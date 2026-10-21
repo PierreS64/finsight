@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import com.finsight.transaction.FinancialTransactionRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
@@ -25,16 +26,18 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/v1/accounts")
 public class FinancialAccountController {
     private final FinancialAccountRepository accounts;
+    private final FinancialTransactionRepository transactions;
 
-    public FinancialAccountController(FinancialAccountRepository accounts) {
+    public FinancialAccountController(FinancialAccountRepository accounts, FinancialTransactionRepository transactions) {
         this.accounts = accounts;
+        this.transactions = transactions;
     }
 
     @GetMapping
     @Transactional(readOnly = true)
     public List<AccountResponse> list(@AuthenticationPrincipal Jwt jwt) {
         return accounts.findAllByOwnerUserIdOrderByCreatedAtAsc(userId(jwt)).stream()
-                .map(AccountResponse::from).toList();
+                .map(account -> response(account)).toList();
     }
 
     @PostMapping
@@ -44,7 +47,15 @@ public class FinancialAccountController {
                                   @Valid @RequestBody CreateAccountRequest request) {
         FinancialAccount account = new FinancialAccount(userId(jwt), request.name().trim(),
                 request.accountType(), request.openingBalance());
-        return AccountResponse.from(accounts.save(account));
+        return response(accounts.save(account));
+    }
+
+    private AccountResponse response(FinancialAccount account) {
+        BigDecimal current = account.getOpeningBalance().add(
+                transactions.netForAccount(account.getOwnerUserId(), account.getId()));
+        return new AccountResponse(account.getId(), account.getName(), account.getAccountType(),
+                account.getOpeningBalance().toPlainString(), current.toPlainString(),
+                account.getCurrencyCode(), account.getCreatedAt());
     }
 
     private static UUID userId(Jwt jwt) {
@@ -61,10 +72,5 @@ public class FinancialAccountController {
                                        @NotNull @Digits(integer = 17, fraction = 2) BigDecimal openingBalance) {}
 
     public record AccountResponse(UUID id, String name, FinancialAccount.Type accountType,
-                                  String openingBalance, String currencyCode, Instant createdAt) {
-        static AccountResponse from(FinancialAccount account) {
-            return new AccountResponse(account.getId(), account.getName(), account.getAccountType(),
-                    account.getOpeningBalance().toPlainString(), account.getCurrencyCode(), account.getCreatedAt());
-        }
-    }
+                                  String openingBalance, String currentBalance, String currencyCode, Instant createdAt) {}
 }
