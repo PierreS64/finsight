@@ -1,4 +1,4 @@
-# Progress — 2026-10-20
+# Progress — 2026-10-21
 
 ## Completed
 
@@ -29,6 +29,7 @@
 - Added a web Supabase Auth sign-up/sign-in/sign-out flow and a profile form that calls the API with the user's bearer token. Web lint and production build passed. The user signed in and saved a profile successfully through the local web app and real Supabase API, verifying the genuine user-token path end to end.
 - Added an Android Supabase Auth and profile screen with session persistence. Mobile TypeScript, lint, and Expo Doctor (18/18) passed; the sign-in screen rendered on the Android SDK 35 emulator. The user signed in with a real account and saw the profile created on web.
 - Flyway V2 created `public.financial_accounts` on the real Supabase project. The API now creates and lists virtual accounts scoped to the verified user, with exact decimal opening balances. Web and Android have account forms. Web lint/build and mobile typecheck/lint passed. The user added a test account on web and saw it persist after a page reload. An Android render error caused by passing `BigInt` to Hermes `Intl.NumberFormat` was fixed by formatting the decimal string directly. The emulator then loaded the user's profile and displayed the same test account and 100,000 VND opening balance.
+- Rebuilt the web and Android screens using the user-provided `frontend/web design/` and `frontend/mobile design/` folders as visual references. The landing, sign-in, sign-up, email confirmation, dashboard, accounts, transactions, and profile views now share the FinSight name, F. mark, navy and emerald palette, cards, and responsive navigation. Generated matching web favicon and Android icon assets. Kept the real Supabase authentication and owner-scoped profile/account APIs. Dashboard totals use exact integer minor-unit arithmetic from real opening balances; transaction views show an explicit empty state because transaction storage is not implemented yet. Design reference folders remain user-owned and unmodified.
 
 ## In progress / blocked
 
@@ -36,6 +37,13 @@
 - Jira Sprint 1 remains unplanned and unstarted; Task statuses need review against the actual acceptance criteria and verification evidence.
 - New team Tasks FNS-19 through FNS-37 remain To Do in the backlog; the four other members are planned owners in descriptions, pending manual assignment by the user.
 - Expo SDK 53 dependency audit reported 35 vulnerabilities (14 moderate, 21 high). `npm audit fix` did not reduce this count; remaining suggested fixes require breaking Expo/React Native version changes. SDK 53 is pinned for target SDK 35; assess advisories and upgrade strategy before production use.
+
+## Redesign verification — 2026-10-21
+
+- Web `npm run lint` and `npm run build` passed. Landing, direct `#account` sign-in, and direct `#register` sign-up views were visually inspected in the local browser.
+- Mobile `npx tsc --noEmit`, `npx expo lint`, and `npx expo-doctor` passed (18/18). Metro bundled the Expo Router Android app after adding `query-string`, required by the installed Router package at runtime.
+- Android SDK 35 emulator rendered the new dashboard with the existing real Supabase user profile and one account totaling 100,000 VND after starting the local API. The transactions empty state and account list/form were visually checked through bottom navigation. No new financial data was written during this verification.
+- Web authenticated workspace was checked by build/code review, while live browser visual inspection covered unauthenticated screens. A separate browser sign-in was not performed during this redesign.
 
 ## Decisions
 
