@@ -39,6 +39,7 @@
 - Assigned and verified all 14 Tasks FNS-24 through FNS-37 in Jira after the four members joined: Tiến Thành Nguyễn (FNS-24–27), Minh Anh Nguyễn (FNS-28–30), Hoshino Meito / Hàn Minh Tùng (FNS-31–34), and Minh Chu / Chu Đức Ngọc Minh (FNS-35–37). Five Tasks are in Testing and nine in To Do; assignee changes did not alter status.
 - Assigned the remaining eight Epics FNS-3–10 and six Tasks FNS-11–13/FNS-16–18 to Nguyễn Thuận Phong. Verified Jira has no unassigned FNS issues. Created FNS-38 for transfers and assigned it to him.
 - FNS-38: Added owner-scoped transfers between two distinct accounts with Flyway V7, exact two-sided account balances, and separate web/Android screens using the existing FinSight navy/emerald design. Transfers remain outside income, expense, budgets, and dashboard cash-flow totals. API supports list, create, and delete; account ownership and amount/date input are checked.
+- FNS-19: Added deterministic owner-scoped insight cards for at least 20% month-over-month expense growth and 80%/100% total or category budget use. Each card includes a type, title, explanatory content, severity, period, exact amounts, and threshold. Web and Android show the cards in the monthly dashboard with loading, error, and no-insight states.
 
 ## In progress / blocked
 
@@ -59,6 +60,7 @@
 - FNS-24 verification: Backend verify passed 18 tests, including exact totals, month boundaries, overrun, updated source transactions, owner isolation, invalid limits, and category deletion conflict. Web lint/build and Android TypeScript/lint passed. The restarted real Supabase API applied V6 and the Android SDK 35 emulator displayed the authenticated empty budget screen and month controls. Budget create/update/delete were verified in H2 tests, not by writing to the user's real account.
 - FNS-25 verification: Backend verify passed 19 tests, including exact balance and monthly sums, budget remainder, month boundaries, owner isolation, and recalculation after deleting a transaction. Web lint/build and Android TypeScript/lint passed. The authenticated Android dashboard displayed the user's existing 100,000 VND account balance, zero monthly transactions, and no budget against the real Supabase API; no user financial data was changed.
 - FNS-38 verification: Backend verify passed 21 tests, including exact debit/credit, unchanged dashboard totals, delete reversal, cross-owner denial, invalid amounts, and unauthenticated denial. Web lint/build and Android TypeScript/lint passed. Flyway V7 migrated the real Supabase PostgreSQL project; the API health endpoint returned HTTP 200 and unauthenticated transfers returned 401. No transfer was created on the real user account and the new screens have not yet been visually checked on an authenticated session.
+- FNS-19 verification: Backend verify passed 23 tests, including exact 20% and 80% boundaries, reached-budget severity, empty months, category cards, owner isolation, invalid month, and unauthenticated denial. Web lint/build and Android TypeScript/lint passed. The restarted Supabase-backed API returned health 200 and unauthenticated insights 401. The authenticated insight UI has not yet been visually checked; no test financial data was written to the real project.
 
 ## Decisions
 
@@ -70,4 +72,4 @@ The private `origin` remote is `https://github.com/PierreS64/finsight.git`. `mai
 
 ## Next
 
-Continue with goals, recurring/reconciliation, and dependent insight features. Keep each completed feature in a separate commit for review.
+Continue with FNS-20 spending explanations, then goals, recurring/reconciliation, and dependent insight features. Keep each completed feature in a separate commit for review.

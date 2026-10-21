@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { getAccounts, getDashboard, getProfile, type Account, type DashboardSummary } from '../../api';
+import { getAccounts, getDashboard, getInsights, getProfile, type Account, type DashboardSummary, type Insights } from '../../api';
 import { Brand, Card, Page, PrimaryButton, Kicker, common } from '../../components/Ui';
 import { formatVnd } from '../../money';
 import { useSession } from '../../session';
@@ -14,6 +14,8 @@ export default function Dashboard() {
   const { session } = useSession();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
+  const [insights, setInsights] = useState<Insights | null>(null);
+  const [insightError, setInsightError] = useState('');
   const [month, setMonth] = useState(currentMonth);
   const [monthInput, setMonthInput] = useState(currentMonth);
   const [name, setName] = useState('');
@@ -22,10 +24,13 @@ export default function Dashboard() {
   useFocusEffect(useCallback(() => {
     if (!session) return;
     const controller = new AbortController();
-    setLoaded(false); setError('');
+    setLoaded(false); setError(''); setInsights(null); setInsightError('');
     Promise.all([getAccounts(session, controller.signal), getProfile(session, controller.signal), getDashboard(session, month, controller.signal)])
       .then(([foundAccounts, profile, summary]) => { setAccounts(foundAccounts); setDashboard(summary); setName(profile?.displayName || String(session.user.user_metadata?.display_name || '')); setLoaded(true); })
       .catch((reason: unknown) => { if (!controller.signal.aborted) { setError(reason instanceof Error ? reason.message : 'Không thể tải dữ liệu.'); setLoaded(true); } });
+    getInsights(session, month, controller.signal)
+      .then(setInsights)
+      .catch((reason: unknown) => { if (!controller.signal.aborted) setInsightError(reason instanceof Error ? reason.message : 'Không tải được insight.'); });
     return () => controller.abort();
   }, [session, month]));
   function viewMonth() {
@@ -39,6 +44,10 @@ export default function Dashboard() {
     {!loaded && <Text style={common.helper}>Đang tải tổng quan...</Text>}{!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}
     <View style={styles.metrics}><Card style={styles.metric}><Text style={styles.metricLabel}>THU NHẬP THÁNG</Text><Text style={[styles.metricValue, styles.income]}>{dashboard && !error ? formatVnd(dashboard.income) : '—'}</Text></Card><Card style={styles.metric}><Text style={styles.metricLabel}>CHI TIÊU THÁNG</Text><Text style={[styles.metricValue, styles.expense]}>{dashboard && !error ? formatVnd(dashboard.expense) : '—'}</Text></Card></View>
     <Card style={styles.budgetCard}><Text style={styles.metricLabel}>NGÂN SÁCH CÒN LẠI</Text><Text style={[styles.metricValue, dashboard?.budget?.remaining.startsWith('-') && styles.over]}>{dashboard?.budget ? formatVnd(dashboard.budget.remaining) : '—'}</Text><Text style={common.helper}>{dashboard?.budget ? `Hạn mức ${formatVnd(dashboard.budget.limitAmount)} · đã dùng ${dashboard.budget.usedPercent}%` : 'Chưa đặt ngân sách tổng cho tháng này'}</Text><Pressable accessibilityRole="button" onPress={() => router.replace('/budgets')}><Text style={styles.seeAll}>Xem ngân sách ›</Text></Pressable></Card>
+    <Text style={[common.sectionTitle, styles.section]}>Insight trong {month}</Text>
+    {!!insightError && <Text accessibilityRole="alert" style={common.error}>{insightError}</Text>}
+    {!insights && !insightError && <Text style={common.helper}>Đang tính insight...</Text>}
+    {insights && (insights.cards.length ? insights.cards.map((card, index) => <Card key={`${card.type}-${index}`} style={[styles.insightCard, card.severity === 'CRITICAL' && styles.criticalCard]}><Kicker>{card.severity === 'CRITICAL' ? 'CẦN CHÚ Ý' : 'CẢNH BÁO'}</Kicker><Text style={styles.insightTitle}>{card.title}</Text><Text style={styles.insightText}>{card.content}</Text><Text style={common.helper}>Kỳ {card.period} · Ngưỡng {card.thresholdPercent}%</Text></Card>) : <Card style={styles.noInsights}><Text style={styles.emptyTitle}>Chưa có insight cho tháng này</Text><Text style={common.helper}>Thẻ sẽ xuất hiện khi chi tiêu tăng rõ rệt hoặc ngân sách tiến gần hạn mức.</Text></Card>)}
     {dashboard && dashboard.accountCount === 0 && dashboard.transactionCount === 0 && <Card style={styles.emptySummary}><Text style={styles.emptyTitle}>Chưa có dữ liệu tài chính</Text><Text style={common.helper}>Thêm tài khoản và giao dịch đầu tiên để xem tổng quan tháng.</Text></Card>}
     <Text style={[common.sectionTitle, styles.section]}>Bắt đầu từ đây</Text><View style={styles.quickRow}><Pressable accessibilityRole="button" onPress={() => router.replace('/accounts')} style={styles.quick}><View style={styles.quickIcon}><Ionicons name="wallet-outline" size={23} color={color.greenDark} /></View><Text style={styles.quickLabel}>Tài khoản</Text></Pressable><Pressable accessibilityRole="button" onPress={() => router.replace('/transactions')} style={styles.quick}><View style={[styles.quickIcon, { backgroundColor: color.blueLight }]}><Ionicons name="receipt-outline" size={23} color={color.blue} /></View><Text style={styles.quickLabel}>Giao dịch</Text></Pressable><Pressable accessibilityRole="button" onPress={() => router.replace('/budgets')} style={styles.quick}><View style={[styles.quickIcon, { backgroundColor: '#f1f5f9' }]}><Ionicons name="pie-chart-outline" size={23} color={color.navy} /></View><Text style={styles.quickLabel}>Ngân sách</Text></Pressable></View>
     <Card style={styles.notice}><View style={styles.noticeIcon}><Ionicons name="information-circle-outline" size={23} color={color.greenDark} /></View><View style={{ flex: 1 }}><Kicker>DỮ LIỆU MINH BẠCH</Kicker><Text style={styles.noticeText}>Chỉ số tháng tính từ giao dịch bạn đã nhập. Số dư hiện tại tính từ mọi giao dịch đã lưu.</Text></View></Card>
@@ -56,4 +65,5 @@ const styles = StyleSheet.create({
   section: { marginBottom: 12 }, quickRow: { flexDirection: 'row', gap: 9, marginBottom: 18 }, quick: { flex: 1, minHeight: 94, backgroundColor: color.white, borderColor: color.border, borderWidth: 1, borderRadius: 15, alignItems: 'center', justifyContent: 'center', gap: 9 }, quickIcon: { width: 40, height: 40, backgroundColor: color.greenLight, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, quickLabel: { color: color.navy, fontSize: 11, fontWeight: '700' },
   notice: { backgroundColor: '#e4f6f2', flexDirection: 'row', gap: 12, marginBottom: 24 }, noticeIcon: { width: 38, height: 38, backgroundColor: '#c8ede2', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, noticeText: { color: color.navy, fontSize: 12, lineHeight: 18, marginTop: 5 }, sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }, seeAll: { color: color.greenDark, fontWeight: '700', fontSize: 12 },
   accountRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 }, rowDivider: { borderTopWidth: 1, borderColor: color.border }, accountIcon: { width: 40, height: 40, backgroundColor: color.greenLight, borderRadius: 13, alignItems: 'center', justifyContent: 'center' }, accountName: { fontSize: 13, fontWeight: '700', color: color.navy }, accountCaption: { fontSize: 10, color: color.muted, marginTop: 3 }, accountAmount: { fontSize: 12, color: color.navy, fontWeight: '800', fontVariant: ['tabular-nums'] }, empty: { alignItems: 'center', paddingVertical: 17, gap: 9 }, emptyTitle: { color: color.navy, fontSize: 16, fontWeight: '800' },
+  insightCard: { backgroundColor: '#f0fdf4', borderColor: '#a7f3d0', gap: 8, marginBottom: 10 }, criticalCard: { backgroundColor: '#fef2f2', borderColor: '#fecaca' }, insightTitle: { color: color.navy, fontSize: 16, fontWeight: '800' }, insightText: { color: color.navy, fontSize: 12, lineHeight: 19 }, noInsights: { gap: 8, marginBottom: 12 },
 });
