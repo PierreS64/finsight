@@ -102,7 +102,8 @@ public class BudgetController {
 
     private static BudgetLine line(BigDecimal limit, BigDecimal spent) {
         return new BudgetLine(limit.toPlainString(), spent.toPlainString(), limit.subtract(spent).toPlainString(),
-                spent.multiply(BigDecimal.valueOf(100)).divide(limit, 1, RoundingMode.HALF_UP).toPlainString());
+                spent.multiply(BigDecimal.valueOf(100)).divide(limit, 1, RoundingMode.HALF_UP).toPlainString(),
+                BudgetAlertThreshold.highest(spent, limit));
     }
 
     private static YearMonth parseMonth(String month) {
@@ -121,7 +122,8 @@ public class BudgetController {
     }
 
     public record BudgetRequest(@NotNull @DecimalMin("0.01") @Digits(integer = 17, fraction = 2) BigDecimal limitAmount) {}
-    public record BudgetLine(String limitAmount, String spent, String remaining, String usedPercent) {}
+    public record BudgetLine(String limitAmount, String spent, String remaining, String usedPercent,
+                             int alertThresholdPercent) {}
     public record CategoryBudgetLine(UUID categoryId, String categoryName, BudgetLine values) {}
     public record BudgetSummary(String month, String totalSpent, BudgetLine total, List<CategoryBudgetLine> categories) {}
 }

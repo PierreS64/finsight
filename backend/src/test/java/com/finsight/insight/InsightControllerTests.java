@@ -62,10 +62,21 @@ class InsightControllerTests {
         mvc.perform(get("/api/v1/insights").with(jwt().jwt(token -> token.subject(ALICE))).param("month", "2026-02"))
                 .andExpect(jsonPath("$.cards[?(@.type == 'SPENDING_INCREASE')].currentAmount").value(hasItem("120.00")))
                 .andExpect(jsonPath("$.cards[?(@.type == 'BUDGET_NEAR_LIMIT')].thresholdPercent").value(hasItem("80")));
-        expense(ALICE, alice, "30.00", "2026-02-28");
+        expense(ALICE, alice, "14.99", "2026-02-28");
+        mvc.perform(get("/api/v1/insights").with(jwt().jwt(token -> token.subject(ALICE))).param("month", "2026-02"))
+                .andExpect(jsonPath("$.cards[?(@.type == 'BUDGET_NEAR_LIMIT')].thresholdPercent").value(hasItem("80")));
+        expense(ALICE, alice, "0.01", "2026-02-28");
+        mvc.perform(get("/api/v1/insights").with(jwt().jwt(token -> token.subject(ALICE))).param("month", "2026-02"))
+                .andExpect(jsonPath("$.cards[?(@.type == 'BUDGET_NEAR_LIMIT')].thresholdPercent").value(hasItem("90")))
+                .andExpect(jsonPath("$.cards.length()").value(2));
+        mvc.perform(get("/api/v1/budgets").with(jwt().jwt(token -> token.subject(ALICE))).param("month", "2026-02"))
+                .andExpect(jsonPath("$.total.alertThresholdPercent").value(90));
+        expense(ALICE, alice, "15.00", "2026-02-28");
         mvc.perform(get("/api/v1/insights").with(jwt().jwt(token -> token.subject(ALICE))).param("month", "2026-02"))
                 .andExpect(jsonPath("$.cards[?(@.type == 'BUDGET_REACHED')].severity").value(hasItem("CRITICAL")))
                 .andExpect(jsonPath("$.cards[?(@.type == 'BUDGET_REACHED')].referenceAmount").value(hasItem("150.00")));
+        mvc.perform(get("/api/v1/budgets").with(jwt().jwt(token -> token.subject(ALICE))).param("month", "2026-02"))
+                .andExpect(jsonPath("$.total.alertThresholdPercent").value(100));
     }
 
     @Test
@@ -84,6 +95,9 @@ class InsightControllerTests {
                 .andExpect(jsonPath("$.cards[0].type").value("BUDGET_NEAR_LIMIT"))
                 .andExpect(jsonPath("$.cards[0].currentAmount").value("80.00"))
                 .andExpect(jsonPath("$.cards[0].referenceAmount").value("100.00"));
+        expense(ALICE, alice, "10", "2026-05-31");
+        mvc.perform(get("/api/v1/budgets").with(jwt().jwt(token -> token.subject(ALICE))).param("month", "2026-05"))
+                .andExpect(jsonPath("$.categories[0].values.alertThresholdPercent").value(90));
         mvc.perform(get("/api/v1/insights").with(jwt().jwt(token -> token.subject(BOB))).param("month", "2026-05"))
                 .andExpect(jsonPath("$.cards").isEmpty());
         mvc.perform(get("/api/v1/insights").with(jwt().jwt(token -> token.subject(ALICE))).param("month", "bad"))

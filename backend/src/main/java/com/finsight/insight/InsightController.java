@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import com.finsight.budget.BudgetStore;
+import com.finsight.budget.BudgetAlertThreshold;
 import com.finsight.dashboard.DashboardStore;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,7 +26,6 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/v1/insights")
 public class InsightController {
     private static final BigDecimal SPENDING_INCREASE_RATIO = new BigDecimal("1.20");
-    private static final BigDecimal BUDGET_WARNING_RATIO = new BigDecimal("0.80");
     private final DashboardStore dashboard;
     private final BudgetStore budgets;
 
@@ -69,15 +69,16 @@ public class InsightController {
 
     private static void addBudgetCard(List<InsightCard> cards, YearMonth period, String category,
                                       BigDecimal spent, BigDecimal limit) {
-        if (spent.compareTo(limit.multiply(BUDGET_WARNING_RATIO)) < 0) return;
-        boolean exceeded = spent.compareTo(limit) >= 0;
+        int threshold = BudgetAlertThreshold.highest(spent, limit);
+        if (threshold == 0) return;
+        boolean exceeded = threshold == 100;
         String subject = category == null ? "Ngân sách tổng" : "Ngân sách " + category;
         cards.add(new InsightCard(exceeded ? "BUDGET_REACHED" : "BUDGET_NEAR_LIMIT",
                 exceeded ? subject + " đã đạt hạn mức" : subject + " sắp đạt hạn mức",
                 subject + " tháng " + period + " đã dùng " + spent.toPlainString() + " / "
-                        + limit.toPlainString() + " VND. Ngưỡng cảnh báo: 80%; đạt hạn mức: 100%.",
+                        + limit.toPlainString() + " VND. Đã đạt ngưỡng " + threshold + "%.",
                 exceeded ? "CRITICAL" : "WARNING", period.toString(), spent.toPlainString(),
-                limit.toPlainString(), exceeded ? "100" : "80"));
+                limit.toPlainString(), Integer.toString(threshold)));
     }
 
     private static YearMonth parseMonth(String month) {

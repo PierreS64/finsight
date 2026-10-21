@@ -1,5 +1,7 @@
 package com.finsight.budget;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -9,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -27,6 +30,18 @@ class BudgetControllerTests {
     private static final String SALARY = "00000000-0000-4000-8000-000000000101";
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
+
+    @Test
+    void alertThresholdUsesExactBoundariesAndHighestLevel() {
+        BigDecimal limit = new BigDecimal("100.00");
+        assertEquals(0, BudgetAlertThreshold.highest(new BigDecimal("79.99"), limit));
+        assertEquals(80, BudgetAlertThreshold.highest(new BigDecimal("80.00"), limit));
+        assertEquals(80, BudgetAlertThreshold.highest(new BigDecimal("89.99"), limit));
+        assertEquals(90, BudgetAlertThreshold.highest(new BigDecimal("90.00"), limit));
+        assertEquals(100, BudgetAlertThreshold.highest(new BigDecimal("100.00"), limit));
+        assertEquals(100, BudgetAlertThreshold.highest(new BigDecimal("120.00"), limit));
+        assertEquals(0, BudgetAlertThreshold.highest(BigDecimal.ONE, BigDecimal.ZERO));
+    }
 
     private String account(String owner, String name) throws Exception {
         String body = mvc.perform(post("/api/v1/accounts").with(jwt().jwt(token -> token.subject(owner)))

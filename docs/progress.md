@@ -45,6 +45,7 @@
 - FNS-22: Added a read-only What-if API and web/Android dashboard forms. A signed expense adjustment and optional hypothetical total-budget limit produce projected expense, account balance, budget remaining, usage, and warnings for negative balance or nearing/exceeding budget. Scenarios exist only in UI memory and API responses; neither transactions nor budgets are written. Exact decimal validation rejects invalid precision, nonpositive limits, and projected expense below zero.
 - FNS-23 partial: Documented current endpoint, error, pagination, money, migration, JWT/owner-scoping, and review conventions in `docs/api-conventions.md`. Reviewed the security configuration and owner-scoped integration tests. No pull request exists yet for the PR review/merge criterion; leave this Jira task open until there is one to review.
 - FNS-26: Added owner-scoped chart API and web/Android dashboard bars for expense composition by category and income/expense over time. Week mode splits the selected month at Monday and month boundaries; month mode shows six months ending at the selected month. Values and category shares come from exact decimal aggregates, while bar widths use integral minor units in the clients. Empty periods show explanatory states.
+- FNS-37: Unified budget alert thresholds at 80%, 90%, and 100% for total and category budgets. The API returns the highest reached threshold per budget using exact decimal comparisons; insight cards and web/Android budget screens display that level without multiple cards for the same budget. Alerts update from current stored expenses and limits whenever those views reload. Income and transfers do not count toward spend.
 
 ## In progress / blocked
 
@@ -71,6 +72,7 @@
 - FNS-22 verification: Backend verify passed 30 tests, including 0, negative and positive adjustments, exact decimal results, 80% and over-limit alerts, owner isolation, invalid input, no authentication, and saved dashboard values unchanged after simulations. Web lint/build and Android TypeScript/Expo lint passed. The authenticated simulator UI and real Supabase token path have not yet been visually checked; no scenario was submitted against the real project.
 - FNS-23 verification: Inspected Spring Security configuration, JWT issuer/JWKS/audience settings, migration file inventory, and existing owner-isolation tests. The FNS-22 backend verify run passed 30 tests. No PR review or real-token test was performed for this documentation milestone.
 - FNS-26 verification: Backend verify passed 32 tests after isolating chart-test user IDs from other H2 tests. The new tests cover leap-day and Monday/month bucket boundaries, exact category and income/expense sums, owner isolation, empty periods, invalid granularity/month, and missing auth. Web lint/build and Android TypeScript/Expo lint passed. The authenticated chart screens and real Supabase token path have not yet been visually checked.
+- FNS-37 verification: Backend verify passed 33 tests, including exact 79.99/80/89.99/90/100% boundaries, overrun, owner isolation, and total/category response thresholds. Web lint/build and Android TypeScript/Expo lint passed. The authenticated warning UI has not yet been visually checked.
 
 ## Decisions
 
@@ -82,4 +84,4 @@ The private `origin` remote is `https://github.com/PierreS64/finsight.git`. `mai
 
 ## Next
 
-Continue with remaining assigned features including spending trends, recurring transactions, forecast, and alerts; return to FNS-23 when a PR is available for review. Keep each completed feature in a separate commit for review.
+Continue with remaining assigned features including spending trends, recurring transactions, and forecast; return to FNS-23 when a PR is available for review. Keep each completed feature in a separate commit for review.
