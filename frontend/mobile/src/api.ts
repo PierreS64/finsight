@@ -21,6 +21,7 @@ export type Insights = { month: string; cards: InsightCard[] };
 export type SpendingExplanation = { month: string; previousMonth: string; currentTotal: string; previousTotal: string; changeAmount: string; categories: { categoryId: string; categoryName: string; currentAmount: string; previousAmount: string; changeAmount: string; contributionPercent: string | null }[]; calculationRule: string };
 export type SpendingProfile = { month: string; elapsedDays: number; income: string; expense: string; savingsRatePercent: string | null; averageDailyExpense: string | null; stabilityScore: string | null; topExpenseCategory: { categoryId: string; categoryName: string; amount: string } | null; trend: 'INCREASE' | 'DECREASE' | 'STABLE' | 'INSUFFICIENT_DATA'; trendPercent: string | null; previousMonth: string; calculationRule: string };
 export type WhatIfScenario = { month: string; actualExpense: string; expenseAdjustment: string; projectedExpense: string; actualBalance: string; projectedBalance: string; savedBudgetLimit: string | null; assumedBudgetLimit: string | null; projectedBudgetRemaining: string | null; usedPercent: string | null; alerts: ('NEGATIVE_BALANCE' | 'OVER_BUDGET' | 'NEAR_BUDGET')[]; calculationRule: string };
+export type Charts = { month: string; granularity: 'week' | 'month'; incomeTotal: string; expenseTotal: string; categories: { categoryId: string; categoryName: string; amount: string; percent: string }[]; buckets: { from: string; to: string; income: string; expense: string }[]; calculationRule: string };
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
@@ -209,4 +210,11 @@ export async function simulateWhatIf(session: Session, month: string, expenseAdj
     ? 'Kịch bản không hợp lệ: chi dự kiến không được âm và hạn mức phải lớn hơn 0.'
     : `Không tính được kịch bản (HTTP ${response.status}).`);
   return (await response.json()) as WhatIfScenario;
+}
+
+export async function getCharts(session: Session, month: string, granularity: 'week' | 'month', signal?: AbortSignal): Promise<Charts> {
+  const response = await fetch(`${apiBase}/api/v1/charts?month=${month}&granularity=${granularity}`,
+    { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được biểu đồ (HTTP ${response.status}).`);
+  return (await response.json()) as Charts;
 }
