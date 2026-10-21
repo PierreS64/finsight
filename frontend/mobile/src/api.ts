@@ -28,6 +28,7 @@ export type ExpenseForecast = { month: string; elapsedDays: number; remainingDay
 export type RecurringRule = { id: string; accountId: string; categoryId: string; name: string; kind: CategoryType; amount: string; cadence: 'WEEKLY' | 'MONTHLY'; nextDueOn: string; active: boolean; note: string | null };
 export type RecurringRuleInput = Omit<RecurringRule, 'id'>;
 export type UpcomingExpenses = { from: string; to: string; total: string; count: number; items: { ruleId: string; name: string; amount: string; dueOn: string; overdue: boolean }[]; calculationRule: string };
+export type SafeToSpend = { month: string; remainingDays: number; budgetLimit: string | null; spent: string; budgetRemaining: string | null; upcomingExpense: string; availableAfterReservations: string | null; safePerDay: string | null; status: 'NO_BUDGET' | 'BUDGET_EXHAUSTED' | 'UPCOMING_EXCEEDS_BUDGET' | 'AVAILABLE'; calculationRule: string };
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
@@ -268,4 +269,11 @@ export async function getUpcomingExpenses(session: Session, from: string, to: st
     { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
   if (!response.ok) throw new Error(response.status === 400 ? 'Chọn khoảng ngày hợp lệ, tối đa 366 ngày.' : `Không tải được khoản đến hạn (HTTP ${response.status}).`);
   return (await response.json()) as UpcomingExpenses;
+}
+
+export async function getSafeToSpend(session: Session, signal?: AbortSignal): Promise<SafeToSpend> {
+  const response = await fetch(`${apiBase}/api/v1/safe-to-spend`,
+    { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được mức chi an toàn (HTTP ${response.status}).`);
+  return (await response.json()) as SafeToSpend;
 }

@@ -50,6 +50,7 @@
 - FNS-32: Added owner-scoped current-month expense forecast API and web/Android dashboard cards. The forecast extends average recorded expense per elapsed calendar day to remaining days using exact decimal arithmetic. It labels confidence from elapsed and active spending days; fewer than three elapsed days, fewer than two spending days, or no expense gives an explicit insufficient-data result. Day-zero-spend gaps remain in the denominator. The UI distinguishes expected remaining expense from safe-to-spend money.
 - FNS-30: Added owner-scoped weekly/monthly recurring rules with account, category, amount, next due date, and pause state. Flyway V8 records each processed occurrence with a unique rule/date key. Web and Android can create, edit, pause/resume, and explicitly process due periods; processing writes transactions once, with a 52-period catch-up limit. Monthly anchors preserve end-of-month and leap-year behavior. There is no background scheduler yet.
 - FNS-33: Added an owner-scoped Upcoming Expenses API and web/Android dashboard cards. A selectable inclusive date range shows active, unprocessed expense occurrences, overdue labels, exact total, and a 366-day range limit. Paused rules, income rules, already recorded occurrences, and other owners are excluded; dates are generated from weekly/monthly anchors including month ends.
+- FNS-34: Added owner-scoped Safe-to-Spend API and web/Android dashboard cards. The current-month total budget minus recorded expense and unprocessed recurring expense through month end is divided across remaining calendar days including today, rounded down to cents and floored at zero. No total budget gives an explicit unavailable state; exhausted budgets cannot yield a positive daily amount. When a scheduled expense becomes a transaction, it moves from reservation to recorded expense instead of being deducted twice.
 
 ## In progress / blocked
 
@@ -81,6 +82,7 @@
 - FNS-32 verification: Backend verify passed 37 tests, including leap February, last day of month, sparse/zero data, exact projected money, owner isolation, and missing auth. Web lint/build and Android TypeScript/Expo lint passed before final wording-only UI change. The authenticated forecast cards and real Supabase token path have not yet been visually checked.
 - FNS-30 verification: Backend verify passed 39 tests (0 failures/errors), including explicit/idempotent processing, owner isolation, pause, category mismatch, unauthenticated denial, and monthly/weekly date boundaries. Web lint/build and Android TypeScript/Expo lint passed. Flyway V8 migrated the real Supabase project; the restarted API returned health 200 and unauthenticated recurring list 401. Authenticated recurring screens have not yet been visually checked; no recurring transaction was created in the real user account.
 - FNS-33 verification: Backend verify passed 41 tests (0 failures/errors), including overdue end-of-month/leap dates, exact total, owner isolation, paused rules, processed occurrence exclusion, invalid range, and missing auth. Web lint/build and Android TypeScript/Expo lint passed. The restarted real Supabase-backed API returned health 200 and unauthenticated upcoming expenses 401. Authenticated upcoming-expense cards have not yet been visually checked; no real user financial data was changed.
+- FNS-34 verification: Backend verify passed 43 tests (0 failures/errors), including exact daily division, reservation-to-transaction conversion without double subtraction, missing budget, budget overrun, owner isolation, last-day/leap-February count, and missing auth. Web lint/build and Android TypeScript/Expo lint passed. The restarted real Supabase-backed API returned health 200 and unauthenticated safe-to-spend 401. Authenticated safe-to-spend cards have not yet been visually checked; no real user financial data was changed.
 
 ## Decisions
 
@@ -92,4 +94,4 @@ The private `origin` remote is `https://github.com/PierreS64/finsight.git`. `mai
 
 ## Next
 
-Continue with safe-to-spend and remaining assigned features; return to FNS-23 when a PR is available for review. Keep each completed feature in a separate commit for review.
+Continue with receipt OCR, account lifecycle, and remaining assigned features; return to FNS-23 when a PR is available for review. Keep each completed feature in a separate commit for review.

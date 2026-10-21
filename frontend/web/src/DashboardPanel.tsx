@@ -8,6 +8,7 @@ import ChartsPanel from "./ChartsPanel";
 import SpendingTrendsPanel from "./SpendingTrendsPanel";
 import ExpenseForecastPanel from "./ExpenseForecastPanel";
 import UpcomingExpensesPanel from "./UpcomingExpensesPanel";
+import SafeToSpendPanel from "./SafeToSpendPanel";
 import "./DashboardPanel.css";
 
 type Dashboard = { month: string; accountCount: number; transactionCount: number; totalBalance: string; income: string; expense: string; netFlow: string; budget: { limitAmount: string; remaining: string; usedPercent: string } | null };
@@ -90,6 +91,7 @@ export default function DashboardPanel({ session, displayName, accounts, account
     <SpendingTrendsPanel session={session} month={month} />
     {month === currentMonth() && <ExpenseForecastPanel session={session} />}
     <UpcomingExpensesPanel session={session} />
+    <SafeToSpendPanel session={session} />
     <WhatIfPanel session={session} month={month} />
     {dashboard && dashboard.accountCount === 0 && dashboard.transactionCount === 0 && <div className="surface-card dashboard-empty"><h2>Chưa có dữ liệu tài chính</h2><p>Hãy thêm tài khoản và giao dịch đầu tiên để xem tổng quan tháng.</p><button className="button-primary" onClick={() => onNavigate("accounts")}>Thêm tài khoản</button></div>}
     {accountsError && <p className="inline-error" role="alert">{accountsError}</p>}
