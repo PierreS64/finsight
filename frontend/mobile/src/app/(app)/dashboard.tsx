@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { getAccounts, getDashboard, getInsights, getProfile, type Account, type DashboardSummary, type Insights } from '../../api';
+import { getAccounts, getDashboard, getInsights, getProfile, getSpendingExplanation, type Account, type DashboardSummary, type Insights, type SpendingExplanation } from '../../api';
 import { Brand, Card, Page, PrimaryButton, Kicker, common } from '../../components/Ui';
 import { formatVnd } from '../../money';
 import { useSession } from '../../session';
@@ -16,6 +16,8 @@ export default function Dashboard() {
   const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
   const [insights, setInsights] = useState<Insights | null>(null);
   const [insightError, setInsightError] = useState('');
+  const [explanation, setExplanation] = useState<SpendingExplanation | null>(null);
+  const [explanationError, setExplanationError] = useState('');
   const [month, setMonth] = useState(currentMonth);
   const [monthInput, setMonthInput] = useState(currentMonth);
   const [name, setName] = useState('');
@@ -24,13 +26,16 @@ export default function Dashboard() {
   useFocusEffect(useCallback(() => {
     if (!session) return;
     const controller = new AbortController();
-    setLoaded(false); setError(''); setInsights(null); setInsightError('');
+    setLoaded(false); setError(''); setInsights(null); setInsightError(''); setExplanation(null); setExplanationError('');
     Promise.all([getAccounts(session, controller.signal), getProfile(session, controller.signal), getDashboard(session, month, controller.signal)])
       .then(([foundAccounts, profile, summary]) => { setAccounts(foundAccounts); setDashboard(summary); setName(profile?.displayName || String(session.user.user_metadata?.display_name || '')); setLoaded(true); })
       .catch((reason: unknown) => { if (!controller.signal.aborted) { setError(reason instanceof Error ? reason.message : 'Không thể tải dữ liệu.'); setLoaded(true); } });
     getInsights(session, month, controller.signal)
       .then(setInsights)
       .catch((reason: unknown) => { if (!controller.signal.aborted) setInsightError(reason instanceof Error ? reason.message : 'Không tải được insight.'); });
+    getSpendingExplanation(session, month, controller.signal)
+      .then(setExplanation)
+      .catch((reason: unknown) => { if (!controller.signal.aborted) setExplanationError(reason instanceof Error ? reason.message : 'Không tải được giải thích chi tiêu.'); });
     return () => controller.abort();
   }, [session, month]));
   function viewMonth() {
@@ -48,6 +53,10 @@ export default function Dashboard() {
     {!!insightError && <Text accessibilityRole="alert" style={common.error}>{insightError}</Text>}
     {!insights && !insightError && <Text style={common.helper}>Đang tính insight...</Text>}
     {insights && (insights.cards.length ? insights.cards.map((card, index) => <Card key={`${card.type}-${index}`} style={[styles.insightCard, card.severity === 'CRITICAL' && styles.criticalCard]}><Kicker>{card.severity === 'CRITICAL' ? 'CẦN CHÚ Ý' : 'CẢNH BÁO'}</Kicker><Text style={styles.insightTitle}>{card.title}</Text><Text style={styles.insightText}>{card.content}</Text><Text style={common.helper}>Kỳ {card.period} · Ngưỡng {card.thresholdPercent}%</Text></Card>) : <Card style={styles.noInsights}><Text style={styles.emptyTitle}>Chưa có insight cho tháng này</Text><Text style={common.helper}>Thẻ sẽ xuất hiện khi chi tiêu tăng rõ rệt hoặc ngân sách tiến gần hạn mức.</Text></Card>)}
+    <Text style={[common.sectionTitle, styles.section]}>Vì sao chi tiêu thay đổi?</Text>
+    {!!explanationError && <Text accessibilityRole="alert" style={common.error}>{explanationError}</Text>}
+    {!explanation && !explanationError && <Text style={common.helper}>Đang so sánh hai tháng...</Text>}
+    {explanation && <Card style={styles.explanationCard}><Text style={common.helper}>So sánh toàn bộ tháng {explanation.month} với {explanation.previousMonth}. Khoản thu/hoàn tiền ghi là thu nhập và chuyển khoản không tính vào chi tiêu.</Text><View style={styles.explanationTotals}><View><Text style={styles.explanationLabel}>THÁNG TRƯỚC</Text><Text style={styles.explanationAmount}>{formatVnd(explanation.previousTotal)}</Text></View><View><Text style={styles.explanationLabel}>THÁNG ĐANG XEM</Text><Text style={styles.explanationAmount}>{formatVnd(explanation.currentTotal)}</Text></View></View><Text style={styles.explanationChange}>Chênh lệch: {formatVnd(explanation.changeAmount)}</Text>{explanation.categories.length ? explanation.categories.map((item) => <View key={item.categoryId} style={styles.explanationRow}><View style={{ flex: 1 }}><Text style={styles.explanationName}>{item.categoryName}</Text><Text style={common.helper}>{formatVnd(item.previousAmount)} → {formatVnd(item.currentAmount)}</Text></View><View style={styles.explanationRight}><Text style={styles.explanationName}>{formatVnd(item.changeAmount)}</Text><Text style={common.helper}>{item.contributionPercent === null ? 'Hai chiều bù trừ' : `${item.contributionPercent}% ròng`}</Text></View></View>) : <Text style={common.helper}>Chưa có thay đổi chi tiêu theo danh mục.</Text>}<Text style={styles.explanationFoot}>Tổng chênh lệch các danh mục bằng chênh lệch hai tháng. Tỷ lệ có thể vượt 100% khi các danh mục bù trừ nhau.</Text></Card>}
     {dashboard && dashboard.accountCount === 0 && dashboard.transactionCount === 0 && <Card style={styles.emptySummary}><Text style={styles.emptyTitle}>Chưa có dữ liệu tài chính</Text><Text style={common.helper}>Thêm tài khoản và giao dịch đầu tiên để xem tổng quan tháng.</Text></Card>}
     <Text style={[common.sectionTitle, styles.section]}>Bắt đầu từ đây</Text><View style={styles.quickRow}><Pressable accessibilityRole="button" onPress={() => router.replace('/accounts')} style={styles.quick}><View style={styles.quickIcon}><Ionicons name="wallet-outline" size={23} color={color.greenDark} /></View><Text style={styles.quickLabel}>Tài khoản</Text></Pressable><Pressable accessibilityRole="button" onPress={() => router.replace('/transactions')} style={styles.quick}><View style={[styles.quickIcon, { backgroundColor: color.blueLight }]}><Ionicons name="receipt-outline" size={23} color={color.blue} /></View><Text style={styles.quickLabel}>Giao dịch</Text></Pressable><Pressable accessibilityRole="button" onPress={() => router.replace('/budgets')} style={styles.quick}><View style={[styles.quickIcon, { backgroundColor: '#f1f5f9' }]}><Ionicons name="pie-chart-outline" size={23} color={color.navy} /></View><Text style={styles.quickLabel}>Ngân sách</Text></Pressable></View>
     <Card style={styles.notice}><View style={styles.noticeIcon}><Ionicons name="information-circle-outline" size={23} color={color.greenDark} /></View><View style={{ flex: 1 }}><Kicker>DỮ LIỆU MINH BẠCH</Kicker><Text style={styles.noticeText}>Chỉ số tháng tính từ giao dịch bạn đã nhập. Số dư hiện tại tính từ mọi giao dịch đã lưu.</Text></View></Card>
@@ -66,4 +75,5 @@ const styles = StyleSheet.create({
   notice: { backgroundColor: '#e4f6f2', flexDirection: 'row', gap: 12, marginBottom: 24 }, noticeIcon: { width: 38, height: 38, backgroundColor: '#c8ede2', borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, noticeText: { color: color.navy, fontSize: 12, lineHeight: 18, marginTop: 5 }, sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }, seeAll: { color: color.greenDark, fontWeight: '700', fontSize: 12 },
   accountRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 10 }, rowDivider: { borderTopWidth: 1, borderColor: color.border }, accountIcon: { width: 40, height: 40, backgroundColor: color.greenLight, borderRadius: 13, alignItems: 'center', justifyContent: 'center' }, accountName: { fontSize: 13, fontWeight: '700', color: color.navy }, accountCaption: { fontSize: 10, color: color.muted, marginTop: 3 }, accountAmount: { fontSize: 12, color: color.navy, fontWeight: '800', fontVariant: ['tabular-nums'] }, empty: { alignItems: 'center', paddingVertical: 17, gap: 9 }, emptyTitle: { color: color.navy, fontSize: 16, fontWeight: '800' },
   insightCard: { backgroundColor: '#f0fdf4', borderColor: '#a7f3d0', gap: 8, marginBottom: 10 }, criticalCard: { backgroundColor: '#fef2f2', borderColor: '#fecaca' }, insightTitle: { color: color.navy, fontSize: 16, fontWeight: '800' }, insightText: { color: color.navy, fontSize: 12, lineHeight: 19 }, noInsights: { gap: 8, marginBottom: 12 },
+  explanationCard: { gap: 12, marginBottom: 15 }, explanationTotals: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 }, explanationLabel: { color: color.muted, fontSize: 10, fontWeight: '800' }, explanationAmount: { color: color.navy, fontSize: 15, fontWeight: '800', marginTop: 5 }, explanationChange: { color: color.greenDark, fontSize: 15, fontWeight: '800' }, explanationRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 10, borderTopWidth: 1, borderColor: color.border, paddingTop: 10 }, explanationName: { color: color.navy, fontSize: 12, fontWeight: '800' }, explanationRight: { alignItems: 'flex-end' }, explanationFoot: { color: color.muted, fontSize: 11, lineHeight: 16 },
 });

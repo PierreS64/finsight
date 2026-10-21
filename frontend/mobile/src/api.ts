@@ -18,6 +18,7 @@ export type BudgetSummary = { month: string; totalSpent: string; total: BudgetLi
 export type DashboardSummary = { month: string; accountCount: number; transactionCount: number; totalBalance: string; income: string; expense: string; netFlow: string; budget: { limitAmount: string; remaining: string; usedPercent: string } | null };
 export type InsightCard = { type: string; title: string; content: string; severity: 'WARNING' | 'CRITICAL'; period: string; currentAmount: string; referenceAmount: string; thresholdPercent: string };
 export type Insights = { month: string; cards: InsightCard[] };
+export type SpendingExplanation = { month: string; previousMonth: string; currentTotal: string; previousTotal: string; changeAmount: string; categories: { categoryId: string; categoryName: string; currentAmount: string; previousAmount: string; changeAmount: string; contributionPercent: string | null }[]; calculationRule: string };
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
@@ -180,4 +181,11 @@ export async function getInsights(session: Session, month: string, signal?: Abor
     { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
   if (!response.ok) throw new Error(`Không tải được insight (HTTP ${response.status}).`);
   return (await response.json()) as Insights;
+}
+
+export async function getSpendingExplanation(session: Session, month: string, signal?: AbortSignal): Promise<SpendingExplanation> {
+  const response = await fetch(`${apiBase}/api/v1/spending-explanation?month=${month}`,
+    { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được giải thích chi tiêu (HTTP ${response.status}).`);
+  return (await response.json()) as SpendingExplanation;
 }
