@@ -9,6 +9,8 @@ export type CategoryType = 'INCOME' | 'EXPENSE';
 export type CategoryIcon = 'wallet' | 'gift' | 'other' | 'food' | 'transport' | 'home' | 'shopping' | 'health' | 'education';
 export type Category = { id: string; name: string; categoryType: CategoryType; icon: CategoryIcon; isDefault: boolean };
 export type Transaction = { id: string; accountId: string; categoryId: string; kind: CategoryType; amount: string; occurredOn: string; note: string | null; hasReceipt: boolean };
+export type TransactionHistoryFilters = { search: string; from: string; to: string; month: string; kind: CategoryType | ''; categoryId: string; sort: 'asc' | 'desc' };
+export type TransactionHistory = { items: Transaction[]; page: number; size: number; totalElements: number; totalPages: number };
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
@@ -60,6 +62,18 @@ export async function getTransactions(session: Session, signal?: AbortSignal): P
   const response = await fetch(`${apiBase}/api/v1/transactions`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
   if (!response.ok) throw new Error(`Không tải được giao dịch (HTTP ${response.status}).`);
   return (await response.json()) as Transaction[];
+}
+
+export async function getTransactionHistory(session: Session, filters: TransactionHistoryFilters,
+                                            page: number, signal?: AbortSignal): Promise<TransactionHistory> {
+  const params = new URLSearchParams({ page: String(page), size: '10', sort: filters.sort });
+  for (const key of ['search', 'from', 'to', 'month', 'kind', 'categoryId'] as const) {
+    if (filters[key].trim()) params.set(key, filters[key].trim());
+  }
+  const response = await fetch(`${apiBase}/api/v1/transactions/history?${params}`,
+    { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được lịch sử (HTTP ${response.status}).`);
+  return (await response.json()) as TransactionHistory;
 }
 
 export async function saveTransaction(session: Session, transaction: { accountId: string; categoryId: string; kind: CategoryType; amount: string; occurredOn: string; note: string | null }, id?: string): Promise<Transaction> {

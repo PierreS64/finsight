@@ -3,8 +3,12 @@ package com.finsight.transaction;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeParseException;
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import com.finsight.account.FinancialAccount;
 import com.finsight.account.FinancialAccountRepository;
@@ -15,6 +19,13 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Subquery;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +39,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -57,6 +69,68 @@ public class FinancialTransactionController {
     public List<TransactionResponse> list(@AuthenticationPrincipal Jwt jwt) {
         return transactions.findAllByOwnerUserIdOrderByOccurredOnDescCreatedAtDescIdDesc(userId(jwt))
                 .stream().map(this::response).toList();
+    }
+
+    @GetMapping("/history")
+    @Transactional(readOnly = true)
+    public HistoryResponse history(@AuthenticationPrincipal Jwt jwt,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String month,
+            @RequestParam(required = false) FinancialTransaction.Kind kind,
+            @RequestParam(required = false) UUID categoryId,
+            @RequestParam(defaultValue = "desc") String sort,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        if (page < 0 || size < 1 || size > 50 || (search != null && search.length() > 100))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid history page or search");
+        if (from != null && to != null && from.isAfter(to))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start date must precede end date");
+        YearMonth parsedMonth = null;
+        if (month != null && !month.isBlank()) {
+            try { parsedMonth = YearMonth.parse(month); }
+            catch (DateTimeParseException ex) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Month must have format YYYY-MM");
+            }
+        }
+        Sort.Direction direction;
+        if ("asc".equalsIgnoreCase(sort)) direction = Sort.Direction.ASC;
+        else if ("desc".equalsIgnoreCase(sort)) direction = Sort.Direction.DESC;
+        else throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Sort must be asc or desc");
+        UUID owner = userId(jwt);
+        YearMonth finalMonth = parsedMonth;
+        String term = search == null || search.isBlank() ? null : "%" + escapeLike(search.trim().toLowerCase(Locale.ROOT)) + "%";
+        Specification<FinancialTransaction> filters = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("ownerUserId"), owner));
+            if (from != null) predicates.add(cb.greaterThanOrEqualTo(root.get("occurredOn"), from));
+            if (to != null) predicates.add(cb.lessThanOrEqualTo(root.get("occurredOn"), to));
+            if (finalMonth != null) predicates.add(cb.between(root.get("occurredOn"), finalMonth.atDay(1), finalMonth.atEndOfMonth()));
+            if (kind != null) predicates.add(cb.equal(root.get("kind"), kind));
+            if (categoryId != null) predicates.add(cb.equal(root.get("categoryId"), categoryId));
+            if (term != null) {
+                Subquery<UUID> category = query.subquery(UUID.class);
+                var categoryRoot = category.from(Category.class);
+                category.select(categoryRoot.get("id")).where(cb.equal(categoryRoot.get("id"), root.get("categoryId")),
+                        cb.like(cb.lower(categoryRoot.get("name")), term, '\\'));
+                Subquery<UUID> account = query.subquery(UUID.class);
+                var accountRoot = account.from(FinancialAccount.class);
+                account.select(accountRoot.get("id")).where(cb.equal(accountRoot.get("id"), root.get("accountId")),
+                        cb.like(cb.lower(accountRoot.get("name")), term, '\\'));
+                predicates.add(cb.or(cb.like(cb.lower(root.get("note")), term, '\\'),
+                        cb.exists(category), cb.exists(account)));
+            }
+            return cb.and(predicates.toArray(Predicate[]::new));
+        };
+        Page<FinancialTransaction> result = transactions.findAll(filters,
+                PageRequest.of(page, size, Sort.by(direction, "occurredOn", "createdAt", "id")));
+        return new HistoryResponse(result.getContent().stream().map(this::response).toList(), page, size,
+                result.getTotalElements(), result.getTotalPages());
+    }
+
+    private static String escapeLike(String term) {
+        return term.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     @GetMapping("/{id}")
@@ -190,4 +264,7 @@ public class FinancialTransactionController {
                     transaction.getNote(), transaction.getCreatedAt(), hasReceipt);
         }
     }
+
+    public record HistoryResponse(List<TransactionResponse> items, int page, int size,
+                                  long totalElements, int totalPages) {}
 }

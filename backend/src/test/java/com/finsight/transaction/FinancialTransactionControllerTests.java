@@ -180,4 +180,58 @@ class FinancialTransactionControllerTests {
         mvc.perform(get("/api/v1/transactions/{id}/receipt", id).with(jwt().jwt(token -> token.subject(ALICE))))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    void historyCombinesFiltersKeepsPageOrderAndExcludesOtherOwners() throws Exception {
+        String aliceAccount = account(ALICE, "History Alice");
+        String bobAccount = account(BOB, "History Bob");
+        for (String date : new String[] {"2026-02-28", "2026-03-01", "2026-03-01", "2026-03-31", "2026-04-01"}) {
+            mvc.perform(post("/api/v1/transactions").with(jwt().jwt(token -> token.subject(ALICE)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(body(aliceAccount, FOOD, "EXPENSE", "10").replace("2026-10-21", date)
+                            .replace("Thử nghiệm", date.equals("2026-03-31") ? "Coffee" : "Khác")))
+                    .andExpect(status().isCreated());
+        }
+        mvc.perform(post("/api/v1/transactions").with(jwt().jwt(token -> token.subject(BOB)))
+                        .contentType(MediaType.APPLICATION_JSON).content(body(bobAccount, FOOD, "EXPENSE", "99")))
+                .andExpect(status().isCreated());
+        String firstPage = mvc.perform(get("/api/v1/transactions/history")
+                        .with(jwt().jwt(token -> token.subject(ALICE)))
+                        .param("month", "2026-03").param("kind", "EXPENSE").param("categoryId", FOOD)
+                        .param("size", "2").param("sort", "asc"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.items.length()").value(2))
+                .andExpect(jsonPath("$.items[0].occurredOn").value("2026-03-01"))
+                .andReturn().getResponse().getContentAsString();
+        String secondPage = mvc.perform(get("/api/v1/transactions/history")
+                        .with(jwt().jwt(token -> token.subject(ALICE)))
+                        .param("month", "2026-03").param("kind", "EXPENSE").param("categoryId", FOOD)
+                        .param("size", "2").param("page", "1").param("sort", "asc"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].occurredOn").value("2026-03-31"))
+                .andReturn().getResponse().getContentAsString();
+        var firstItems = json.readTree(firstPage).get("items");
+        var lastId = json.readTree(secondPage).get("items").get(0).get("id").asText();
+        org.junit.jupiter.api.Assertions.assertNotEquals(firstItems.get(0).get("id").asText(), firstItems.get(1).get("id").asText());
+        org.junit.jupiter.api.Assertions.assertNotEquals(firstItems.get(0).get("id").asText(), lastId);
+        org.junit.jupiter.api.Assertions.assertNotEquals(firstItems.get(1).get("id").asText(), lastId);
+        mvc.perform(get("/api/v1/transactions/history").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .param("search", "coffee").param("from", "2026-03-31").param("to", "2026-03-31"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1));
+        mvc.perform(get("/api/v1/transactions/history").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .param("search", "history alice"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(5));
+        mvc.perform(get("/api/v1/transactions/history").with(jwt().jwt(token -> token.subject(BOB))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1));
+        mvc.perform(get("/api/v1/transactions/history").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .param("page", "2").param("size", "2").param("month", "2026-03"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.items").isEmpty());
+        mvc.perform(get("/api/v1/transactions/history").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .param("from", "2026-04-01").param("to", "2026-03-01"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/transactions/history").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .param("size", "51"))
+                .andExpect(status().isBadRequest());
+    }
 }
