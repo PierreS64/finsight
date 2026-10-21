@@ -24,6 +24,7 @@ export type WhatIfScenario = { month: string; actualExpense: string; expenseAdju
 export type Charts = { month: string; granularity: 'week' | 'month'; incomeTotal: string; expenseTotal: string; categories: { categoryId: string; categoryName: string; amount: string; percent: string }[]; buckets: { from: string; to: string; income: string; expense: string }[]; calculationRule: string };
 export type TrendComparison = { from: string; to: string; previousFrom: string; previousTo: string; expense: string; previousExpense: string; changeAmount: string; changePercent: string | null; direction: 'INCREASE' | 'DECREASE' | 'STABLE' | 'INSUFFICIENT_DATA' };
 export type SpendingTrends = { month: string; week: TrendComparison; monthComparison: TrendComparison; calculationRule: string };
+export type ExpenseForecast = { month: string; elapsedDays: number; remainingDays: number; spendingDays: number; spent: string; averageDaily: string | null; projectedMonthEnd: string | null; expectedAdditional: string | null; confidence: 'HIGH' | 'MEDIUM' | 'LOW' | 'INSUFFICIENT_DATA'; calculationRule: string };
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
@@ -226,4 +227,11 @@ export async function getSpendingTrends(session: Session, month: string, signal?
     { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
   if (!response.ok) throw new Error(response.status === 400 ? 'Chỉ xem xu hướng đến tháng hiện tại.' : `Không tải được xu hướng (HTTP ${response.status}).`);
   return (await response.json()) as SpendingTrends;
+}
+
+export async function getExpenseForecast(session: Session, signal?: AbortSignal): Promise<ExpenseForecast> {
+  const response = await fetch(`${apiBase}/api/v1/expense-forecast`,
+    { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được dự báo (HTTP ${response.status}).`);
+  return (await response.json()) as ExpenseForecast;
 }
