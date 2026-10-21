@@ -4,6 +4,9 @@ const apiBase = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8086';
 export type AccountType = 'CASH' | 'BANK' | 'E_WALLET' | 'OTHER';
 export type Account = { id: string; name: string; accountType: AccountType; openingBalance: string; currencyCode: string };
 export type Profile = { userId: string; displayName: string | null; currencyCode: string };
+export type CategoryType = 'INCOME' | 'EXPENSE';
+export type CategoryIcon = 'wallet' | 'gift' | 'other' | 'food' | 'transport' | 'home' | 'shopping' | 'health' | 'education';
+export type Category = { id: string; name: string; categoryType: CategoryType; icon: CategoryIcon; isDefault: boolean };
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
@@ -28,4 +31,25 @@ export async function saveProfile(session: Session, displayName: string): Promis
   const response = await fetch(`${apiBase}/api/v1/profile`, { method: 'PUT', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ displayName }) });
   if (!response.ok) throw new Error(`Không lưu được hồ sơ (HTTP ${response.status}).`);
   return (await response.json()) as Profile;
+}
+
+export async function getCategories(session: Session, signal?: AbortSignal): Promise<Category[]> {
+  const response = await fetch(`${apiBase}/api/v1/categories`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được danh mục (HTTP ${response.status}).`);
+  return (await response.json()) as Category[];
+}
+
+export async function saveCategory(session: Session, category: { name: string; categoryType: CategoryType; icon: CategoryIcon }, id?: string): Promise<Category> {
+  const response = await fetch(`${apiBase}/api/v1/categories${id ? `/${id}` : ''}`, {
+    method: id ? 'PUT' : 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(category),
+  });
+  if (response.status === 409) throw new Error('Tên danh mục đã tồn tại trong loại được chọn.');
+  if (!response.ok) throw new Error(`Không lưu được danh mục (HTTP ${response.status}).`);
+  return (await response.json()) as Category;
+}
+
+export async function deleteCategory(session: Session, id: string): Promise<void> {
+  const response = await fetch(`${apiBase}/api/v1/categories/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
+  if (response.status === 409) throw new Error('Danh mục đang được giao dịch hoặc ngân sách sử dụng. Hãy đổi danh mục của các mục đó trước khi xóa.');
+  if (!response.ok) throw new Error(`Không xóa được danh mục (HTTP ${response.status}).`);
 }

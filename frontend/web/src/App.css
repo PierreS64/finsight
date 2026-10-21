@@ -4,3 +4,4 @@
 /* Keep the green dot inside the FinSight monogram. */
 .brand-mark{position:relative}
 .brand-mark span{position:absolute;right:6px;bottom:2px;font-size:16px;letter-spacing:0}
+.transaction-empty .button-primary{margin-right:9px;margin-bottom:9px}
