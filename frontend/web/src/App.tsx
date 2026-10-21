@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase } from "./supabase";
-import AuthPanel, { ProfilePanel } from "./AuthPanel";
+import { initialRecoveryRedirect, supabase } from "./supabase";
+import AuthPanel, { PasswordResetPanel, ProfilePanel } from "./AuthPanel";
 import AccountsPanel, { type Account } from "./AccountsPanel";
 import CategoriesPanel from "./CategoriesPanel";
 import TransactionsPanel from "./TransactionsPanel";
@@ -54,7 +54,7 @@ function Landing({ openAuth }: { openAuth: (mode: "signin" | "signup") => void }
   </div>;
 }
 
-function Workspace({ session, signOut }: { session: Session; signOut: () => Promise<void> }) {
+function Workspace({ session, signOut, signOutError }: { session: Session; signOut: () => Promise<void>; signOutError: string }) {
   const [page, setPage] = useState<Page>("overview");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountsLoaded, setAccountsLoaded] = useState(false);
@@ -89,6 +89,7 @@ function Workspace({ session, signOut }: { session: Session; signOut: () => Prom
     <aside className="workspace-sidebar"><Brand /><p className="sidebar-caption">KHÔNG GIAN CỦA BẠN</p><nav aria-label="Điều hướng ứng dụng">{nav.map((item) => <button key={item.id} className={page === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}</nav><div className="sidebar-bottom"><span className="sidebar-avatar">{(displayName || session.user.email || "F").slice(0, 1).toUpperCase()}</span><span><strong>{displayName || "Tài khoản FinSight"}</strong><small>{session.user.email}</small></span></div></aside>
     <div className="workspace-main"><header className="workspace-topbar"><div><span className="mobile-brand"><Brand /></span><small>FINSIGHT / {title.toUpperCase()}</small></div><div className="topbar-actions"><span className="data-badge"><span className="live-dot" /> Dữ liệu do bạn nhập</span><button className="button-quiet" onClick={signOut}>Đăng xuất</button></div></header>
       <main className="workspace-content">
+        {signOutError && <p className="inline-error" role="alert">{signOutError}</p>}
         {page === "overview" && <DashboardPanel session={session} displayName={displayName} accounts={accounts} accountsLoaded={accountsLoaded} accountsError={accountsError} onNavigate={setPage} />}
         {page === "accounts" && <><div className="page-heading"><p className="eyebrow">TÀI KHOẢN CỦA BẠN</p><h1>Quản lý tài khoản</h1><p>Tài khoản trong FinSight là bản ghi do bạn tự tạo, không liên kết ngân hàng.</p></div><AccountsPanel session={session} accounts={accounts} onCreated={(account) => setAccounts((current) => [...current, account])} /></>}
         {page === "transactions" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Giao dịch</h1><p>Ghi khoản thu, chi và xem lịch sử từ dữ liệu bạn tự nhập.</p><button className="button-outline" onClick={() => setPage("transfers")}>Chuyển khoản giữa tài khoản →</button><button className="button-outline" onClick={() => setPage("recurring")}>Giao dịch định kỳ →</button></div><TransactionsPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} onCategories={() => setPage("categories")} /></>}
@@ -106,6 +107,8 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(!!supabase);
   const [authMode, setAuthMode] = useState<"signin" | "signup" | null>(() => window.location.hash === "#account" || window.location.hash === "#login" ? "signin" : window.location.hash === "#register" ? "signup" : null);
+  const [recovering, setRecovering] = useState(() => initialRecoveryRedirect || sessionStorage.getItem("finsight-password-recovery") === "1");
+  const [signOutError, setSignOutError] = useState("");
   useEffect(() => {
     const syncHash = () => setAuthMode(window.location.hash === "#account" || window.location.hash === "#login" ? "signin" : window.location.hash === "#register" ? "signup" : null);
     window.addEventListener("hashchange", syncHash);
@@ -114,15 +117,29 @@ export default function App() {
   useEffect(() => {
     if (!supabase) return;
     const client = supabase;
-    const { data: { subscription } } = client.auth.onAuthStateChange((_event, next) => { setSession(next); setLoading(false); });
-    client.auth.getSession().then(({ data }) => { setSession(data.session); setLoading(false); });
-    return () => subscription.unsubscribe();
+    let active = true;
+    let authEventSeen = false;
+    const { data: { subscription } } = client.auth.onAuthStateChange((event, next) => {
+      if (!active) return;
+      authEventSeen = true;
+      if (event === "PASSWORD_RECOVERY") { sessionStorage.setItem("finsight-password-recovery", "1"); setRecovering(true); }
+      if (event === "SIGNED_OUT") { sessionStorage.removeItem("finsight-password-recovery"); setRecovering(false); }
+      setSession(next); setLoading(false);
+    });
+    client.auth.getSession().then(({ data }) => { if (active && !authEventSeen) { setSession(data.session); setLoading(false); } });
+    return () => { active = false; subscription.unsubscribe(); };
   }, []);
   function openAuth(mode: "signin" | "signup") { setAuthMode(mode); window.location.hash = mode === "signin" ? "account" : "register"; window.scrollTo(0, 0); }
   function closeAuth() { setAuthMode(null); window.location.hash = "top"; window.scrollTo(0, 0); }
-  async function signOut() { if (supabase) await supabase.auth.signOut(); setSession(null); setAuthMode("signin"); window.location.hash = "account"; }
+  async function signOut() {
+    if (!supabase) return;
+    const { error } = await supabase.auth.signOut();
+    if (error) { setSignOutError(error.message); return; }
+    setSignOutError(""); setSession(null); setAuthMode("signin"); window.location.hash = "account";
+  }
   if (loading) return <div className="loading-screen"><Brand /><p>Đang mở FinSight...</p></div>;
-  if (session) return <Workspace session={session} signOut={signOut} />;
+  if (recovering && session) return <PasswordResetPanel onFinished={() => setRecovering(false)} />;
+  if (session) return <Workspace session={session} signOut={signOut} signOutError={signOutError} />;
   if (authMode) return <AuthPanel key={authMode} initialMode={authMode} close={closeAuth} />;
   return <Landing openAuth={openAuth} />;
 }

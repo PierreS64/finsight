@@ -12,10 +12,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (!supabase) return;
     const client = supabase;
     let active = true;
+    let authEventSeen = false;
     const { data: { subscription } } = client.auth.onAuthStateChange((_event, next) => {
-      if (active) { setSession(next); setLoading(false); }
+      if (active) { authEventSeen = true; setSession(next); setLoading(false); }
     });
-    client.auth.getSession().then(({ data }) => { if (active) { setSession(data.session); setLoading(false); } });
+    client.auth.getSession().then(({ data }) => { if (active && !authEventSeen) { setSession(data.session); setLoading(false); } });
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
   return <SessionContext.Provider value={{ session, loading }}>{children}</SessionContext.Provider>;

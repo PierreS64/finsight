@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+export const initialRecoveryRedirect = new URLSearchParams(window.location.hash.replace(/^#/, "")).get("type") === "recovery";
 
 export const supabase =
   url && publishableKey

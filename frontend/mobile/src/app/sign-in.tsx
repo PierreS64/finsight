@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
+import * as Linking from 'expo-linking';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { supabase } from '../../supabase';
@@ -24,7 +25,7 @@ export default function SignIn() {
   async function resetPassword() {
     if (!supabase || !email.trim() || busy) { setMessage('Nhập email trước khi đặt lại mật khẩu.'); return; }
     setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: Linking.createURL('reset-password') });
     setMessage(error?.message ?? 'Nếu email đã đăng ký, bạn sẽ nhận hướng dẫn đặt lại mật khẩu.');
     setBusy(false);
   }
