@@ -29,6 +29,28 @@ export type RecurringRule = { id: string; accountId: string; categoryId: string;
 export type RecurringRuleInput = Omit<RecurringRule, 'id'>;
 export type UpcomingExpenses = { from: string; to: string; total: string; count: number; items: { ruleId: string; name: string; amount: string; dueOn: string; overdue: boolean }[]; calculationRule: string };
 export type SafeToSpend = { month: string; remainingDays: number; budgetLimit: string | null; spent: string; budgetRemaining: string | null; upcomingExpense: string; availableAfterReservations: string | null; safePerDay: string | null; status: 'NO_BUDGET' | 'BUDGET_EXHAUSTED' | 'UPCOMING_EXCEEDS_BUDGET' | 'AVAILABLE'; calculationRule: string };
+export type FinancialGoal = { id: string; name: string; targetAmount: string; savedAmount: string; remainingAmount: string; progressPercent: string; targetDate: string | null; note: string | null; achieved: boolean; overdue: boolean };
+export type FinancialGoalInput = Pick<FinancialGoal, 'name' | 'targetAmount' | 'savedAmount' | 'targetDate' | 'note'>;
+
+export async function getGoals(session: Session, signal?: AbortSignal): Promise<FinancialGoal[]> {
+  const response = await fetch(`${apiBase}/api/v1/goals`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được mục tiêu (HTTP ${response.status}).`);
+  return await response.json() as FinancialGoal[];
+}
+
+export async function saveGoal(session: Session, input: FinancialGoalInput, id?: string): Promise<FinancialGoal> {
+  const response = await fetch(`${apiBase}/api/v1/goals${id ? `/${id}` : ''}`, {
+    method: id ? 'PUT' : 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) throw new Error(`Không lưu được mục tiêu (HTTP ${response.status}).`);
+  return await response.json() as FinancialGoal;
+}
+
+export async function deleteGoal(session: Session, id: string): Promise<void> {
+  const response = await fetch(`${apiBase}/api/v1/goals/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
+  if (!response.ok) throw new Error(`Không xóa được mục tiêu (HTTP ${response.status}).`);
+}
 
 export async function getAccounts(session: Session, signal?: AbortSignal): Promise<Account[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });

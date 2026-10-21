@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { deleteBudget, getBudget, getCategories, saveBudget, type BudgetSummary, type Category } from '../../api';
@@ -77,7 +77,7 @@ export default function Budgets() {
 
   const expenseCategories = categories.filter((category) => category.categoryType === 'EXPENSE');
   return <Page><View style={styles.header}><Brand subtitle="NGÂN SÁCH" /><View style={styles.headerIcon}><Ionicons name="pie-chart-outline" size={22} color={color.greenDark} /></View></View>
-    <Text style={common.title}>Kế hoạch chi tiêu</Text><Text style={[common.subtitle, styles.intro]}>Đặt hạn mức tháng và theo dõi chi tiêu từ giao dịch đã ghi.</Text>
+    <Text style={common.title}>Kế hoạch chi tiêu</Text><Text style={[common.subtitle, styles.intro]}>Đặt hạn mức tháng và theo dõi chi tiêu từ giao dịch đã ghi.</Text><SecondaryButton onPress={() => router.push('/goals')}>Mục tiêu tiết kiệm →</SecondaryButton>
     <Card style={styles.monthCard}><Text style={common.label}>Tháng ngân sách (YYYY-MM)</Text><View style={styles.monthRow}><TextInput style={[common.input, styles.monthInput]} value={monthInput} onChangeText={setMonthInput} placeholder="2026-10" placeholderTextColor="#94a3b8" /><Pressable accessibilityRole="button" onPress={viewMonth} style={styles.monthButton}><Text style={styles.monthButtonText}>Xem</Text></Pressable></View></Card>
     {loading && <Text style={common.helper}>Đang tải ngân sách...</Text>}{!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}
     {budget && <><Card style={styles.totalCard}><Text style={styles.totalLabel}>CHI TIÊU TRONG THÁNG</Text><Text style={styles.totalValue}>{formatVnd(budget.totalSpent)}</Text><Text style={common.helper}>{budget.total ? `Hạn mức ${formatVnd(budget.total.limitAmount)}` : 'Chưa đặt hạn mức tổng cho tháng này'}</Text>{budget.total && <View style={styles.totalProgress}><View style={styles.line}><Text style={common.helper}>Đã dùng {budget.total.usedPercent}%</Text><Text style={[styles.remaining, budget.total.remaining.startsWith('-') && styles.over]}>{formatVnd(budget.total.remaining)}</Text></View><View style={styles.track}><View style={[styles.fill, { width: barWidth(budget.total.usedPercent) }]} /></View><Pressable accessibilityRole="button" onPress={() => remove()} disabled={busy}><Text style={styles.delete}>{confirmDelete === 'total' ? 'Xác nhận xóa hạn mức tổng' : 'Xóa hạn mức tổng'}</Text></Pressable></View>}</Card>

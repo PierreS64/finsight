@@ -15,12 +15,14 @@ This records the behavior implemented on `develop` as of 2026-10-21. Use it when
 - JSON uses camelCase. Return `201` after creation, `204` for successful deletion or receipt replacement, `400` for invalid input, `401` for missing/invalid authentication, `404` for missing or other-owner records, and `409` when a referenced category cannot be deleted. Current error bodies are Spring-generated; clients should branch on HTTP status, not parse a fixed error schema.
 - Month parameters are ISO `YYYY-MM`; dates are ISO `YYYY-MM-DD`. Monthly queries use an inclusive first day and exclusive first day of the next month. Reports that depend on today's date use Asia/Bangkok.
 - `GET /api/v1/transactions/history` is the paged transaction endpoint: zero-based `page`, `size` from 1 to 50 (default 10), `sort=asc|desc`, and stable order by occurrence date, creation time, then ID. It returns `items`, `page`, `size`, `totalElements`, and `totalPages`. The basic transaction list is unpaged and intended for existing small-screen flows; use history for large lists.
+- `POST /api/v1/receipts/recognize` accepts an authenticated multipart image and returns OCR suggestions without creating a transaction. `GET/POST /api/v1/goals` and `PUT/DELETE /api/v1/goals/{id}` manage owner-scoped savings goals.
 
 ## Money and calculations
 
 - Accept money as JSON decimal strings or JSON numbers with at most two fractional digits and up to 17 integer digits. Use Java `BigDecimal` and database `NUMERIC(19,2)`; return decimal strings to avoid JavaScript floating-point rounding. Web and Android format decimal strings for display.
 - Income and expense affect cash flow and budgets. Transfers move value between two owned accounts and must not change total balance, income, expense, or budgets. Account current balance is opening balance plus income minus expense plus incoming transfers minus outgoing transfers.
 - Keep reporting formulas and missing-data behavior visible in the API and UI. Do not infer a savings rate without income or a trend without a comparison base. Hypothetical values never become stored transactions or budgets.
+- Savings goals store a manually reported saved amount as planning data. Their progress and remaining amount use decimal arithmetic; goal edits do not move account funds or change cash flow.
 
 ## Schema and review
 
