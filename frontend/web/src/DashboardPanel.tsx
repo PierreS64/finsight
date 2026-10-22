@@ -9,6 +9,7 @@ import SpendingTrendsPanel from "./SpendingTrendsPanel";
 import ExpenseForecastPanel from "./ExpenseForecastPanel";
 import UpcomingExpensesPanel from "./UpcomingExpensesPanel";
 import SafeToSpendPanel from "./SafeToSpendPanel";
+import FinancialHealthPanel from "./FinancialHealthPanel";
 import "./DashboardPanel.css";
 
 type Dashboard = { month: string; accountCount: number; transactionCount: number; totalBalance: string; income: string; expense: string; netFlow: string; budget: { limitAmount: string; remaining: string; usedPercent: string } | null };
@@ -87,6 +88,7 @@ export default function DashboardPanel({ session, displayName, accounts, account
       {explanationError ? <p className="inline-error" role="alert">{explanationError}</p> : !explanation ? <p className="muted">Đang so sánh hai tháng...</p> : <><p className="muted">So sánh toàn bộ tháng {explanation.month} với {explanation.previousMonth}. Chỉ tính giao dịch chi tiêu; khoản thu/hoàn tiền được ghi là thu nhập và chuyển khoản không tính vào đây.</p><div className="explanation-totals"><div><small>THÁNG TRƯỚC</small><strong>{formatVnd(explanation.previousTotal)}</strong></div><div><small>THÁNG ĐANG XEM</small><strong>{formatVnd(explanation.currentTotal)}</strong></div><div><small>CHÊNH LỆCH</small><strong className={explanation.changeAmount.startsWith("-") ? "money-in" : "money-out"}>{formatVnd(explanation.changeAmount)}</strong></div></div>{explanation.categories.length ? <ul className="explanation-list">{explanation.categories.map((item) => <li key={item.categoryId}><span><strong>{item.categoryName}</strong><small>{formatVnd(item.previousAmount)} → {formatVnd(item.currentAmount)}</small></span><span><strong>{formatVnd(item.changeAmount)}</strong><small>{item.contributionPercent === null ? "Hai chiều bù trừ" : `${item.contributionPercent}% chênh lệch ròng`}</small></span></li>)}</ul> : <div className="empty-state compact"><span>◫</span><h3>Chi tiêu chưa thay đổi theo danh mục</h3><p>Thêm giao dịch chi tiêu để xem nguyên nhân tăng hoặc giảm.</p></div>}<p className="explanation-note">Tổng chênh lệch của từng danh mục bằng chênh lệch hai tháng. Tỷ lệ có thể lớn hơn 100% khi các danh mục tăng và giảm bù trừ nhau.</p></>}
     </section>
     <SpendingProfilePanel session={session} month={month} />
+    {month === currentMonth() && <FinancialHealthPanel session={session} />}
     <ChartsPanel session={session} month={month} />
     <SpendingTrendsPanel session={session} month={month} />
     {month === currentMonth() && <ExpenseForecastPanel session={session} />}

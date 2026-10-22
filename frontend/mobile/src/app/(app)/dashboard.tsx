@@ -11,6 +11,7 @@ import SpendingTrendsCard from '../../components/SpendingTrendsCard';
 import ExpenseForecastCard from '../../components/ExpenseForecastCard';
 import UpcomingExpensesCard from '../../components/UpcomingExpensesCard';
 import SafeToSpendCard from '../../components/SafeToSpendCard';
+import FinancialHealthCard from '../../components/FinancialHealthCard';
 import { formatVnd } from '../../money';
 import { useSession } from '../../session';
 import { color } from '../../theme';
@@ -65,6 +66,7 @@ export default function Dashboard() {
     {!explanation && !explanationError && <Text style={common.helper}>Đang so sánh hai tháng...</Text>}
     {explanation && <Card style={styles.explanationCard}><Text style={common.helper}>So sánh toàn bộ tháng {explanation.month} với {explanation.previousMonth}. Khoản thu/hoàn tiền ghi là thu nhập và chuyển khoản không tính vào chi tiêu.</Text><View style={styles.explanationTotals}><View><Text style={styles.explanationLabel}>THÁNG TRƯỚC</Text><Text style={styles.explanationAmount}>{formatVnd(explanation.previousTotal)}</Text></View><View><Text style={styles.explanationLabel}>THÁNG ĐANG XEM</Text><Text style={styles.explanationAmount}>{formatVnd(explanation.currentTotal)}</Text></View></View><Text style={styles.explanationChange}>Chênh lệch: {formatVnd(explanation.changeAmount)}</Text>{explanation.categories.length ? explanation.categories.map((item) => <View key={item.categoryId} style={styles.explanationRow}><View style={{ flex: 1 }}><Text style={styles.explanationName}>{item.categoryName}</Text><Text style={common.helper}>{formatVnd(item.previousAmount)} → {formatVnd(item.currentAmount)}</Text></View><View style={styles.explanationRight}><Text style={styles.explanationName}>{formatVnd(item.changeAmount)}</Text><Text style={common.helper}>{item.contributionPercent === null ? 'Hai chiều bù trừ' : `${item.contributionPercent}% ròng`}</Text></View></View>) : <Text style={common.helper}>Chưa có thay đổi chi tiêu theo danh mục.</Text>}<Text style={styles.explanationFoot}>Tổng chênh lệch các danh mục bằng chênh lệch hai tháng. Tỷ lệ có thể vượt 100% khi các danh mục bù trừ nhau.</Text></Card>}
     <SpendingProfileCard month={month} />
+    {month === currentMonth() && <FinancialHealthCard />}
     <ChartsCard month={month} />
     <SpendingTrendsCard month={month} />
     {month === currentMonth() && <ExpenseForecastCard />}

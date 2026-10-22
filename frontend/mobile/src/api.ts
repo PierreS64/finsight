@@ -37,6 +37,13 @@ export type StatementRow = { rowNumber: number; occurredOn: string; description:
 export type StatementPreview = { sourceHash: string; rows: StatementRow[] };
 export type NetWorthItem = { id: string; name: string; kind: 'ASSET' | 'LIABILITY'; amount: string; note: string | null };
 export type NetWorth = { accountAssets: string; accountLiabilities: string; totalAssets: string; totalLiabilities: string; netWorth: string; accounts: { id: string; name: string; balance: string }[]; items: NetWorthItem[] };
+export type FinancialHealth = { month: string; score: string | null; coveragePercent: number; status: 'COMPLETE' | 'PARTIAL' | 'INSUFFICIENT_DATA'; components: { key: string; label: string; weight: number; points: string | null; explanation: string }[]; calculationRule: string };
+
+export async function getFinancialHealth(session: Session, signal?: AbortSignal): Promise<FinancialHealth> {
+  const response = await fetch(`${apiBase}/api/v1/financial-health`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được điểm sức khỏe tài chính (HTTP ${response.status}).`);
+  return await response.json() as FinancialHealth;
+}
 
 export async function getNetWorth(session: Session, signal?: AbortSignal): Promise<NetWorth> {
   const response = await fetch(`${apiBase}/api/v1/net-worth`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
