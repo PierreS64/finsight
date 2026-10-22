@@ -55,3 +55,5 @@ The eight initially unassigned Epics FNS-3 through FNS-10 and six Tasks FNS-11, 
 [FNS-40](https://finsight-team.atlassian.net/browse/FNS-40) tracks balance reconciliation under Financial Accounts and is assigned to Nguyễn Thuận Phong. A reconciliation records a snapshot and discrepancy without adjusting the balance.
 
 [FNS-41](https://finsight-team.atlassian.net/browse/FNS-41) tracks owner-scoped merchant management and optional merchant links on transactions under Automation. It is assigned to Nguyễn Thuận Phong.
+
+[FNS-42](https://finsight-team.atlassian.net/browse/FNS-42) tracks CSV/XLSX statement preview and confirmed import under Automation. It is assigned to Nguyễn Thuận Phong.

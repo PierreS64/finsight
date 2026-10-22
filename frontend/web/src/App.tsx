@@ -5,6 +5,7 @@ import AuthPanel, { PasswordResetPanel, ProfilePanel } from "./AuthPanel";
 import AccountsPanel, { type Account } from "./AccountsPanel";
 import CategoriesPanel from "./CategoriesPanel";
 import MerchantsPanel from "./MerchantsPanel";
+import StatementImportPanel from "./StatementImportPanel";
 import TransactionsPanel from "./TransactionsPanel";
 import TransfersPanel from "./TransfersPanel";
 import BudgetPanel from "./BudgetPanel";
@@ -14,7 +15,7 @@ import GoalPanel from "./GoalPanel";
 import ReconciliationPanel from "./ReconciliationPanel";
 import "./App.css";
 
-type Page = "overview" | "accounts" | "reconcile" | "transactions" | "transfers" | "recurring" | "categories" | "merchants" | "budgets" | "goals" | "profile";
+type Page = "overview" | "accounts" | "reconcile" | "transactions" | "statements" | "transfers" | "recurring" | "categories" | "merchants" | "budgets" | "goals" | "profile";
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 export function Brand({ light = false }: { light?: boolean }) {
@@ -85,7 +86,7 @@ function Workspace({ session, signOut, signOutError }: { session: Session; signO
     return () => controller.abort();
   }, [session.access_token]);
   const nav: { id: Page; label: string; symbol: string }[] = [
-    { id: "overview", label: "Tổng quan", symbol: "◫" }, { id: "transactions", label: "Giao dịch", symbol: "▤" }, { id: "merchants", label: "Nơi giao dịch", symbol: "▣" }, { id: "transfers", label: "Chuyển khoản", symbol: "↔" }, { id: "recurring", label: "Định kỳ", symbol: "↻" }, { id: "accounts", label: "Tài khoản", symbol: "▣" }, { id: "reconcile", label: "Đối soát", symbol: "◎" }, { id: "budgets", label: "Ngân sách", symbol: "◩" }, { id: "goals", label: "Mục tiêu", symbol: "◎" }, { id: "profile", label: "Hồ sơ", symbol: "◉" },
+    { id: "overview", label: "Tổng quan", symbol: "◫" }, { id: "transactions", label: "Giao dịch", symbol: "▤" }, { id: "statements", label: "Nhập sao kê", symbol: "▧" }, { id: "merchants", label: "Nơi giao dịch", symbol: "▣" }, { id: "transfers", label: "Chuyển khoản", symbol: "↔" }, { id: "recurring", label: "Định kỳ", symbol: "↻" }, { id: "accounts", label: "Tài khoản", symbol: "▣" }, { id: "reconcile", label: "Đối soát", symbol: "◎" }, { id: "budgets", label: "Ngân sách", symbol: "◩" }, { id: "goals", label: "Mục tiêu", symbol: "◎" }, { id: "profile", label: "Hồ sơ", symbol: "◉" },
   ];
   const title = nav.find((item) => item.id === page)?.label ?? "Danh mục";
   return <div className="workspace">
@@ -96,7 +97,8 @@ function Workspace({ session, signOut, signOutError }: { session: Session; signO
         {page === "overview" && <DashboardPanel session={session} displayName={displayName} accounts={accounts} accountsLoaded={accountsLoaded} accountsError={accountsError} onNavigate={setPage} />}
         {page === "accounts" && <><div className="page-heading"><p className="eyebrow">TÀI KHOẢN CỦA BẠN</p><h1>Quản lý tài khoản</h1><p>Tài khoản trong FinSight là bản ghi do bạn tự tạo, không liên kết ngân hàng.</p><button className="button-outline" onClick={() => setPage("reconcile")}>Đối soát số dư →</button></div><AccountsPanel session={session} accounts={accounts} onCreated={(account) => setAccounts((current) => [...current, account])} /></>}
         {page === "reconcile" && <><div className="page-heading"><p className="eyebrow">TÀI KHOẢN CỦA BẠN</p><h1>Đối soát số dư</h1><p>Ghi lại số dư bạn quan sát và so với số dư FinSight.</p></div><ReconciliationPanel session={session} accounts={accounts} /></>}
-        {page === "transactions" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Giao dịch</h1><p>Ghi khoản thu, chi và xem lịch sử từ dữ liệu bạn tự nhập.</p><button className="button-outline" onClick={() => setPage("transfers")}>Chuyển khoản giữa tài khoản →</button><button className="button-outline" onClick={() => setPage("recurring")}>Giao dịch định kỳ →</button><button className="button-outline" onClick={() => setPage("merchants")}>Nơi giao dịch →</button></div><TransactionsPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} onCategories={() => setPage("categories")} onMerchants={() => setPage("merchants")} /></>}
+        {page === "transactions" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Giao dịch</h1><p>Ghi khoản thu, chi và xem lịch sử từ dữ liệu bạn tự nhập.</p><button className="button-outline" onClick={() => setPage("statements")}>Nhập sao kê CSV/Excel →</button><button className="button-outline" onClick={() => setPage("transfers")}>Chuyển khoản giữa tài khoản →</button><button className="button-outline" onClick={() => setPage("recurring")}>Giao dịch định kỳ →</button><button className="button-outline" onClick={() => setPage("merchants")}>Nơi giao dịch →</button></div><TransactionsPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} onCategories={() => setPage("categories")} onMerchants={() => setPage("merchants")} /></>}
+        {page === "statements" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN / SAO KÊ</p><h1>Nhập sao kê</h1><p>Xem trước và xác nhận từng dòng trước khi tạo giao dịch.</p></div><StatementImportPanel session={session} accounts={accounts} onCategories={() => setPage("categories")} /></>}
         {page === "transfers" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Chuyển khoản</h1><p>Di chuyển tiền giữa các tài khoản do bạn tự quản lý.</p></div><TransfersPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} /></>}
         {page === "recurring" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Giao dịch định kỳ</h1><p>Lên lịch khoản thu chi thường kỳ và tự chọn khi nào ghi nhận.</p></div><RecurringPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} /></>}
         {page === "categories" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN / DANH MỤC</p><h1>Danh mục thu chi</h1><p>Tổ chức các khoản thu nhập và chi tiêu theo cách bạn quen dùng.</p></div><CategoriesPanel session={session} /></>}
@@ -104,7 +106,7 @@ function Workspace({ session, signOut, signOutError }: { session: Session; signO
         {page === "budgets" && <><div className="page-heading"><p className="eyebrow">KẾ HOẠCH TÀI CHÍNH</p><h1>Ngân sách</h1><p>Đặt hạn mức tổng và theo danh mục cho từng tháng.</p><button className="button-outline" onClick={() => setPage("goals")}>Mục tiêu tiết kiệm →</button></div><BudgetPanel session={session} /></>}
         {page === "goals" && <><div className="page-heading"><p className="eyebrow">KẾ HOẠCH TÀI CHÍNH</p><h1>Mục tiêu tiết kiệm</h1><p>Theo dõi khoản tiền bạn dự định dành cho điều quan trọng.</p></div><GoalPanel session={session} /></>}
         {page === "profile" && <><div className="page-heading"><p className="eyebrow">CÀI ĐẶT CÁ NHÂN</p><h1>Hồ sơ của bạn</h1><p>Cập nhật tên hiển thị và kiểm tra thông tin tài khoản.</p></div><ProfilePanel session={session} onDisplayName={setDisplayName} /></>}
-      </main><nav className="workspace-mobile-nav" aria-label="Điều hướng ứng dụng trên điện thoại">{nav.filter((item) => item.id !== "transfers" && item.id !== "recurring" && item.id !== "goals" && item.id !== "reconcile" && item.id !== "merchants").map((item) => <button key={item.id} className={page === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}</nav>
+      </main><nav className="workspace-mobile-nav" aria-label="Điều hướng ứng dụng trên điện thoại">{nav.filter((item) => item.id !== "transfers" && item.id !== "recurring" && item.id !== "goals" && item.id !== "reconcile" && item.id !== "merchants" && item.id !== "statements").map((item) => <button key={item.id} className={page === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}</nav>
     </div>
   </div>;
 }

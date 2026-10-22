@@ -18,6 +18,7 @@ This records the behavior implemented on `develop` as of 2026-10-21. Use it when
 - `POST /api/v1/receipts/recognize` accepts an authenticated multipart image and returns OCR suggestions without creating a transaction. `GET/POST /api/v1/goals` and `PUT/DELETE /api/v1/goals/{id}` manage owner-scoped savings goals.
 - `GET/POST /api/v1/accounts/{accountId}/reconciliations` and `DELETE /api/v1/accounts/{accountId}/reconciliations/{id}` record and manage owner-scoped balance snapshots. Each snapshot returns its expected, observed and signed difference amounts.
 - `GET/POST /api/v1/merchants` and `PUT/DELETE /api/v1/merchants/{id}` manage names scoped to the authenticated user. A transaction may include a nullable `merchantId`; both the API ownership check and composite database foreign key require the same owner. History search includes merchant names. A referenced merchant cannot be deleted.
+- `POST /api/v1/statements/preview?accountId=...` accepts an authenticated multipart CSV UTF-8 or XLSX file, returns parsed rows and duplicate hints, and writes nothing. `POST /api/v1/statements/import` accepts reviewed rows with category IDs and creates them atomically. File digest and row number prevent reimporting the same file row for the same owner. See `docs/decisions/0005-statement-import.md`.
 
 ## Money and calculations
 

@@ -33,6 +33,36 @@ export type SafeToSpend = { month: string; remainingDays: number; budgetLimit: s
 export type FinancialGoal = { id: string; name: string; targetAmount: string; savedAmount: string; remainingAmount: string; progressPercent: string; targetDate: string | null; note: string | null; achieved: boolean; overdue: boolean };
 export type FinancialGoalInput = Pick<FinancialGoal, 'name' | 'targetAmount' | 'savedAmount' | 'targetDate' | 'note'>;
 export type AccountReconciliation = { id: string; accountId: string; expectedBalance: string; observedBalance: string; differenceAmount: string; status: 'BALANCED' | 'SURPLUS' | 'SHORTFALL'; note: string | null; recordedAt: string };
+export type StatementRow = { rowNumber: number; occurredOn: string; description: string; amount: string; kind: CategoryType; alreadyImported: boolean; possibleDuplicate: boolean };
+export type StatementPreview = { sourceHash: string; rows: StatementRow[] };
+
+export async function previewStatement(session: Session, accountId: string, uri: string, mimeType: string): Promise<StatementPreview> {
+  const result = await FileSystem.uploadAsync(`${apiBase}/api/v1/statements/preview?accountId=${encodeURIComponent(accountId)}`, uri, {
+    uploadType: FileSystem.FileSystemUploadType.MULTIPART, fieldName: 'file', mimeType,
+    headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+  if (result.status !== 200) {
+    let detail: string | undefined;
+    try { detail = (JSON.parse(result.body) as { detail?: string }).detail; } catch { /* Keep status message. */ }
+    throw new Error(detail || `Không đọc được sao kê (HTTP ${result.status}). Dùng mẫu cột date, description, amount, type.`);
+  }
+  return JSON.parse(result.body) as StatementPreview;
+}
+
+export async function importStatement(session: Session, accountId: string, sourceHash: string, rows: {
+  rowNumber: number; categoryId: string; kind: CategoryType; amount: string; occurredOn: string;
+  description: string; allowPossibleDuplicate: boolean;
+}[]): Promise<number> {
+  const response = await fetch(`${apiBase}/api/v1/statements/import`, {
+    method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ accountId, sourceHash, rows }),
+  });
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({})) as { detail?: string };
+    throw new Error(error.detail || `Không nhập được sao kê (HTTP ${response.status}). Hãy xem trước lại tệp nếu có dòng trùng.`);
+  }
+  return (await response.json() as { importedCount: number }).importedCount;
+}
 
 export async function getReconciliations(session: Session, accountId: string, signal?: AbortSignal): Promise<AccountReconciliation[]> {
   const response = await fetch(`${apiBase}/api/v1/accounts/${accountId}/reconciliations`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
