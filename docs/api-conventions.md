@@ -21,6 +21,7 @@ This records the behavior implemented on `develop` as of 2026-10-21. Use it when
 - `POST /api/v1/statements/preview?accountId=...` accepts an authenticated multipart CSV UTF-8 or XLSX file, returns parsed rows and duplicate hints, and writes nothing. `POST /api/v1/statements/import` accepts reviewed rows with category IDs and creates them atomically. File digest and row number prevent reimporting the same file row for the same owner. See `docs/decisions/0005-statement-import.md`.
 - `GET /api/v1/net-worth` returns current account balances, manually estimated assets/liabilities and exact totals. `POST /api/v1/net-worth/items` and `PUT/DELETE /api/v1/net-worth/items/{id}` manage owner-scoped current estimates. Negative account balances count as liabilities; savings goals are excluded.
 - `GET /api/v1/financial-health` returns a current-month score, each available/missing component and data coverage. A null score means there is no usable input. See `docs/decisions/0007-financial-health-score.md` for exact thresholds.
+- `GET /api/v1/subscription-suggestions` returns read-only possible monthly expense patterns from owner-scoped transactions. It never schedules or writes a transaction. See `docs/decisions/0008-subscription-suggestions.md` for the heuristic and limits.
 
 ## Money and calculations
 

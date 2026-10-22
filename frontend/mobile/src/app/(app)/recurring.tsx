@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getAccounts, getCategories, getRecurringRules, processRecurringRule, saveRecurringRule,
   type Account, type Category, type CategoryType, type RecurringRule, type RecurringRuleInput } from '../../api';
 import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
+import SubscriptionSuggestionsCard from '../../components/SubscriptionSuggestionsCard';
 import { formatVnd } from '../../money';
 import { useSession } from '../../session';
 import { color } from '../../theme';
@@ -85,6 +86,7 @@ export default function Recurring() {
   }
   return <Page><Brand subtitle="GIAO DỊCH ĐỊNH KỲ" /><Text style={[common.title, styles.title]}>Lịch thu chi</Text>
     <Text style={common.subtitle}>Giao dịch thật chỉ được tạo khi bạn bấm “Ghi nhận đến hạn”. Một kỳ chỉ được ghi một lần.</Text>
+    <SubscriptionSuggestionsCard />
     <Text style={styles.heading}>Các khoản đã lên lịch</Text>
     {loading && <Text style={common.helper}>Đang tải lịch...</Text>}
     {!loading && !rules.length && <Card><Text style={common.helper}>Chưa có khoản định kỳ.</Text></Card>}
