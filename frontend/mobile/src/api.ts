@@ -8,7 +8,8 @@ export type Profile = { userId: string; displayName: string | null; currencyCode
 export type CategoryType = 'INCOME' | 'EXPENSE';
 export type CategoryIcon = 'wallet' | 'gift' | 'other' | 'food' | 'transport' | 'home' | 'shopping' | 'health' | 'education';
 export type Category = { id: string; name: string; categoryType: CategoryType; icon: CategoryIcon; isDefault: boolean };
-export type Transaction = { id: string; accountId: string; categoryId: string; kind: CategoryType; amount: string; occurredOn: string; note: string | null; hasReceipt: boolean };
+export type Merchant = { id: string; name: string };
+export type Transaction = { id: string; accountId: string; categoryId: string; merchantId: string | null; kind: CategoryType; amount: string; occurredOn: string; note: string | null; hasReceipt: boolean };
 export type TransactionHistoryFilters = { search: string; from: string; to: string; month: string; kind: CategoryType | ''; categoryId: string; sort: 'asc' | 'desc' };
 export type TransactionHistory = { items: Transaction[]; page: number; size: number; totalElements: number; totalPages: number };
 export type Transfer = { id: string; fromAccountId: string; toAccountId: string; amount: string; occurredOn: string; note: string | null };
@@ -127,6 +128,28 @@ export async function getTransactions(session: Session, signal?: AbortSignal): P
   return (await response.json()) as Transaction[];
 }
 
+export async function getMerchants(session: Session, signal?: AbortSignal): Promise<Merchant[]> {
+  const response = await fetch(`${apiBase}/api/v1/merchants`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được nơi giao dịch (HTTP ${response.status}).`);
+  return await response.json() as Merchant[];
+}
+
+export async function saveMerchant(session: Session, name: string, id?: string): Promise<Merchant> {
+  const response = await fetch(`${apiBase}/api/v1/merchants${id ? `/${id}` : ''}`, {
+    method: id ? 'PUT' : 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  if (response.status === 409) throw new Error('Tên nơi giao dịch đã tồn tại.');
+  if (!response.ok) throw new Error(`Không lưu được nơi giao dịch (HTTP ${response.status}).`);
+  return await response.json() as Merchant;
+}
+
+export async function deleteMerchant(session: Session, id: string): Promise<void> {
+  const response = await fetch(`${apiBase}/api/v1/merchants/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
+  if (response.status === 409) throw new Error('Nơi giao dịch đang được sử dụng. Hãy đổi giao dịch trước khi xóa.');
+  if (!response.ok) throw new Error(`Không xóa được nơi giao dịch (HTTP ${response.status}).`);
+}
+
 export async function getTransactionHistory(session: Session, filters: TransactionHistoryFilters,
                                             page: number, signal?: AbortSignal): Promise<TransactionHistory> {
   const params = new URLSearchParams({ page: String(page), size: '10', sort: filters.sort });
@@ -139,7 +162,7 @@ export async function getTransactionHistory(session: Session, filters: Transacti
   return (await response.json()) as TransactionHistory;
 }
 
-export async function saveTransaction(session: Session, transaction: { accountId: string; categoryId: string; kind: CategoryType; amount: string; occurredOn: string; note: string | null }, id?: string): Promise<Transaction> {
+export async function saveTransaction(session: Session, transaction: { accountId: string; categoryId: string; merchantId?: string | null; kind: CategoryType; amount: string; occurredOn: string; note: string | null }, id?: string): Promise<Transaction> {
   const response = await fetch(`${apiBase}/api/v1/transactions${id ? `/${id}` : ''}`, {
     method: id ? 'PUT' : 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }, body: JSON.stringify(transaction),
   });

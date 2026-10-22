@@ -6,7 +6,8 @@ import "./TransactionsPanel.css";
 
 type Kind = "INCOME" | "EXPENSE";
 type Category = { id: string; name: string; categoryType: Kind; icon: string };
-type Transaction = { id: string; accountId: string; categoryId: string; kind: Kind; amount: string; occurredOn: string; note: string | null; hasReceipt: boolean };
+type Merchant = { id: string; name: string };
+type Transaction = { id: string; accountId: string; categoryId: string; merchantId: string | null; kind: Kind; amount: string; occurredOn: string; note: string | null; hasReceipt: boolean };
 type HistoryFilters = { search: string; from: string; to: string; month: string; kind: string; categoryId: string; sort: "asc" | "desc" };
 type History = { items: Transaction[]; page: number; size: number; totalElements: number; totalPages: number };
 type OcrResult = { merchant: string | null; occurredOn: string | null; amount: string | null; duplicateTransactionId: string | null; readable: boolean };
@@ -17,15 +18,17 @@ const today = () => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 };
 
-export default function TransactionsPanel({ session, accounts, onChanged, onCategories }: {
-  session: Session; accounts: Account[]; onChanged: () => void; onCategories: () => void;
+export default function TransactionsPanel({ session, accounts, onChanged, onCategories, onMerchants }: {
+  session: Session; accounts: Account[]; onChanged: () => void; onCategories: () => void; onMerchants: () => void;
 }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [kind, setKind] = useState<Kind>("EXPENSE");
   const [accountId, setAccountId] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  const [merchantId, setMerchantId] = useState("");
   const [amount, setAmount] = useState("");
   const [occurredOn, setOccurredOn] = useState(today);
   const [note, setNote] = useState("");
@@ -60,10 +63,12 @@ export default function TransactionsPanel({ session, accounts, onChanged, onCate
     Promise.all([
       fetch(`${apiBase}/api/v1/transactions`, { headers, signal: controller.signal }),
       fetch(`${apiBase}/api/v1/categories`, { headers, signal: controller.signal }),
-    ]).then(async ([transactionsResponse, categoriesResponse]) => {
-      if (!transactionsResponse.ok || !categoriesResponse.ok) throw new Error("Không tải được giao dịch hoặc danh mục.");
+      fetch(`${apiBase}/api/v1/merchants`, { headers, signal: controller.signal }),
+    ]).then(async ([transactionsResponse, categoriesResponse, merchantsResponse]) => {
+      if (!transactionsResponse.ok || !categoriesResponse.ok || !merchantsResponse.ok) throw new Error("Không tải được giao dịch, danh mục hoặc nơi giao dịch.");
       setTransactions(await transactionsResponse.json() as Transaction[]);
       setCategories(await categoriesResponse.json() as Category[]);
+      setMerchants(await merchantsResponse.json() as Merchant[]);
       setLoaded(true);
     }).catch((error: unknown) => { if (!controller.signal.aborted) { setMessage(error instanceof Error ? error.message : "Không thể tải dữ liệu."); setLoaded(true); } });
     return () => controller.abort();
@@ -101,11 +106,11 @@ export default function TransactionsPanel({ session, accounts, onChanged, onCate
   const income = sumBalances(transactions.filter((item) => item.kind === "INCOME").map((item) => item.amount));
   const expense = sumBalances(transactions.filter((item) => item.kind === "EXPENSE").map((item) => item.amount));
 
-  function reset() { setAmount(""); setNote(""); setOccurredOn(today()); setEditingId(null); setDeletingId(null); setPendingReceipt(null); setOcrResult(null); setDuplicateConfirmed(false); }
+  function reset() { setAmount(""); setNote(""); setMerchantId(""); setOccurredOn(today()); setEditingId(null); setDeletingId(null); setPendingReceipt(null); setOcrResult(null); setDuplicateConfirmed(false); }
   function edit(transaction: Transaction) {
     setPendingReceipt(null); setOcrResult(null); setDuplicateConfirmed(false);
     setEditingId(transaction.id); setKind(transaction.kind); setAccountId(transaction.accountId);
-    setCategoryId(transaction.categoryId); setAmount(transaction.amount); setOccurredOn(transaction.occurredOn);
+    setCategoryId(transaction.categoryId); setMerchantId(transaction.merchantId ?? ""); setAmount(transaction.amount); setOccurredOn(transaction.occurredOn);
     setNote(transaction.note || ""); setDeletingId(null); setMessage("");
   }
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -118,7 +123,7 @@ export default function TransactionsPanel({ session, accounts, onChanged, onCate
       const response = await fetch(`${apiBase}/api/v1/transactions${editingId ? `/${editingId}` : ""}`, {
         method: editingId ? "PUT" : "POST",
         headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ accountId: selectedAccount, categoryId: selectedCategory, kind, amount: value, occurredOn, note: note.trim() || null }),
+        body: JSON.stringify({ accountId: selectedAccount, categoryId: selectedCategory, merchantId: merchantId || null, kind, amount: value, occurredOn, note: note.trim() || null }),
       });
       if (!response.ok) throw new Error(`Không lưu được giao dịch (HTTP ${response.status}).`);
       const saved = await response.json() as Transaction;
@@ -154,10 +159,14 @@ export default function TransactionsPanel({ session, accounts, onChanged, onCate
       });
       if (!response.ok) throw new Error(`Không đọc được hóa đơn (HTTP ${response.status}). Hãy nhập tay.`);
       const result = await response.json() as OcrResult;
-      setOcrResult(result); setKind('EXPENSE'); setCategoryId(''); setEditingId(null);
+      setOcrResult(result); setKind('EXPENSE'); setCategoryId(''); setMerchantId(''); setEditingId(null);
       if (result.amount) setAmount(result.amount);
       if (result.occurredOn) setOccurredOn(result.occurredOn);
-      if (result.merchant) setNote(result.merchant);
+      if (result.merchant) {
+        setNote(result.merchant);
+        const match = merchants.find((item) => item.name.toLocaleLowerCase() === result.merchant?.trim().toLocaleLowerCase());
+        setMerchantId(match?.id ?? "");
+      }
       setMessage(result.readable ? 'Đã điền dữ liệu nhận diện. Hãy kiểm tra và sửa trước khi lưu.' : 'OCR chưa đọc được thông tin. Hãy nhập tay và kiểm tra ảnh trước khi lưu.');
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Không đọc được hóa đơn. Hãy nhập tay.'); }
     finally { setOcrBusy(false); }
@@ -229,7 +238,7 @@ export default function TransactionsPanel({ session, accounts, onChanged, onCate
         <div className="history-actions"><button className="button-primary" type="submit">Áp dụng</button><button className="button-outline" type="button" onClick={() => { setFilters(emptyFilters); setApplied({ ...emptyFilters }); setHistoryPage(0); setFilterError(""); }}>Xóa lọc</button></div>
       </form>
       {(filterError || historyError) && <p className="auth-message" role="alert">{filterError || historyError}</p>}
-      {historyLoading && !history ? <p className="muted">Đang tải giao dịch...</p> : history?.items.length ? <ul className="transaction-list">{history.items.map((transaction) => <li key={transaction.id}><span className={`transaction-kind ${transaction.kind.toLowerCase()}`}>{transaction.kind === "INCOME" ? "↗" : "↘"}</span><span className="transaction-main"><strong>{categories.find((category) => category.id === transaction.categoryId)?.name ?? "Danh mục đã thay đổi"}</strong><small>{transaction.occurredOn.split("-").reverse().join("/")} · {accounts.find((account) => account.id === transaction.accountId)?.name ?? "Tài khoản"}</small>{transaction.note && <small>{transaction.note}</small>}</span><span className="transaction-side"><strong className={transaction.kind === "INCOME" ? "money-in" : "money-out"}>{transaction.kind === "INCOME" ? "+" : "−"}{formatVnd(transaction.amount)}</strong><span><button className="link-button" onClick={() => showReceipt(transaction)}>{transaction.hasReceipt ? "Xem hóa đơn" : "Thêm hóa đơn"}</button><button className="link-button" onClick={() => edit(transaction)}>Sửa</button><button className="link-button danger" onClick={() => setDeletingId(transaction.id)}>Xóa</button></span>{deletingId === transaction.id && <span><button className="link-button danger" onClick={() => remove(transaction.id)} disabled={busy}>Xác nhận</button><button className="link-button" onClick={() => setDeletingId(null)}>Hủy</button></span>}</span></li>)}</ul> : <div className="empty-state compact"><span>▤</span><h3>{applied.search || applied.month || applied.from || applied.to || applied.kind || applied.categoryId ? "Không có giao dịch phù hợp" : "Chưa có giao dịch"}</h3><p>Thử đổi bộ lọc hoặc thêm giao dịch mới.</p></div>}
+      {historyLoading && !history ? <p className="muted">Đang tải giao dịch...</p> : history?.items.length ? <ul className="transaction-list">{history.items.map((transaction) => <li key={transaction.id}><span className={`transaction-kind ${transaction.kind.toLowerCase()}`}>{transaction.kind === "INCOME" ? "↗" : "↘"}</span><span className="transaction-main"><strong>{categories.find((category) => category.id === transaction.categoryId)?.name ?? "Danh mục đã thay đổi"}</strong><small>{transaction.occurredOn.split("-").reverse().join("/")} · {accounts.find((account) => account.id === transaction.accountId)?.name ?? "Tài khoản"}</small>{transaction.merchantId && <small>Nơi giao dịch: {merchants.find((item) => item.id === transaction.merchantId)?.name ?? "Đã đổi"}</small>}{transaction.note && <small>{transaction.note}</small>}</span><span className="transaction-side"><strong className={transaction.kind === "INCOME" ? "money-in" : "money-out"}>{transaction.kind === "INCOME" ? "+" : "−"}{formatVnd(transaction.amount)}</strong><span><button className="link-button" onClick={() => showReceipt(transaction)}>{transaction.hasReceipt ? "Xem hóa đơn" : "Thêm hóa đơn"}</button><button className="link-button" onClick={() => edit(transaction)}>Sửa</button><button className="link-button danger" onClick={() => setDeletingId(transaction.id)}>Xóa</button></span>{deletingId === transaction.id && <span><button className="link-button danger" onClick={() => remove(transaction.id)} disabled={busy}>Xác nhận</button><button className="link-button" onClick={() => setDeletingId(null)}>Hủy</button></span>}</span></li>)}</ul> : <div className="empty-state compact"><span>▤</span><h3>{applied.search || applied.month || applied.from || applied.to || applied.kind || applied.categoryId ? "Không có giao dịch phù hợp" : "Chưa có giao dịch"}</h3><p>Thử đổi bộ lọc hoặc thêm giao dịch mới.</p></div>}
       {!!history && history.totalPages > 1 && <nav className="history-pagination" aria-label="Phân trang giao dịch"><button className="button-outline" disabled={historyPage === 0 || historyLoading} onClick={() => setHistoryPage((value) => value - 1)}>Trang trước</button><span>Trang {historyPage + 1} / {history.totalPages}</span><button className="button-outline" disabled={historyPage + 1 >= history.totalPages || historyLoading} onClick={() => setHistoryPage((value) => value + 1)}>Trang sau</button></nav>}
       {receiptId && <div className="receipt-panel"><div className="section-head"><div><p className="eyebrow">ẢNH HÓA ĐƠN</p><h3>Giao dịch đã chọn</h3></div><button className="link-button" onClick={() => { setReceiptId(null); setPreviewUrl(null); }}>Đóng</button></div>{previewUrl && <img src={previewUrl} alt="Ảnh hóa đơn của giao dịch" className="receipt-preview" />}<label>Chọn ảnh JPEG, PNG hoặc WebP (tối đa 5 MB)<input type="file" accept="image/jpeg,image/png,image/webp" disabled={receiptBusy} onChange={(event) => { const file = event.target.files?.[0]; if (file) void uploadReceipt(file); event.target.value = ""; }} /></label>{transactions.find((item) => item.id === receiptId)?.hasReceipt && <button className="link-button danger" disabled={receiptBusy} onClick={deleteReceipt}>Xóa ảnh hóa đơn</button>}</div>}
     </section><section className="surface-card transaction-form-card"><p className="eyebrow">{editingId ? "CHỈNH SỬA" : "GHI NHẬN"}</p><h2>{editingId ? "Sửa giao dịch" : "Thêm giao dịch"}</h2><p className="muted">Nhập khoản thu hoặc chi từ tài khoản của bạn.</p><div className="ocr-panel"><strong>Quét hóa đơn</strong><p className="muted">Chọn ảnh để điền gợi ý. Giao dịch chỉ được lưu khi bạn xác nhận biểu mẫu.</p><label>Ảnh JPEG, PNG hoặc WebP (tối đa 5 MB)<input type="file" accept="image/jpeg,image/png,image/webp" disabled={ocrBusy || busy} onChange={(event) => { const file = event.target.files?.[0]; if (file) void scanReceipt(file); event.target.value = ""; }} /></label>{ocrBusy && <p role="status">Đang nhận diện hóa đơn...</p>}{pendingReceipt && <p className="muted">Ảnh chờ lưu: {pendingReceipt.name}</p>}{ocrResult?.duplicateTransactionId && <div className="ocr-warning" role="alert"><strong>Ảnh này đã gắn với một giao dịch của bạn.</strong><label><input type="checkbox" checked={duplicateConfirmed} onChange={(event) => setDuplicateConfirmed(event.target.checked)} /> Tôi đã kiểm tra và vẫn muốn lưu giao dịch này</label></div>}</div><form onSubmit={save}><div className="transaction-kind-tabs" role="group" aria-label="Loại giao dịch"><button type="button" className={kind === "EXPENSE" ? "active" : ""} onClick={() => { setKind("EXPENSE"); setCategoryId(""); }}>Chi tiêu</button><button type="button" className={kind === "INCOME" ? "active" : ""} onClick={() => { setKind("INCOME"); setCategoryId(""); }}>Thu nhập</button></div>
@@ -237,6 +246,8 @@ export default function TransactionsPanel({ session, accounts, onChanged, onCate
       <label>Tài khoản<select required value={selectedAccount} onChange={(event) => setAccountId(event.target.value)}>{!accounts.length && <option value="">Chưa có tài khoản</option>}{accounts.map((account) => <option key={account.id} value={account.id}>{account.name}</option>)}</select></label>
       <label>Danh mục<select required value={selectedCategory} onChange={(event) => setCategoryId(event.target.value)}>{!availableCategories.length && <option value="">Chưa có danh mục</option>}{availableCategories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}</select></label>
       <button type="button" className="link-button" onClick={onCategories}>Quản lý danh mục →</button>
+      <label>Nơi giao dịch (tùy chọn)<select value={merchantId} onChange={(event) => setMerchantId(event.target.value)}><option value="">Không chọn</option>{merchants.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
+      <button type="button" className="link-button" onClick={onMerchants}>Quản lý nơi giao dịch →</button>
       <label>Ngày giao dịch<input type="date" required value={occurredOn} onChange={(event) => setOccurredOn(event.target.value)} /></label>
       <label>Ghi chú (tùy chọn)<textarea value={note} onChange={(event) => setNote(event.target.value)} maxLength={500} rows={3} placeholder="Ghi chú cho giao dịch" /></label>
       <button className="button-primary" disabled={busy || ocrBusy || !selectedAccount || !selectedCategory || !!(ocrResult?.duplicateTransactionId && !duplicateConfirmed)}>{busy ? "Đang lưu..." : editingId ? "Lưu thay đổi" : "Thêm giao dịch"}</button>{editingId && <button type="button" className="button-outline" onClick={reset}>Hủy chỉnh sửa</button>}</form>{message && <p className="auth-message" role="status">{message}</p>}</section></div>

@@ -29,6 +29,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,14 +55,16 @@ public class FinancialTransactionController {
     private final FinancialAccountRepository accounts;
     private final CategoryRepository categories;
     private final TransactionReceiptStore receipts;
+    private final JdbcTemplate merchantJdbc;
 
     public FinancialTransactionController(FinancialTransactionRepository transactions,
                                           FinancialAccountRepository accounts, CategoryRepository categories,
-                                          TransactionReceiptStore receipts) {
+                                          TransactionReceiptStore receipts, JdbcTemplate merchantJdbc) {
         this.transactions = transactions;
         this.accounts = accounts;
         this.categories = categories;
         this.receipts = receipts;
+        this.merchantJdbc = merchantJdbc;
     }
 
     @GetMapping
@@ -114,12 +117,16 @@ public class FinancialTransactionController {
                 var categoryRoot = category.from(Category.class);
                 category.select(categoryRoot.get("id")).where(cb.equal(categoryRoot.get("id"), root.get("categoryId")),
                         cb.like(cb.lower(categoryRoot.get("name")), term, '\\'));
+                Subquery<UUID> merchant = query.subquery(UUID.class);
+                var merchantRoot = merchant.from(com.finsight.merchant.Merchant.class);
+                merchant.select(merchantRoot.get("id")).where(cb.equal(merchantRoot.get("id"), root.get("merchantId")),
+                        cb.equal(merchantRoot.get("ownerUserId"), owner), cb.like(cb.lower(merchantRoot.get("name")), term, '\\'));
                 Subquery<UUID> account = query.subquery(UUID.class);
                 var accountRoot = account.from(FinancialAccount.class);
                 account.select(accountRoot.get("id")).where(cb.equal(accountRoot.get("id"), root.get("accountId")),
                         cb.like(cb.lower(accountRoot.get("name")), term, '\\'));
                 predicates.add(cb.or(cb.like(cb.lower(root.get("note")), term, '\\'),
-                        cb.exists(category), cb.exists(account)));
+                        cb.exists(category), cb.exists(account), cb.exists(merchant)));
             }
             return cb.and(predicates.toArray(Predicate[]::new));
         };
@@ -147,7 +154,7 @@ public class FinancialTransactionController {
         UUID owner = userId(jwt);
         validateReferences(owner, request);
         FinancialTransaction transaction = new FinancialTransaction(owner, request.accountId(), request.categoryId(),
-                request.kind(), request.amount(), request.occurredOn(), request.note());
+                request.merchantId(), request.kind(), request.amount(), request.occurredOn(), request.note());
         return response(transactions.save(transaction));
     }
 
@@ -158,7 +165,7 @@ public class FinancialTransactionController {
         UUID owner = userId(jwt);
         FinancialTransaction transaction = owned(id, owner);
         validateReferences(owner, request);
-        transaction.update(request.accountId(), request.categoryId(), request.kind(), request.amount(),
+        transaction.update(request.accountId(), request.categoryId(), request.merchantId(), request.kind(), request.amount(),
                 request.occurredOn(), request.note());
         return response(transactions.save(transaction));
     }
@@ -230,6 +237,12 @@ public class FinancialTransactionController {
     }
 
     private void validateReferences(UUID owner, TransactionRequest request) {
+        if (request.merchantId() != null) {
+            Integer matches = merchantJdbc.queryForObject("SELECT COUNT(*) FROM public.merchants "
+                    + "WHERE owner_user_id = ? AND id = ?", Integer.class, owner, request.merchantId());
+            if (matches == null || matches == 0)
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Merchant not found");
+        }
         FinancialAccount account = accounts.findById(request.accountId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found"));
         if (!owner.equals(account.getOwnerUserId()))
@@ -250,16 +263,16 @@ public class FinancialTransactionController {
         }
     }
 
-    public record TransactionRequest(@NotNull UUID accountId, @NotNull UUID categoryId,
+    public record TransactionRequest(@NotNull UUID accountId, @NotNull UUID categoryId, UUID merchantId,
                                      @NotNull FinancialTransaction.Kind kind,
                                      @NotNull @DecimalMin("0.01") @Digits(integer = 17, fraction = 2) BigDecimal amount,
                                      @NotNull LocalDate occurredOn, @Size(max = 500) String note) {}
 
-    public record TransactionResponse(UUID id, UUID accountId, UUID categoryId, FinancialTransaction.Kind kind,
+    public record TransactionResponse(UUID id, UUID accountId, UUID categoryId, UUID merchantId, FinancialTransaction.Kind kind,
                                       String amount, LocalDate occurredOn, String note, Instant createdAt,
                                       boolean hasReceipt) {
         static TransactionResponse from(FinancialTransaction transaction, boolean hasReceipt) {
-            return new TransactionResponse(transaction.getId(), transaction.getAccountId(), transaction.getCategoryId(),
+            return new TransactionResponse(transaction.getId(), transaction.getAccountId(), transaction.getCategoryId(), transaction.getMerchantId(),
                     transaction.getKind(), transaction.getAmount().toPlainString(), transaction.getOccurredOn(),
                     transaction.getNote(), transaction.getCreatedAt(), hasReceipt);
         }

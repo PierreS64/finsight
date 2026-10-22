@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { router } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
 import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { deleteReceipt, deleteTransaction, downloadReceipt, getAccounts, getCategories, getTransactionHistory, getTransactions, recognizeReceipt, saveTransaction, uploadReceipt, type Account, type Category, type CategoryType, type ReceiptRecognition, type Transaction, type TransactionHistory, type TransactionHistoryFilters } from '../../api';
+import { deleteReceipt, deleteTransaction, downloadReceipt, getAccounts, getCategories, getMerchants, getTransactionHistory, getTransactions, recognizeReceipt, saveTransaction, uploadReceipt, type Account, type Category, type CategoryType, type Merchant, type ReceiptRecognition, type Transaction, type TransactionHistory, type TransactionHistoryFilters } from '../../api';
 import { formatVnd, sumBalances } from '../../money';
 import { useSession } from '../../session';
 import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
@@ -20,11 +20,13 @@ export default function Transactions() {
   const { session } = useSession();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [kind, setKind] = useState<CategoryType>('EXPENSE');
   const [accountId, setAccountId] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [merchantId, setMerchantId] = useState('');
   const [amount, setAmount] = useState('');
   const [occurredOn, setOccurredOn] = useState(today);
   const [note, setNote] = useState('');
@@ -57,6 +59,14 @@ export default function Transactions() {
       .catch((reason: unknown) => { if (!controller.signal.aborted) { setMessage(reason instanceof Error ? reason.message : 'Không tải được giao dịch.'); setLoaded(true); } });
     return () => controller.abort();
   }, [session]);
+
+  useFocusEffect(useCallback(() => {
+    if (!session) return;
+    const controller = new AbortController();
+    getMerchants(session, controller.signal).then(setMerchants)
+      .catch((reason: unknown) => { if (!controller.signal.aborted) setMessage(reason instanceof Error ? reason.message : 'Không tải được nơi giao dịch.'); });
+    return () => controller.abort();
+  }, [session]));
 
   useEffect(() => {
     if (!session) return;
@@ -103,11 +113,11 @@ export default function Transactions() {
   const income = sumBalances(transactions.filter((item) => item.kind === 'INCOME').map((item) => item.amount));
   const expense = sumBalances(transactions.filter((item) => item.kind === 'EXPENSE').map((item) => item.amount));
 
-  function reset() { setAmount(''); setNote(''); setOccurredOn(today()); setEditingId(null); setDeletingId(null); setPendingReceipt(null); setOcrResult(null); setDuplicateConfirmed(false); }
+  function reset() { setAmount(''); setNote(''); setMerchantId(''); setOccurredOn(today()); setEditingId(null); setDeletingId(null); setPendingReceipt(null); setOcrResult(null); setDuplicateConfirmed(false); }
   function edit(transaction: Transaction) {
     setPendingReceipt(null); setOcrResult(null); setDuplicateConfirmed(false);
     setEditingId(transaction.id); setKind(transaction.kind); setAccountId(transaction.accountId); setCategoryId(transaction.categoryId);
-    setAmount(transaction.amount); setOccurredOn(transaction.occurredOn); setNote(transaction.note || ''); setDeletingId(null); setMessage('Đang sửa giao dịch bên dưới.');
+    setAmount(transaction.amount); setMerchantId(transaction.merchantId ?? ''); setOccurredOn(transaction.occurredOn); setNote(transaction.note || ''); setDeletingId(null); setMessage('Đang sửa giao dịch bên dưới.');
     setReceiptId(transaction.id);
   }
   async function save() {
@@ -117,7 +127,7 @@ export default function Transactions() {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(occurredOn)) { setMessage('Ngày giao dịch phải có dạng YYYY-MM-DD.'); return; }
     setBusy(true); setMessage('');
     try {
-      const saved = await saveTransaction(session, { accountId: selectedAccount, categoryId: selectedCategory, kind, amount: value, occurredOn, note: note.trim() || null }, editingId ?? undefined);
+      const saved = await saveTransaction(session, { accountId: selectedAccount, categoryId: selectedCategory, merchantId: merchantId || null, kind, amount: value, occurredOn, note: note.trim() || null }, editingId ?? undefined);
       let receiptAttached = false;
       if (pendingReceipt) {
         try { await uploadReceipt(session, saved.id, pendingReceipt.uri, pendingReceipt.mimeType); receiptAttached = true; }
@@ -151,10 +161,10 @@ export default function Transactions() {
     setPendingReceipt({ uri: asset.uri, mimeType: asset.mimeType });
     try {
       const found = await recognizeReceipt(session, asset.uri, asset.mimeType);
-      setOcrResult(found); setKind('EXPENSE'); setCategoryId(''); setEditingId(null);
+      setOcrResult(found); setKind('EXPENSE'); setCategoryId(''); setMerchantId(''); setEditingId(null);
       if (found.amount) setAmount(found.amount);
       if (found.occurredOn) setOccurredOn(found.occurredOn);
-      if (found.merchant) setNote(found.merchant);
+      if (found.merchant) { setNote(found.merchant); setMerchantId(merchants.find((item) => item.name.toLocaleLowerCase() === found.merchant?.trim().toLocaleLowerCase())?.id ?? ''); }
       setMessage(found.readable ? 'Đã điền dữ liệu nhận diện. Hãy kiểm tra và sửa trước khi lưu.' : 'OCR chưa đọc được thông tin. Hãy nhập tay trước khi lưu.');
     } catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Không đọc được hóa đơn. Hãy nhập tay.'); }
     finally { setOcrBusy(false); }
@@ -203,7 +213,7 @@ export default function Transactions() {
   }
 
   return <Page><View style={styles.header}><Brand subtitle="GIAO DỊCH" /><Pressable accessibilityRole="button" onPress={() => router.push('/categories')} style={styles.categoryShortcut}><Ionicons name="pricetags-outline" size={22} color={color.greenDark} /></Pressable></View>
-    <Text style={common.title}>Lịch sử giao dịch</Text><Text style={[common.subtitle, styles.subtitle]}>Ghi khoản thu, chi và xem lịch sử từ dữ liệu bạn tự nhập.</Text><SecondaryButton onPress={() => router.push('/transfers')}>Chuyển khoản giữa tài khoản →</SecondaryButton><SecondaryButton onPress={() => router.push('/recurring')}>Giao dịch định kỳ →</SecondaryButton>
+    <Text style={common.title}>Lịch sử giao dịch</Text><Text style={[common.subtitle, styles.subtitle]}>Ghi khoản thu, chi và xem lịch sử từ dữ liệu bạn tự nhập.</Text><SecondaryButton onPress={() => router.push('/transfers')}>Chuyển khoản giữa tài khoản →</SecondaryButton><SecondaryButton onPress={() => router.push('/recurring')}>Giao dịch định kỳ →</SecondaryButton><SecondaryButton onPress={() => router.push('/merchants')}>Nơi giao dịch →</SecondaryButton>
     <View style={styles.summary}><Card style={styles.summaryCard}><Text style={styles.summaryLabel}>TỔNG THU</Text><Text style={[styles.summaryValue, styles.income]}>{loaded ? formatVnd(income) : '—'}</Text><Text style={common.helper}>Giao dịch đã lưu</Text></Card><Card style={styles.summaryCard}><Text style={styles.summaryLabel}>TỔNG CHI</Text><Text style={[styles.summaryValue, styles.expense]}>{loaded ? formatVnd(expense) : '—'}</Text><Text style={common.helper}>Giao dịch đã lưu</Text></Card></View>
     <View style={styles.sectionHead}><Text style={common.sectionTitle}>Giao dịch của bạn</Text><Pressable accessibilityRole="button" onPress={() => setFiltersOpen((value) => !value)}><Text style={styles.link}>{filtersOpen ? 'Ẩn bộ lọc' : 'Lọc & tìm kiếm'}</Text></Pressable></View>
     {filtersOpen && <Card style={styles.filtersCard}>
@@ -218,12 +228,13 @@ export default function Transactions() {
     </Card>}
     <Text style={styles.count}>{history?.totalElements ?? 0} giao dịch phù hợp</Text>
     {!!history && history.totalPages > 1 && <View style={styles.pagination}><Pressable accessibilityRole="button" disabled={historyPage === 0 || historyLoading} onPress={() => setHistoryPage((value) => value - 1)}><Text style={[styles.link, historyPage === 0 && styles.disabled]}>Trang trước</Text></Pressable><Text style={common.helper}>Trang {historyPage + 1} / {history.totalPages}</Text><Pressable accessibilityRole="button" disabled={historyPage + 1 >= history.totalPages || historyLoading} onPress={() => setHistoryPage((value) => value + 1)}><Text style={[styles.link, historyPage + 1 >= history.totalPages && styles.disabled]}>Trang sau</Text></Pressable></View>}
-    <Card>{!loaded || historyLoading ? <Text style={common.helper}>Đang tải giao dịch...</Text> : historyError ? <Text style={common.message}>{historyError}</Text> : history?.items.length ? history.items.map((transaction, index) => <View key={transaction.id} style={[styles.row, index > 0 && styles.divider]}><View style={[styles.rowIcon, transaction.kind === 'INCOME' ? styles.incomeBg : styles.expenseBg]}><Ionicons name={transaction.kind === 'INCOME' ? 'arrow-up-outline' : 'arrow-down-outline'} size={23} color={transaction.kind === 'INCOME' ? color.greenDark : '#b45309'} /></View><View style={styles.rowMain}><Text style={styles.rowName}>{categories.find((category) => category.id === transaction.categoryId)?.name ?? 'Danh mục'}</Text><Text style={styles.rowDetail}>{transaction.occurredOn.split('-').reverse().join('/')} · {accounts.find((account) => account.id === transaction.accountId)?.name ?? 'Tài khoản'}</Text>{!!transaction.note && <Text style={styles.rowDetail}>{transaction.note}</Text>}<View style={styles.rowActions}><Pressable accessibilityRole="button" onPress={() => setReceiptId(transaction.id)}><Text style={styles.link}>{transaction.hasReceipt ? 'Xem hóa đơn' : 'Thêm hóa đơn'}</Text></Pressable><Pressable accessibilityRole="button" onPress={() => edit(transaction)}><Text style={styles.link}>Sửa</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setDeletingId(transaction.id)}><Text style={styles.delete}>Xóa</Text></Pressable></View></View><Text style={[styles.rowAmount, transaction.kind === 'INCOME' ? styles.income : styles.expense]}>{transaction.kind === 'INCOME' ? '+' : '−'}{formatVnd(transaction.amount)}</Text>{deletingId === transaction.id && <View style={styles.confirm}><Text style={common.helper}>Xóa giao dịch này?</Text><Pressable accessibilityRole="button" onPress={() => remove(transaction.id)} disabled={busy}><Text style={styles.delete}>Xác nhận xóa</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setDeletingId(null)}><Text style={styles.link}>Hủy</Text></Pressable></View>}</View>) : <View style={styles.empty}><Ionicons name="receipt-outline" size={35} color={color.greenDark} /><Text style={styles.emptyTitle}>{applied.search || applied.month || applied.from || applied.to || applied.kind || applied.categoryId ? 'Không có giao dịch phù hợp' : 'Chưa có giao dịch'}</Text><Text style={common.helper}>Thử đổi bộ lọc hoặc thêm giao dịch mới.</Text></View>}</Card>
+    <Card>{!loaded || historyLoading ? <Text style={common.helper}>Đang tải giao dịch...</Text> : historyError ? <Text style={common.message}>{historyError}</Text> : history?.items.length ? history.items.map((transaction, index) => <View key={transaction.id} style={[styles.row, index > 0 && styles.divider]}><View style={[styles.rowIcon, transaction.kind === 'INCOME' ? styles.incomeBg : styles.expenseBg]}><Ionicons name={transaction.kind === 'INCOME' ? 'arrow-up-outline' : 'arrow-down-outline'} size={23} color={transaction.kind === 'INCOME' ? color.greenDark : '#b45309'} /></View><View style={styles.rowMain}><Text style={styles.rowName}>{categories.find((category) => category.id === transaction.categoryId)?.name ?? 'Danh mục'}</Text><Text style={styles.rowDetail}>{transaction.occurredOn.split('-').reverse().join('/')} · {accounts.find((account) => account.id === transaction.accountId)?.name ?? 'Tài khoản'}</Text>{transaction.merchantId && <Text style={styles.rowDetail}>Nơi giao dịch: {merchants.find((item) => item.id === transaction.merchantId)?.name ?? 'Đã đổi'}</Text>}{!!transaction.note && <Text style={styles.rowDetail}>{transaction.note}</Text>}<View style={styles.rowActions}><Pressable accessibilityRole="button" onPress={() => setReceiptId(transaction.id)}><Text style={styles.link}>{transaction.hasReceipt ? 'Xem hóa đơn' : 'Thêm hóa đơn'}</Text></Pressable><Pressable accessibilityRole="button" onPress={() => edit(transaction)}><Text style={styles.link}>Sửa</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setDeletingId(transaction.id)}><Text style={styles.delete}>Xóa</Text></Pressable></View></View><Text style={[styles.rowAmount, transaction.kind === 'INCOME' ? styles.income : styles.expense]}>{transaction.kind === 'INCOME' ? '+' : '−'}{formatVnd(transaction.amount)}</Text>{deletingId === transaction.id && <View style={styles.confirm}><Text style={common.helper}>Xóa giao dịch này?</Text><Pressable accessibilityRole="button" onPress={() => remove(transaction.id)} disabled={busy}><Text style={styles.delete}>Xác nhận xóa</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setDeletingId(null)}><Text style={styles.link}>Hủy</Text></Pressable></View>}</View>) : <View style={styles.empty}><Ionicons name="receipt-outline" size={35} color={color.greenDark} /><Text style={styles.emptyTitle}>{applied.search || applied.month || applied.from || applied.to || applied.kind || applied.categoryId ? 'Không có giao dịch phù hợp' : 'Chưa có giao dịch'}</Text><Text style={common.helper}>Thử đổi bộ lọc hoặc thêm giao dịch mới.</Text></View>}</Card>
     {receiptId && <Card style={styles.receiptCard}><View style={styles.receiptHead}><Text style={common.sectionTitle}>Ảnh hóa đơn</Text><Pressable accessibilityRole="button" onPress={() => setReceiptId(null)}><Text style={styles.link}>Đóng</Text></Pressable></View>{receiptUri && <Image source={{ uri: receiptUri }} style={styles.receiptImage} resizeMode="contain" />}<Text style={common.helper}>JPEG, PNG hoặc WebP · tối đa 5 MB</Text><PrimaryButton onPress={addReceipt} disabled={receiptBusy}>{receiptBusy ? 'Đang xử lý...' : 'Chọn ảnh từ thư viện'}</PrimaryButton>{transactions.find((item) => item.id === receiptId)?.hasReceipt && <Pressable accessibilityRole="button" onPress={removeReceipt} disabled={receiptBusy}><Text style={styles.delete}>Xóa ảnh hóa đơn</Text></Pressable>}</Card>}
     <Text style={[common.sectionTitle, styles.sectionTitle]}>{editingId ? 'Sửa giao dịch' : 'Thêm giao dịch'}</Text><Card style={styles.ocrCard}><Text style={common.sectionTitle}>Quét hóa đơn</Text><Text style={common.helper}>Ảnh chỉ gợi ý dữ liệu. Kiểm tra biểu mẫu trước khi lưu giao dịch.</Text><View style={styles.ocrActions}><PrimaryButton onPress={() => scanReceipt('camera')} disabled={ocrBusy || busy}>Chụp ảnh</PrimaryButton><SecondaryButton onPress={() => scanReceipt('library')}>Chọn ảnh</SecondaryButton></View>{ocrBusy && <Text style={common.helper}>Đang nhận diện hóa đơn...</Text>}{pendingReceipt && <Image source={{ uri: pendingReceipt.uri }} style={styles.receiptImage} resizeMode="contain" />}{ocrResult?.duplicateTransactionId && <View style={styles.ocrWarning}><Text style={styles.ocrWarningText}>Ảnh này đã gắn với một giao dịch của bạn.</Text><Pressable accessibilityRole="checkbox" accessibilityState={{ checked: duplicateConfirmed }} onPress={() => setDuplicateConfirmed((value) => !value)}><Text style={styles.ocrWarningText}>{duplicateConfirmed ? '☑' : '□'} Tôi đã kiểm tra và vẫn muốn lưu</Text></Pressable></View>}</Card><Card><View style={styles.kindTabs}><Pressable accessibilityRole="button" onPress={() => { setKind('EXPENSE'); setCategoryId(''); }} style={[styles.kindTab, kind === 'EXPENSE' && styles.kindActive]}><Text style={[styles.kindText, kind === 'EXPENSE' && styles.kindActiveText]}>Chi tiêu</Text></Pressable><Pressable accessibilityRole="button" onPress={() => { setKind('INCOME'); setCategoryId(''); }} style={[styles.kindTab, kind === 'INCOME' && styles.kindActive]}><Text style={[styles.kindText, kind === 'INCOME' && styles.kindActiveText]}>Thu nhập</Text></Pressable></View>
       <Text style={common.label}>Số tiền (VND)</Text><TextInput style={common.input} value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder="Ví dụ: 50000" placeholderTextColor="#94a3b8" />
       <Text style={[common.label, styles.labelGap]}>Tài khoản</Text><View style={styles.chips}>{accounts.map((account) => <Pressable accessibilityRole="button" key={account.id} onPress={() => setAccountId(account.id)} style={[styles.chip, selectedAccount === account.id && styles.chipActive]}><Text style={[styles.chipText, selectedAccount === account.id && styles.chipTextActive]}>{account.name}</Text></Pressable>)}</View>{!accounts.length && <Text style={common.helper}>Hãy thêm tài khoản trước khi ghi giao dịch.</Text>}
       <Text style={[common.label, styles.labelGap]}>Danh mục</Text><View style={styles.chips}>{availableCategories.map((category) => <Pressable accessibilityRole="button" key={category.id} onPress={() => setCategoryId(category.id)} style={[styles.chip, selectedCategory === category.id && styles.chipActive]}><Text style={[styles.chipText, selectedCategory === category.id && styles.chipTextActive]}>{category.name}</Text></Pressable>)}</View><Pressable accessibilityRole="button" onPress={() => router.push('/categories')} style={styles.manage}><Text style={styles.link}>Quản lý danh mục →</Text></Pressable>
+      <Text style={[common.label, styles.labelGap]}>Nơi giao dịch (tùy chọn)</Text><View style={styles.chips}><Pressable accessibilityRole="button" onPress={() => setMerchantId('')} style={[styles.chip, !merchantId && styles.chipActive]}><Text style={[styles.chipText, !merchantId && styles.chipTextActive]}>Không chọn</Text></Pressable>{merchants.map((item) => <Pressable accessibilityRole="button" key={item.id} onPress={() => setMerchantId(item.id)} style={[styles.chip, merchantId === item.id && styles.chipActive]}><Text style={[styles.chipText, merchantId === item.id && styles.chipTextActive]}>{item.name}</Text></Pressable>)}</View><Pressable accessibilityRole="button" onPress={() => router.push('/merchants')} style={styles.manage}><Text style={styles.link}>Quản lý nơi giao dịch →</Text></Pressable>
       <Text style={[common.label, styles.labelGap]}>Ngày giao dịch (YYYY-MM-DD)</Text><TextInput style={common.input} value={occurredOn} onChangeText={setOccurredOn} keyboardType="numbers-and-punctuation" placeholder="2026-10-21" placeholderTextColor="#94a3b8" />
       <Text style={[common.label, styles.labelGap]}>Ghi chú (tùy chọn)</Text><TextInput style={[common.input, styles.noteInput]} value={note} onChangeText={setNote} multiline maxLength={500} placeholder="Ghi chú cho giao dịch" placeholderTextColor="#94a3b8" />
       <PrimaryButton onPress={save} disabled={busy || ocrBusy || !selectedAccount || !selectedCategory || !amount.trim() || !!(ocrResult?.duplicateTransactionId && !duplicateConfirmed)}>{busy ? 'Đang lưu...' : editingId ? 'Lưu thay đổi' : 'Thêm giao dịch'}</PrimaryButton>{editingId && <SecondaryButton onPress={reset}>Hủy chỉnh sửa</SecondaryButton>}</Card>

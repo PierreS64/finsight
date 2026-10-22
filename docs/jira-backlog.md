@@ -53,3 +53,5 @@ The eight initially unassigned Epics FNS-3 through FNS-10 and six Tasks FNS-11, 
 [FNS-39](https://finsight-team.atlassian.net/browse/FNS-39) tracks savings goals under Budget & Planning and is assigned to Nguyễn Thuận Phong. Goal progress is a manually maintained planning value and does not change account balances.
 
 [FNS-40](https://finsight-team.atlassian.net/browse/FNS-40) tracks balance reconciliation under Financial Accounts and is assigned to Nguyễn Thuận Phong. A reconciliation records a snapshot and discrepancy without adjusting the balance.
+
+[FNS-41](https://finsight-team.atlassian.net/browse/FNS-41) tracks owner-scoped merchant management and optional merchant links on transactions under Automation. It is assigned to Nguyễn Thuận Phong.

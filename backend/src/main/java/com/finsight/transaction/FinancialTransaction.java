@@ -26,6 +26,8 @@ public class FinancialTransaction {
     private UUID accountId;
     @Column(name = "category_id", nullable = false)
     private UUID categoryId;
+    @Column(name = "merchant_id")
+    private UUID merchantId;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 7)
     private Kind kind;
@@ -44,15 +46,26 @@ public class FinancialTransaction {
 
     public FinancialTransaction(UUID ownerUserId, UUID accountId, UUID categoryId, Kind kind,
                                 BigDecimal amount, LocalDate occurredOn, String note) {
+        this(ownerUserId, accountId, categoryId, null, kind, amount, occurredOn, note);
+    }
+
+    public FinancialTransaction(UUID ownerUserId, UUID accountId, UUID categoryId, UUID merchantId, Kind kind,
+                                BigDecimal amount, LocalDate occurredOn, String note) {
         this.id = UUID.randomUUID();
         this.ownerUserId = ownerUserId;
-        update(accountId, categoryId, kind, amount, occurredOn, note);
+        update(accountId, categoryId, merchantId, kind, amount, occurredOn, note);
     }
 
     public void update(UUID accountId, UUID categoryId, Kind kind, BigDecimal amount,
                        LocalDate occurredOn, String note) {
+        update(accountId, categoryId, merchantId, kind, amount, occurredOn, note);
+    }
+
+    public void update(UUID accountId, UUID categoryId, UUID merchantId, Kind kind, BigDecimal amount,
+                       LocalDate occurredOn, String note) {
         this.accountId = accountId;
         this.categoryId = categoryId;
+        this.merchantId = merchantId;
         this.kind = kind;
         this.amount = amount;
         this.occurredOn = occurredOn;
@@ -68,6 +81,7 @@ public class FinancialTransaction {
     public UUID getOwnerUserId() { return ownerUserId; }
     public UUID getAccountId() { return accountId; }
     public UUID getCategoryId() { return categoryId; }
+    public UUID getMerchantId() { return merchantId; }
     public Kind getKind() { return kind; }
     public BigDecimal getAmount() { return amount; }
     public LocalDate getOccurredOn() { return occurredOn; }
