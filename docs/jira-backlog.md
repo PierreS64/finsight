@@ -57,3 +57,5 @@ The eight initially unassigned Epics FNS-3 through FNS-10 and six Tasks FNS-11, 
 [FNS-41](https://finsight-team.atlassian.net/browse/FNS-41) tracks owner-scoped merchant management and optional merchant links on transactions under Automation. It is assigned to Nguyễn Thuận Phong.
 
 [FNS-42](https://finsight-team.atlassian.net/browse/FNS-42) tracks CSV/XLSX statement preview and confirmed import under Automation. It is assigned to Nguyễn Thuận Phong.
+
+[FNS-43](https://finsight-team.atlassian.net/browse/FNS-43) tracks current net-worth calculation and manual assets/liabilities under Financial Overview. It is assigned to Nguyễn Thuận Phong.

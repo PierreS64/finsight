@@ -35,6 +35,30 @@ export type FinancialGoalInput = Pick<FinancialGoal, 'name' | 'targetAmount' | '
 export type AccountReconciliation = { id: string; accountId: string; expectedBalance: string; observedBalance: string; differenceAmount: string; status: 'BALANCED' | 'SURPLUS' | 'SHORTFALL'; note: string | null; recordedAt: string };
 export type StatementRow = { rowNumber: number; occurredOn: string; description: string; amount: string; kind: CategoryType; alreadyImported: boolean; possibleDuplicate: boolean };
 export type StatementPreview = { sourceHash: string; rows: StatementRow[] };
+export type NetWorthItem = { id: string; name: string; kind: 'ASSET' | 'LIABILITY'; amount: string; note: string | null };
+export type NetWorth = { accountAssets: string; accountLiabilities: string; totalAssets: string; totalLiabilities: string; netWorth: string; accounts: { id: string; name: string; balance: string }[]; items: NetWorthItem[] };
+
+export async function getNetWorth(session: Session, signal?: AbortSignal): Promise<NetWorth> {
+  const response = await fetch(`${apiBase}/api/v1/net-worth`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (!response.ok) throw new Error(`Không tải được tài sản ròng (HTTP ${response.status}).`);
+  return await response.json() as NetWorth;
+}
+
+export async function saveNetWorthItem(session: Session, input: { name: string; kind: NetWorthItem['kind']; amount: string; note: string | null }, id?: string): Promise<NetWorthItem> {
+  const response = await fetch(`${apiBase}/api/v1/net-worth/items${id ? `/${id}` : ''}`, {
+    method: id ? 'PUT' : 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) throw new Error(`Không lưu được khoản mục (HTTP ${response.status}).`);
+  return await response.json() as NetWorthItem;
+}
+
+export async function deleteNetWorthItem(session: Session, id: string): Promise<void> {
+  const response = await fetch(`${apiBase}/api/v1/net-worth/items/${id}`, {
+    method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` },
+  });
+  if (!response.ok) throw new Error(`Không xóa được khoản mục (HTTP ${response.status}).`);
+}
 
 export async function previewStatement(session: Session, accountId: string, uri: string, mimeType: string): Promise<StatementPreview> {
   const result = await FileSystem.uploadAsync(`${apiBase}/api/v1/statements/preview?accountId=${encodeURIComponent(accountId)}`, uri, {

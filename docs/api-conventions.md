@@ -19,6 +19,7 @@ This records the behavior implemented on `develop` as of 2026-10-21. Use it when
 - `GET/POST /api/v1/accounts/{accountId}/reconciliations` and `DELETE /api/v1/accounts/{accountId}/reconciliations/{id}` record and manage owner-scoped balance snapshots. Each snapshot returns its expected, observed and signed difference amounts.
 - `GET/POST /api/v1/merchants` and `PUT/DELETE /api/v1/merchants/{id}` manage names scoped to the authenticated user. A transaction may include a nullable `merchantId`; both the API ownership check and composite database foreign key require the same owner. History search includes merchant names. A referenced merchant cannot be deleted.
 - `POST /api/v1/statements/preview?accountId=...` accepts an authenticated multipart CSV UTF-8 or XLSX file, returns parsed rows and duplicate hints, and writes nothing. `POST /api/v1/statements/import` accepts reviewed rows with category IDs and creates them atomically. File digest and row number prevent reimporting the same file row for the same owner. See `docs/decisions/0005-statement-import.md`.
+- `GET /api/v1/net-worth` returns current account balances, manually estimated assets/liabilities and exact totals. `POST /api/v1/net-worth/items` and `PUT/DELETE /api/v1/net-worth/items/{id}` manage owner-scoped current estimates. Negative account balances count as liabilities; savings goals are excluded.
 
 ## Money and calculations
 
@@ -27,6 +28,7 @@ This records the behavior implemented on `develop` as of 2026-10-21. Use it when
 - Keep reporting formulas and missing-data behavior visible in the API and UI. Do not infer a savings rate without income or a trend without a comparison base. Hypothetical values never become stored transactions or budgets.
 - Savings goals store a manually reported saved amount as planning data. Their progress and remaining amount use decimal arithmetic; goal edits do not move account funds or change cash flow.
 - Reconciliation difference is observed minus the account's computed balance at recording time. It is an audit value and never changes account balances or transactions.
+- Net worth equals positive account balances plus manually entered assets, minus absolute negative account balances and manually entered liabilities. These current estimates do not change transactions or account balances.
 
 ## Schema and review
 
