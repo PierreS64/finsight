@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { router } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { createAccount, getAccounts, type Account, type AccountType } from '../../api';
@@ -22,12 +22,12 @@ export default function Accounts() {
   const [openingBalance, setOpeningBalance] = useState('0');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!session) return;
     const controller = new AbortController();
     getAccounts(session, controller.signal).then((found) => { setAccounts(found); setLoaded(true); }).catch((reason: unknown) => { if (!controller.signal.aborted) { setMessage(reason instanceof Error ? reason.message : 'Không thể tải tài khoản.'); setLoaded(true); } });
     return () => controller.abort();
-  }, [session]);
+  }, [session]));
 
   async function submit() {
     if (!session || busy || !name.trim()) return;
