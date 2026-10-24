@@ -73,7 +73,7 @@ export default function StatementImportPanel({ session, accounts, onCategories }
         throw new Error(error.detail || `Không nhập được sao kê (HTTP ${response.status}). Hãy xem trước lại tệp nếu có dòng trùng.`);
       }
       const result = await response.json() as { importedCount: number };
-      setPreview(null); setFile(null); setSelected([]); setMessage(`Đã nhập ${result.importedCount} giao dịch. Số dư tài khoản sẽ được tính lại.`);
+      setPreview(null); setSelected([]); setMessage(`Đã nhập ${result.importedCount} giao dịch. Xem trước lại tệp để kiểm tra các dòng đã nhập.`);
     } catch (error) { setMessage(error instanceof Error ? error.message : "Không nhập được sao kê."); }
     finally { setBusy(false); }
   }
