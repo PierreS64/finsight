@@ -118,6 +118,7 @@
 - FNS-12 current CI: Jenkins build #3 failed at checkout because the old Windows agent workspace was owned by an elevated administrator group and the limited agent could not replace `.git/config`. The Jenkinsfile now uses a new user-owned workspace. On commit `148738c`, [build #4](http://127.0.0.1:8085/job/finsight-develop/4/) passed: backend 75 tests (73 passed, 2 optional skips), web lint/build, mobile TypeScript and Expo Doctor 18/18, and Docker image build. The FinSight Jenkins controller and agent were stopped afterward. Docker Desktop remained open because unrelated containers were running.
 - Mobile dependency review: `npm audit --omit=dev` reported six high and eleven moderate advisories in the current Expo dependency graph; web production dependencies reported zero. Do not apply the suggested Expo major-version downgrade automatically. Assess reachable impact and SDK 53-compatible updates before considering the draft PR release-ready.
 - Jira evidence for the PR/CI work was added to FNS-11, FNS-12 and FNS-23. FNS-11 and FNS-12 moved from To Do to Testing; FNS-23 moved from To Do to In Progress while draft PR #1 is reviewed. No issue was marked Done solely because a build passed.
+- Created FNS-50 under DevOps & Infrastructure for the Expo SDK 53 dependency assessment, assigned to Nguyễn Thuận Phong. Draft PR #1 remains open until its acceptance criteria are resolved.
 
 ## Decisions
 
@@ -129,6 +130,6 @@ The public `origin` remote is `https://github.com/PierreS64/finsight.git`, inten
 
 ## Next
 
-As of 2026-10-24, Jira has 49 FNS issues: 32 in Testing, 16 in To Do (including nine Epics), one In Progress, and none in Done. Much of Phases 0–6 is implemented, but Jira completion still depends on acceptance evidence. The user deferred the password-recovery email test and corrected AI assistant UI recheck.
+As of 2026-10-24, Jira has 50 FNS issues: 32 in Testing, 17 in To Do (including nine Epics), one In Progress, and none in Done. Much of Phases 0–6 is implemented, but Jira completion still depends on acceptance evidence. The user deferred the password-recovery email test and corrected AI assistant UI recheck.
 
 Prioritize Phase 7: finish the mobile dependency assessment, then perform signed-in end-to-end checks for receipt OCR, goals, reconciliation, merchant handling, statement import, net worth, health score, subscription and category suggestions, and lazy web navigation with synthetic data. Record actual evidence in Jira and move verified issues through review and acceptance. Review draft PR #1 for FNS-23 integration; keep it open while required checks or acceptance are incomplete. Keep each completed feature in a separate commit for review; do not start Docker automatically at Windows sign-in.

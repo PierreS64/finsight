@@ -71,3 +71,5 @@ The eight initially unassigned Epics FNS-3 through FNS-10 and six Tasks FNS-11, 
 [FNS-48](https://finsight-team.atlassian.net/browse/FNS-48) tracks the reproducible Supabase API smoke check and current architecture/database/API documentation under DevOps & Infrastructure. It is assigned to Nguyễn Thuận Phong.
 
 [FNS-49](https://finsight-team.atlassian.net/browse/FNS-49) tracks on-demand loading of web workspace screens under DevOps & Infrastructure. It is assigned to Nguyễn Thuận Phong.
+
+[FNS-50](https://finsight-team.atlassian.net/browse/FNS-50) tracks the review and compatible remediation of Expo SDK 53 dependency advisories before draft PR #1 is merged. It is assigned to Nguyễn Thuận Phong under DevOps & Infrastructure.
