@@ -18,8 +18,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @ActiveProfiles("local")
 class FinancialAccountControllerTests {
-    private static final String ALICE = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
-    private static final String BOB = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    private static final String ALICE = "a0a0a0a0-1111-4111-8111-111111111111";
+    private static final String BOB = "b0b0b0b0-2222-4222-8222-222222222222";
 
     @Autowired MockMvc mvc;
 
