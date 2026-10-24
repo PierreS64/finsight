@@ -73,3 +73,5 @@ The eight initially unassigned Epics FNS-3 through FNS-10 and six Tasks FNS-11, 
 [FNS-49](https://finsight-team.atlassian.net/browse/FNS-49) tracks on-demand loading of web workspace screens under DevOps & Infrastructure. It is assigned to Nguyễn Thuận Phong.
 
 [FNS-50](https://finsight-team.atlassian.net/browse/FNS-50) tracks the review and compatible remediation of Expo SDK 53 dependency advisories before draft PR #1 is merged. It is assigned to Nguyễn Thuận Phong under DevOps & Infrastructure.
+
+[FNS-53](https://finsight-team.atlassian.net/browse/FNS-53) tracks the Android password-reset screen's indefinite link-check state after reopening without a valid recovery link. It is assigned to Nguyễn Thuận Phong under Authentication & User.

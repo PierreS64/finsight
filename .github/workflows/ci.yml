@@ -54,3 +54,5 @@ jobs:
       - name: Typecheck, lint and Expo Doctor
         working-directory: frontend/mobile
         run: npx tsc --noEmit && npm run lint && npx expo-doctor
+      - name: Recovery link parsing
+        run: node --experimental-strip-types --test scripts/check-recovery-link.mjs
