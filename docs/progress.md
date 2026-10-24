@@ -2,6 +2,8 @@
 
 ## Completed
 
+- Cleaned 13 unused local artifact paths (64.17 MiB) by moving them to the Windows Recycle Bin: the initial Expo Git scaffold backup, Expo cache, old web distribution, unused starter web assets, packaged backend JAR copies and five old UI-check screenshots. Source files, installed dependencies, running backend classes, configuration, reports and design references were retained. No tracked source files were deleted.
+- Prepared five one-page Vietnamese individual progress reports in the local, ignored `docs/reports/2026-10-21/` folder, mapped to the original team assignment table and implemented commits. Each includes the student's verified name/ID, completed scope, recorded verification and remaining acceptance checks. All five were rendered with installed Microsoft Word and Poppler and visually checked; the packaged LibreOffice renderer was unavailable on this Windows host. The reports are intentionally excluded from Git because they contain student details.
 - Checked Windows tools and Android SDK 35; found JDK 17 while default Java is 21.
 - Initialized new local Git repository on `develop`.
 - Created Spring Boot 3.5 Java 17 API with Maven Wrapper, Security, OAuth2 Resource Server, JPA, Flyway, PostgreSQL driver, Actuator, and local H2 profile.
