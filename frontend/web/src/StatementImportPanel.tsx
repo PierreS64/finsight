@@ -10,7 +10,7 @@ type ImportRow = { rowNumber: number; occurredOn: string; description: string; a
 type Preview = { sourceHash: string; rows: ImportRow[] };
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
-export default function StatementImportPanel({ session, accounts, onCategories }: { session: Session; accounts: Account[]; onCategories: () => void }) {
+export default function StatementImportPanel({ session, accounts, onChanged, onCategories }: { session: Session; accounts: Account[]; onChanged: () => void; onCategories: () => void }) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
   const [file, setFile] = useState<File | null>(null);
@@ -73,6 +73,7 @@ export default function StatementImportPanel({ session, accounts, onCategories }
         throw new Error(error.detail || `Không nhập được sao kê (HTTP ${response.status}). Hãy xem trước lại tệp nếu có dòng trùng.`);
       }
       const result = await response.json() as { importedCount: number };
+      onChanged();
       setPreview(null); setSelected([]); setMessage(`Đã nhập ${result.importedCount} giao dịch. Xem trước lại tệp để kiểm tra các dòng đã nhập.`);
     } catch (error) { setMessage(error instanceof Error ? error.message : "Không nhập được sao kê."); }
     finally { setBusy(false); }
