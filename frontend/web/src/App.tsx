@@ -1,22 +1,24 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { initialRecoveryRedirect, supabase } from "./supabase";
 import AuthPanel, { PasswordResetPanel, ProfilePanel } from "./AuthPanel";
-import AccountsPanel, { type Account } from "./AccountsPanel";
-import CategoriesPanel from "./CategoriesPanel";
-import MerchantsPanel from "./MerchantsPanel";
-import StatementImportPanel from "./StatementImportPanel";
-import TransactionsPanel from "./TransactionsPanel";
-import TransfersPanel from "./TransfersPanel";
-import BudgetPanel from "./BudgetPanel";
-import DashboardPanel from "./DashboardPanel";
-import RecurringPanel from "./RecurringPanel";
-import SubscriptionSuggestionsPanel from "./SubscriptionSuggestionsPanel";
-import GoalPanel from "./GoalPanel";
-import NetWorthPanel from "./NetWorthPanel";
-import AssistantPanel from "./AssistantPanel";
-import ReconciliationPanel from "./ReconciliationPanel";
+import type { Account } from "./AccountsPanel";
 import "./App.css";
+
+const AccountsPanel = lazy(() => import("./AccountsPanel"));
+const CategoriesPanel = lazy(() => import("./CategoriesPanel"));
+const MerchantsPanel = lazy(() => import("./MerchantsPanel"));
+const StatementImportPanel = lazy(() => import("./StatementImportPanel"));
+const TransactionsPanel = lazy(() => import("./TransactionsPanel"));
+const TransfersPanel = lazy(() => import("./TransfersPanel"));
+const BudgetPanel = lazy(() => import("./BudgetPanel"));
+const DashboardPanel = lazy(() => import("./DashboardPanel"));
+const RecurringPanel = lazy(() => import("./RecurringPanel"));
+const SubscriptionSuggestionsPanel = lazy(() => import("./SubscriptionSuggestionsPanel"));
+const GoalPanel = lazy(() => import("./GoalPanel"));
+const NetWorthPanel = lazy(() => import("./NetWorthPanel"));
+const AssistantPanel = lazy(() => import("./AssistantPanel"));
+const ReconciliationPanel = lazy(() => import("./ReconciliationPanel"));
 
 type Page = "overview" | "accounts" | "net-worth" | "reconcile" | "transactions" | "statements" | "transfers" | "recurring" | "categories" | "merchants" | "budgets" | "goals" | "assistant" | "profile";
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
@@ -95,7 +97,7 @@ function Workspace({ session, signOut, signOutError }: { session: Session; signO
   return <div className="workspace">
     <aside className="workspace-sidebar"><Brand /><p className="sidebar-caption">KHÔNG GIAN CỦA BẠN</p><nav aria-label="Điều hướng ứng dụng">{nav.map((item) => <button key={item.id} className={page === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}</nav><div className="sidebar-bottom"><span className="sidebar-avatar">{(displayName || session.user.email || "F").slice(0, 1).toUpperCase()}</span><span><strong>{displayName || "Tài khoản FinSight"}</strong><small>{session.user.email}</small></span></div></aside>
     <div className="workspace-main"><header className="workspace-topbar"><div><span className="mobile-brand"><Brand /></span><small>FINSIGHT / {title.toUpperCase()}</small></div><div className="topbar-actions"><span className="data-badge"><span className="live-dot" /> Dữ liệu do bạn nhập</span><button className="button-quiet" onClick={signOut}>Đăng xuất</button></div></header>
-      <main className="workspace-content">
+      <main className="workspace-content"><Suspense fallback={<div className="empty-state compact" role="status"><span>◌</span><h2>Đang mở màn hình...</h2></div>}>
         {signOutError && <p className="inline-error" role="alert">{signOutError}</p>}
         {page === "overview" && <DashboardPanel session={session} displayName={displayName} accounts={accounts} accountsLoaded={accountsLoaded} accountsError={accountsError} onNavigate={setPage} />}
         {page === "accounts" && <><div className="page-heading"><p className="eyebrow">TÀI KHOẢN CỦA BẠN</p><h1>Quản lý tài khoản</h1><p>Tài khoản trong FinSight là bản ghi do bạn tự tạo, không liên kết ngân hàng.</p><button className="button-outline" onClick={() => setPage("net-worth")}>Xem tài sản ròng →</button><button className="button-outline" onClick={() => setPage("reconcile")}>Đối soát số dư →</button></div><AccountsPanel session={session} accounts={accounts} onCreated={(account) => setAccounts((current) => [...current, account])} /></>}
@@ -111,7 +113,7 @@ function Workspace({ session, signOut, signOutError }: { session: Session; signO
         {page === "budgets" && <><div className="page-heading"><p className="eyebrow">KẾ HOẠCH TÀI CHÍNH</p><h1>Ngân sách</h1><p>Đặt hạn mức tổng và theo danh mục cho từng tháng.</p><button className="button-outline" onClick={() => setPage("goals")}>Mục tiêu tiết kiệm →</button></div><BudgetPanel session={session} /></>}
         {page === "goals" && <><div className="page-heading"><p className="eyebrow">KẾ HOẠCH TÀI CHÍNH</p><h1>Mục tiêu tiết kiệm</h1><p>Theo dõi khoản tiền bạn dự định dành cho điều quan trọng.</p></div><GoalPanel session={session} /></>}
         {page === "profile" && <><div className="page-heading"><p className="eyebrow">CÀI ĐẶT CÁ NHÂN</p><h1>Hồ sơ của bạn</h1><p>Cập nhật tên hiển thị và kiểm tra thông tin tài khoản.</p></div><ProfilePanel session={session} onDisplayName={setDisplayName} /></>}
-      </main><nav className="workspace-mobile-nav" aria-label="Điều hướng ứng dụng trên điện thoại">{nav.filter((item) => item.id !== "transfers" && item.id !== "recurring" && item.id !== "goals" && item.id !== "reconcile" && item.id !== "merchants" && item.id !== "statements").map((item) => <button key={item.id} className={page === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}</nav>
+      </Suspense></main><nav className="workspace-mobile-nav" aria-label="Điều hướng ứng dụng trên điện thoại">{nav.filter((item) => item.id !== "transfers" && item.id !== "recurring" && item.id !== "goals" && item.id !== "reconcile" && item.id !== "merchants" && item.id !== "statements").map((item) => <button key={item.id} className={page === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}</nav>
     </div>
   </div>;
 }
