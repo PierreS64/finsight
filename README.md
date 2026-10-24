@@ -4,7 +4,7 @@ FinSight is a personal finance intelligence platform under development. The repo
 
 ## Current milestone
 
-Phase 0 scaffold is available. Web and Android show an honest project introduction. The API exposes public health and a protected session endpoint. Financial features and Supabase integration are **not implemented yet**. See [progress](docs/progress.md) and [roadmap](docs/development-workflow.md).
+The Phase 0–6 implementation is available on `develop`; Phase 7 acceptance is in progress. The API connects to the real Supabase PostgreSQL project. Web and Android have Supabase Auth with email password recovery and signed-in password change, profiles, virtual accounts and balance reconciliation snapshots, owner-scoped income/expense categories and merchants, transaction CRUD, CSV/XLSX statement preview and confirmed import, private receipt image attachments and OCR assisted entry, searchable transaction history with reviewable category suggestions, account transfers, weekly/monthly recurring transactions, read-only subscription suggestions and an upcoming expense view, monthly budgets and savings goals, current net-worth tracking with manual assets and liabilities, an explainable current-month financial health score, 80%/90%/100% budget alerts and a safe daily spending amount, a monthly financial dashboard with weekly/monthly charts and spending trends, an expense forecast, rule-based insight cards, category-level spending explanations, a monthly spending behavior profile, a temporary What-if Simulator, and an optional AI assistant that explains backend-calculated monthly facts. OCR only suggests fields; users review and save the transaction themselves. Savings goals track planned amounts without moving account funds. Reconciliation records discrepancies without changing balances. Recurring rules are processed explicitly from the UI when due; no background scheduler runs yet. AI chat requires a separate server-side API key; the backend has been tested with synthetic facts against a live provider, and a signed-in web check confirmed the verified facts; the corrected balance wording was rechecked in a signed-in web session. A real user signed in and accessed their profile on both platforms, saved it on web, and added an account that persisted after reload and appeared on Android. The local Jenkins `finsight-develop` pipeline passed backend tests, web and mobile checks, and Docker image build on its Windows agent. See [progress](docs/progress.md) and [roadmap](docs/development-workflow.md).
 
 ## Quick start on Windows PowerShell
 
@@ -20,6 +20,10 @@ $env:SPRING_PROFILES_ACTIVE = 'local'
 
 The local profile uses in-memory H2 and a nonfunctional JWKS URL. `GET http://localhost:8080/actuator/health` works; authenticated requests need a real Supabase environment.
 
+For the real Supabase project, fill the ignored root `.env` and run `powershell -ExecutionPolicy Bypass -File .\scripts\start-supabase-api.ps1` from the repository root. The API listens on `localhost:8086`. See [setup](docs/setup.md) for web configuration and sign-in.
+
+With the API running, `powershell -ExecutionPolicy Bypass -File .\scripts\smoke-supabase-api.ps1` performs read-only health and authentication checks against the real profile.
+
 ```powershell
 cd frontend/web
 npm ci
@@ -34,6 +38,15 @@ npm run android
 ```
 
 For the Docker API demo: `docker compose up --build`. Docker Desktop must be running. See [setup](docs/setup.md) for real database and auth configuration.
+
+API and integration rules are in [API conventions](docs/api-conventions.md).
+
+Jenkins is available on demand without starting Docker Desktop at Windows sign-in:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\start-jenkins-local.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\stop-jenkins-local.ps1
+```
 
 ## Verification
 

@@ -2,6 +2,9 @@
 .env
 .env.*
 !.env.example
+.secrets/
+# Individual student reports contain personal details and remain local.
+docs/reports/
 **/node_modules/
 **/dist/
 **/target/

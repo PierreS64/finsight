@@ -1,0 +1,4 @@
+spring:
+  flyway:
+    schemas: finsight
+    default-schema: finsight
