@@ -1,5 +1,10 @@
 pipeline {
-    agent { label 'windows-finsight' }
+    agent {
+        node {
+            label 'windows-finsight'
+            customWorkspace 'finsight-develop-v2'
+        }
+    }
     tools { jdk 'jdk17' }
     options { timestamps(); disableConcurrentBuilds() }
     stages {
