@@ -20,7 +20,7 @@ Target: the Jira Software Scrum space **F1nS1ght**, key **FNS**, at `https://fin
 
 | Key | Task | Epic | Acceptance criteria | Depends on |
 | --- | --- | --- | --- | --- |
-| FNS-11 | Protect Git branches and document review flow | DevOps & Infrastructure | `main` requires review and passing CI; `develop` remains the integration branch; no forced push | Private GitHub repository (done) |
+| FNS-11 | Protect Git branches and document review flow | DevOps & Infrastructure | `main` requires a PR and passing CI; `develop` remains the integration branch; no forced push | Public GitHub repository (done) |
 | FNS-2 | Connect Windows Jenkins agent | DevOps & Infrastructure | Node `windows-finsight` is online with Java 21 agent runtime, JDK 17 build tool, Git, Node/npm, and Docker CLI available | Jenkins controller and node (created) |
 | FNS-12 | Run Jenkins pipeline from `develop` | DevOps & Infrastructure | Backend tests, web lint/build, mobile typecheck/Expo Doctor, and Docker image build pass with archived JUnit results | Online agent and read-only GitHub credential |
 | FNS-13 | Provision FinSight Supabase project | DevOps & Infrastructure | New project in the intended organization and Singapore region; credentials stored outside Git | Supabase account access |
@@ -32,7 +32,7 @@ Target: the Jira Software Scrum space **F1nS1ght**, key **FNS**, at `https://fin
 
 Configured Jira board workflow: **To Do → In Progress → Code Review → Testing → Done**. The two added statuses use Jira's In progress category. Keep completed setup tasks with actual verification evidence. Split the later epics into sprint-sized stories after the Phase 2 auth/data path works.
 
-Jenkins evidence for FNS-2 and FNS-12: job [`finsight-develop`](http://127.0.0.1:8085/job/finsight-develop/) ran build [#2](http://127.0.0.1:8085/job/finsight-develop/2/) successfully from `develop` commit `5e2532d5ac211b9d42895e1cd9163319fad6c584`. The Windows agent was Online; JDK 17 compiled the API, 9 JUnit tests passed with 0 failures/skips, web lint/build passed, mobile TypeScript and Expo Doctor (18/18) passed, and Docker image `finsight-api:ci` was built. The private GitHub repository is read through a repository-scoped, read-only SSH deploy key. Jira statuses have not yet been changed from To Do; review the build evidence before transitioning those issues.
+Jenkins evidence for FNS-2 and FNS-12: job [`finsight-develop`](http://127.0.0.1:8085/job/finsight-develop/) ran build [#2](http://127.0.0.1:8085/job/finsight-develop/2/) successfully from `develop` commit `5e2532d5ac211b9d42895e1cd9163319fad6c584`. The Windows agent was Online; JDK 17 compiled the API, 9 JUnit tests passed with 0 failures/skips, web lint/build passed, mobile TypeScript and Expo Doctor (18/18) passed, and Docker image `finsight-api:ci` was built. The repository is read through a repository-scoped, read-only SSH deploy key; it was later made public for instructor review. Jira statuses have not yet been changed from To Do; review the build evidence before transitioning those issues.
 
 ## Team assignments from the project report
 

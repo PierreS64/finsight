@@ -1,11 +1,11 @@
 # Development workflow and backlog
 
-Use Scrum sprints with small issues, each with acceptance criteria and actual test evidence. Suggested Git flow: stable `main`, integration `develop`, and `feature/FNS-XX-description` or `fix/FNS-XX-description` branches, matching the actual Jira project key. Do not merge to `main` automatically.
+Use Scrum sprints with small issues, each with acceptance criteria and actual test evidence. Git flow: stable `main`, integration `develop`, and `feature/FNS-XX-description` or `fix/FNS-XX-description` branches, matching the Jira project key. The repository is public for instructor review. The agent may create and merge PRs after reviewing the diff and passing required checks; merge commits preserve individual feature commits. Never force-push or push directly to `main`.
 
 | Phase | Deliverable | Acceptance criteria |
 | --- | --- | --- |
 | 0 | Monorepo, three app scaffolds, local tests, docs, Docker | API health, web build/lint, mobile typecheck/Expo Doctor, Docker build and Android render when environment permits |
-| 1 | GitHub, Jenkins, Jira | Private repository, pipeline passes on Windows agent, backlog and sprint created |
+| 1 | GitHub, Jenkins, Jira | Public repository, PR protection for `main`, pipeline passes on Windows agent, backlog and sprint created |
 | 2 | Supabase, Flyway, JWT, login/profile | Real PostgreSQL migration, signed token works, missing/invalid token 401, profile ownership tests |
 | 3 | Accounts, categories, transactions, transfer, dashboard | Exact money, isolated ownership, transfers excluded from income/expense, UI workflows verified |
 | 4 | Budgets, goals, recurring, reconciliation | Calculations and alerts tested with edge cases |

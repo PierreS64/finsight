@@ -121,7 +121,7 @@ See `docs/decisions/0001-initial-architecture.md`. Spring Initializr currently r
 
 ## Git
 
-The private `origin` remote is `https://github.com/PierreS64/finsight.git`. `main` points to the stable scaffold and is the GitHub default branch; `develop` includes the milestone record and Jenkins Java 17 fix. Both branches track `origin`. No pull request exists yet.
+The public `origin` remote is `https://github.com/PierreS64/finsight.git`, intentionally visible for instructor review. `main` is the GitHub default branch and `develop` is the integration branch. Both track `origin`. The GitHub account has repository Admin permission. The repo was initially created private and later changed to public; local credentials and personal reports remain ignored. No pull request exists yet.
 
 ## Next
 
