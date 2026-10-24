@@ -8,6 +8,7 @@ import { deleteReceipt, deleteTransaction, downloadReceipt, getAccounts, getCate
 import { formatVnd, sumBalances } from '../../money';
 import { useSession } from '../../session';
 import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
+import CategorySuggestion from '../../components/CategorySuggestion';
 import { color } from '../../theme';
 
 function today() {
@@ -237,6 +238,7 @@ export default function Transactions() {
       <Text style={[common.label, styles.labelGap]}>Nơi giao dịch (tùy chọn)</Text><View style={styles.chips}><Pressable accessibilityRole="button" onPress={() => setMerchantId('')} style={[styles.chip, !merchantId && styles.chipActive]}><Text style={[styles.chipText, !merchantId && styles.chipTextActive]}>Không chọn</Text></Pressable>{merchants.map((item) => <Pressable accessibilityRole="button" key={item.id} onPress={() => setMerchantId(item.id)} style={[styles.chip, merchantId === item.id && styles.chipActive]}><Text style={[styles.chipText, merchantId === item.id && styles.chipTextActive]}>{item.name}</Text></Pressable>)}</View><Pressable accessibilityRole="button" onPress={() => router.push('/merchants')} style={styles.manage}><Text style={styles.link}>Quản lý nơi giao dịch →</Text></Pressable>
       <Text style={[common.label, styles.labelGap]}>Ngày giao dịch (YYYY-MM-DD)</Text><TextInput style={common.input} value={occurredOn} onChangeText={setOccurredOn} keyboardType="numbers-and-punctuation" placeholder="2026-10-21" placeholderTextColor="#94a3b8" />
       <Text style={[common.label, styles.labelGap]}>Ghi chú (tùy chọn)</Text><TextInput style={[common.input, styles.noteInput]} value={note} onChangeText={setNote} multiline maxLength={500} placeholder="Ghi chú cho giao dịch" placeholderTextColor="#94a3b8" />
+      <CategorySuggestion session={session} kind={kind} merchantId={merchantId} note={note} onApply={setCategoryId} />
       <PrimaryButton onPress={save} disabled={busy || ocrBusy || !selectedAccount || !selectedCategory || !amount.trim() || !!(ocrResult?.duplicateTransactionId && !duplicateConfirmed)}>{busy ? 'Đang lưu...' : editingId ? 'Lưu thay đổi' : 'Thêm giao dịch'}</PrimaryButton>{editingId && <SecondaryButton onPress={reset}>Hủy chỉnh sửa</SecondaryButton>}</Card>
     {!!message && <Text accessibilityRole="alert" style={common.message}>{message}</Text>}
   </Page>;

@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import CategorySuggestion from "./CategorySuggestion";
 import type { Session } from "@supabase/supabase-js";
 import type { Account } from "./AccountsPanel";
 import { formatVnd, sumBalances } from "./money";
@@ -250,6 +251,7 @@ export default function TransactionsPanel({ session, accounts, onChanged, onCate
       <button type="button" className="link-button" onClick={onMerchants}>Quản lý nơi giao dịch →</button>
       <label>Ngày giao dịch<input type="date" required value={occurredOn} onChange={(event) => setOccurredOn(event.target.value)} /></label>
       <label>Ghi chú (tùy chọn)<textarea value={note} onChange={(event) => setNote(event.target.value)} maxLength={500} rows={3} placeholder="Ghi chú cho giao dịch" /></label>
+      <CategorySuggestion session={session} kind={kind} merchantId={merchantId} note={note} onApply={setCategoryId} />
       <button className="button-primary" disabled={busy || ocrBusy || !selectedAccount || !selectedCategory || !!(ocrResult?.duplicateTransactionId && !duplicateConfirmed)}>{busy ? "Đang lưu..." : editingId ? "Lưu thay đổi" : "Thêm giao dịch"}</button>{editingId && <button type="button" className="button-outline" onClick={reset}>Hủy chỉnh sửa</button>}</form>{message && <p className="auth-message" role="status">{message}</p>}</section></div>
   </>;
 }

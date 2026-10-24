@@ -8,6 +8,7 @@ export type Profile = { userId: string; displayName: string | null; currencyCode
 export type CategoryType = 'INCOME' | 'EXPENSE';
 export type CategoryIcon = 'wallet' | 'gift' | 'other' | 'food' | 'transport' | 'home' | 'shopping' | 'health' | 'education';
 export type Category = { id: string; name: string; categoryType: CategoryType; icon: CategoryIcon; isDefault: boolean };
+export type CategorySuggestion = { categoryId: string; categoryName: string; source: 'MERCHANT' | 'NOTE'; confidence: 'HIGH' | 'MEDIUM'; supportingCount: number; totalMatches: number };
 export type Merchant = { id: string; name: string };
 export type Transaction = { id: string; accountId: string; categoryId: string; merchantId: string | null; kind: CategoryType; amount: string; occurredOn: string; note: string | null; hasReceipt: boolean };
 export type TransactionHistoryFilters = { search: string; from: string; to: string; month: string; kind: CategoryType | ''; categoryId: string; sort: 'asc' | 'desc' };
@@ -187,6 +188,16 @@ export async function getCategories(session: Session, signal?: AbortSignal): Pro
   const response = await fetch(`${apiBase}/api/v1/categories`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
   if (!response.ok) throw new Error(`Không tải được danh mục (HTTP ${response.status}).`);
   return (await response.json()) as Category[];
+}
+
+export async function getCategorySuggestion(session: Session, kind: CategoryType, merchantId: string, note: string, signal?: AbortSignal): Promise<CategorySuggestion | null> {
+  const params = new URLSearchParams({ kind });
+  if (merchantId) params.set('merchantId', merchantId);
+  if (note.trim()) params.set('note', note.trim());
+  const response = await fetch(`${apiBase}/api/v1/categories/suggestion?${params}`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });
+  if (response.status === 204) return null;
+  if (!response.ok) throw new Error(`Không tải được gợi ý danh mục (HTTP ${response.status}).`);
+  return (await response.json()) as CategorySuggestion;
 }
 
 export async function saveCategory(session: Session, category: { name: string; categoryType: CategoryType; icon: CategoryIcon }, id?: string): Promise<Category> {

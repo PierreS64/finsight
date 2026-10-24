@@ -10,7 +10,7 @@ Use Scrum sprints with small issues, each with acceptance criteria and actual te
 | 3 | Accounts, categories, transactions, transfer, dashboard | Exact money, isolated ownership, transfers excluded from income/expense, UI workflows verified |
 | 4 | Budgets, goals, recurring, reconciliation | Calculations and alerts tested with edge cases |
 | 5 | Forecast, safe-to-spend, insights, simulations | Deterministic explainable metrics and boundary tests |
-| 6 | OCR, import, merchant, subscriptions, AI chat | Explicit data provenance, duplicate handling, AI explains backend metrics |
+| 6 | OCR, import, merchant, subscriptions, category suggestions, AI chat | Explicit data provenance, duplicate handling, AI explains backend metrics |
 | 7 | End-to-end, security, demo | Reproducible deployment and documented evidence |
 
 Proposed initial Jira epics: Authentication & User; Financial Accounts; Transaction Management; Budget & Planning; Financial Overview; Financial Intelligence; Automation; AI Interaction; DevOps & Infrastructure.
