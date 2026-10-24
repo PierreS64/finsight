@@ -120,6 +120,7 @@
 - Jira evidence for the PR/CI work was added to FNS-11, FNS-12 and FNS-23. FNS-11 and FNS-12 moved from To Do to Testing; FNS-23 moved from To Do to In Progress while draft PR #1 is reviewed. No issue was marked Done solely because a build passed.
 - Created FNS-50 under DevOps & Infrastructure for the Expo SDK 53 dependency assessment, assigned to Nguyễn Thuận Phong. Draft PR #1 remains open until its acceptance criteria are resolved.
 - FNS-50 dependency assessment: Scoped npm overrides updated PostCSS to 8.5.31 and UUID to 11.1.1 while retaining Expo SDK 53 and React Native 0.79.6. A clean install reduced the mobile production audit from 17 package-level findings (6 high, 11 moderate) to 7 (5 high, 2 moderate). Mobile TypeScript, lint, Expo Doctor (18/18), Android export and `xcode` UUID generation passed. The remaining findings trace to `node-forge` (no patched release), Metro's `image-size` (newer API incompatible with installed Metro), and Expo Router's `query-string`/decoder (newer packages are ESM while Router requires CommonJS). The exact paths, advisory links and limitations are recorded in `docs/decisions/0011-mobile-dependency-audit.md`. No emulator login or authenticated flow was repeated for this dependency change.
+- FNS-49 runtime acceptance: In an existing signed-in Supabase web session, navigated through all 13 workspace views. Each lazy view left the loading fallback and displayed its main content; the browser reported no console errors. This confirms navigation/render only, not every form's CRUD behavior. Added evidence to Jira and moved FNS-49 to Done. FNS-50 moved to Testing after GitHub Backend/Web/Mobile checks passed on commit `64d2868`.
 
 ## Decisions
 
@@ -131,6 +132,6 @@ The public `origin` remote is `https://github.com/PierreS64/finsight.git`, inten
 
 ## Next
 
-As of 2026-10-24, Jira has 50 FNS issues: 32 in Testing, 17 in To Do (including nine Epics), one In Progress, and none in Done. Much of Phases 0–6 is implemented, but Jira completion still depends on acceptance evidence. The user deferred the password-recovery email test and corrected AI assistant UI recheck.
+As of 2026-10-24, Jira has 50 FNS issues: 32 in Testing, 16 in To Do (including nine Epics), one In Progress, and one Done. Much of Phases 0–6 is implemented, but Jira completion still depends on acceptance evidence. The user deferred the password-recovery email test and corrected AI assistant UI recheck.
 
 Prioritize Phase 7: review FNS-50 dependency assessment and the remaining SDK 53 advisories, then perform signed-in end-to-end checks for receipt OCR, goals, reconciliation, merchant handling, statement import, net worth, health score, subscription and category suggestions, and lazy web navigation with synthetic data. Record actual evidence in Jira and move verified issues through review and acceptance. Review draft PR #1 for FNS-23 integration; keep it open while required checks or acceptance are incomplete. Keep each completed feature in a separate commit for review; do not start Docker automatically at Windows sign-in.
