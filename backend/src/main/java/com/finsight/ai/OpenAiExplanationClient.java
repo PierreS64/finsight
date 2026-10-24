@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -20,9 +21,11 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 public class OpenAiExplanationClient implements ExplanationClient {
     private static final URI OPENAI_ENDPOINT = URI.create("https://api.openai.com/v1/responses");
+    private static final Pattern NUMBER_WORDS = Pattern.compile(
+            "(?iu)(?<![\\p{L}])(?:một|hai|ba|bốn|tư|năm|lăm|sáu|bảy|tám|chín|mười|trăm|nghìn|ngàn|triệu|tỷ|nửa|gấp|phần\\s+trăm)(?![\\p{L}])");
     private static final String INSTRUCTIONS = "Bạn là trợ lý giải thích các chỉ số FinSight bằng tiếng Việt. "
             + "Chỉ dựa vào các dữ kiện được cung cấp; không tính toán hoặc tạo số liệu mới. "
-            + "Không viết bất kỳ chữ số nào trong phần giải thích vì ứng dụng hiển thị số xác minh riêng. "
+            + "Không viết chữ số hay từ chỉ số lượng, tỷ lệ hoặc phép tính trong phần giải thích; ứng dụng hiển thị số xác minh riêng. "
             + "Không đưa lời khuyên đầu tư, vay hoặc sản phẩm tài chính cụ thể. "
             + "Nếu câu hỏi vượt quá dữ kiện, nói rõ bạn chưa đủ dữ liệu. Trả lời ngắn gọn, tối đa ba câu.";
 
@@ -76,7 +79,8 @@ public class OpenAiExplanationClient implements ExplanationClient {
                 }
             }
             String explanation = answer.toString().trim();
-            if (explanation.isEmpty() || explanation.length() > 1500 || explanation.matches("(?s).*\\p{Nd}.*"))
+            if (explanation.isEmpty() || explanation.length() > 1500 || explanation.matches("(?s).*\\p{Nd}.*")
+                    || NUMBER_WORDS.matcher(explanation).find())
                 return new Explanation("Mình chỉ có thể giải thích các chỉ số đã xác minh bên dưới. Hãy xem từng mục để đối chiếu.", "VERIFIED_ONLY");
             return new Explanation(explanation, "AI_EXPLANATION");
         } catch (InterruptedException ex) {

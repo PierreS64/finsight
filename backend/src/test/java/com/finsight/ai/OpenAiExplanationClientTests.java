@@ -54,4 +54,46 @@ class OpenAiExplanationClientTests {
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("503");
     }
+
+    @Test
+    void filtersRatiosWrittenAsWords() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/v1/responses", exchange -> {
+            exchange.getRequestBody().readAllBytes();
+            byte[] body = "{\"output\":[{\"type\":\"message\",\"content\":[{\"type\":\"output_text\",\"text\":\"Chi tiêu là một nửa thu nhập.\"}]}]}".getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        server.start();
+        try {
+            URI uri = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/v1/responses");
+            var client = new OpenAiExplanationClient(HttpClient.newHttpClient(), json, "test-key", "gpt-6-luna", uri);
+            var answer = client.explain("Chi tiêu?", facts);
+            assertThat(answer.source()).isEqualTo("VERIFIED_ONLY");
+            assertThat(answer.text()).doesNotContain("nửa");
+        } finally { server.stop(0); }
+    }
+
+    @Test
+    void preservesExplanationWithoutNewAmounts() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/v1/responses", exchange -> {
+            exchange.getRequestBody().readAllBytes();
+            byte[] body = "{\"output\":[{\"type\":\"message\",\"content\":[{\"type\":\"output_text\",\"text\":\"Chi tiêu đã được ghi nhận trong tháng này.\"}]}]}".getBytes(StandardCharsets.UTF_8);
+            exchange.getResponseHeaders().add("Content-Type", "application/json");
+            exchange.sendResponseHeaders(200, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        server.start();
+        try {
+            URI uri = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/v1/responses");
+            var client = new OpenAiExplanationClient(HttpClient.newHttpClient(), json, "test-key", "gpt-6-luna", uri);
+            var answer = client.explain("Chi tiêu?", facts);
+            assertThat(answer.source()).isEqualTo("AI_EXPLANATION");
+            assertThat(answer.text()).isEqualTo("Chi tiêu đã được ghi nhận trong tháng này.");
+        } finally { server.stop(0); }
+    }
 }
