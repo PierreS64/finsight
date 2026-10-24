@@ -6,10 +6,10 @@ import { getAccounts, getCategories, getRecurringRules, processRecurringRule, sa
 import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
 import SubscriptionSuggestionsCard from '../../components/SubscriptionSuggestionsCard';
 import { formatVnd } from '../../money';
+import { reportDate } from '../../reportDate';
 import { useSession } from '../../session';
 import { color } from '../../theme';
 
-const today = () => { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
 const validAmount = (value: string) => /^\d{1,17}(?:[.,]\d{1,2})?$/.test(value.trim()) && /[1-9]/.test(value);
 
 export default function Recurring() {
@@ -24,7 +24,7 @@ export default function Recurring() {
   const [categoryId, setCategoryId] = useState('');
   const [amount, setAmount] = useState('');
   const [cadence, setCadence] = useState<'WEEKLY' | 'MONTHLY'>('MONTHLY');
-  const [nextDueOn, setNextDueOn] = useState(today);
+  const [nextDueOn, setNextDueOn] = useState(reportDate);
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -45,7 +45,7 @@ export default function Recurring() {
   const accountName = (id: string) => accounts.find((item) => item.id === id)?.name ?? 'Tài khoản đã thay đổi';
   const categoryName = (id: string) => categories.find((item) => item.id === id)?.name ?? 'Danh mục đã thay đổi';
 
-  function reset() { setEditing(null); setName(''); setKind('EXPENSE'); setAccountId(''); setCategoryId(''); setAmount(''); setCadence('MONTHLY'); setNextDueOn(today()); setNote(''); }
+  function reset() { setEditing(null); setName(''); setKind('EXPENSE'); setAccountId(''); setCategoryId(''); setAmount(''); setCadence('MONTHLY'); setNextDueOn(reportDate()); setNote(''); }
   function edit(rule: RecurringRule) { setEditing(rule.id); setName(rule.name); setKind(rule.kind); setAccountId(rule.accountId); setCategoryId(rule.categoryId); setAmount(rule.amount); setCadence(rule.cadence); setNextDueOn(rule.nextDueOn); setNote(rule.note ?? ''); }
   async function save() {
     if (!session || busy) return;
@@ -94,7 +94,7 @@ export default function Recurring() {
       <Text style={styles.amount}>{formatVnd(rule.amount)} · {rule.kind === 'EXPENSE' ? 'Chi' : 'Thu'} · {rule.cadence === 'WEEKLY' ? 'Hàng tuần' : 'Hàng tháng'}</Text>
       <Text style={common.helper}>{accountName(rule.accountId)} · {categoryName(rule.categoryId)} · đến hạn {rule.nextDueOn}</Text>
       <View style={styles.actions}><Pressable accessibilityRole="button" onPress={() => edit(rule)}><Text style={styles.link}>Sửa</Text></Pressable><Pressable accessibilityRole="button" disabled={busy} onPress={() => toggle(rule)}><Text style={styles.link}>{rule.active ? 'Tạm dừng' : 'Tiếp tục'}</Text></Pressable></View>
-      {rule.active && rule.nextDueOn <= today() && <PrimaryButton onPress={() => process(rule)} disabled={busy}>Ghi nhận đến hạn</PrimaryButton>}
+      {rule.active && rule.nextDueOn <= reportDate() && <PrimaryButton onPress={() => process(rule)} disabled={busy}>Ghi nhận đến hạn</PrimaryButton>}
     </Card>)}
     <Text style={styles.heading}>{editing ? 'Sửa lịch' : 'Tạo lịch mới'}</Text><Card style={styles.form}>
       <Text style={common.label}>Tên khoản</Text><TextInput style={common.input} value={name} onChangeText={setName} placeholder="Ví dụ: Internet" placeholderTextColor={color.muted} maxLength={100} />

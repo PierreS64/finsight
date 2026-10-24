@@ -6,15 +6,12 @@ import * as FileSystem from 'expo-file-system';
 import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { deleteReceipt, deleteTransaction, downloadReceipt, getAccounts, getCategories, getMerchants, getTransactionHistory, getTransactions, recognizeReceipt, saveTransaction, uploadReceipt, type Account, type Category, type CategoryType, type Merchant, type ReceiptRecognition, type Transaction, type TransactionHistory, type TransactionHistoryFilters } from '../../api';
 import { formatVnd, sumBalances } from '../../money';
+import { reportDate } from '../../reportDate';
 import { useSession } from '../../session';
 import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
 import CategorySuggestion from '../../components/CategorySuggestion';
 import { color } from '../../theme';
 
-function today() {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
 const emptyHistoryFilters: TransactionHistoryFilters = { search: '', from: '', to: '', month: '', kind: '', categoryId: '', sort: 'desc' };
 
 export default function Transactions() {
@@ -29,7 +26,7 @@ export default function Transactions() {
   const [categoryId, setCategoryId] = useState('');
   const [merchantId, setMerchantId] = useState('');
   const [amount, setAmount] = useState('');
-  const [occurredOn, setOccurredOn] = useState(today);
+  const [occurredOn, setOccurredOn] = useState(reportDate);
   const [note, setNote] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -114,7 +111,7 @@ export default function Transactions() {
   const income = sumBalances(transactions.filter((item) => item.kind === 'INCOME').map((item) => item.amount));
   const expense = sumBalances(transactions.filter((item) => item.kind === 'EXPENSE').map((item) => item.amount));
 
-  function reset() { setAmount(''); setNote(''); setMerchantId(''); setOccurredOn(today()); setEditingId(null); setDeletingId(null); setPendingReceipt(null); setOcrResult(null); setDuplicateConfirmed(false); }
+  function reset() { setAmount(''); setNote(''); setMerchantId(''); setOccurredOn(reportDate()); setEditingId(null); setDeletingId(null); setPendingReceipt(null); setOcrResult(null); setDuplicateConfirmed(false); }
   function edit(transaction: Transaction) {
     setPendingReceipt(null); setOcrResult(null); setDuplicateConfirmed(false);
     setEditingId(transaction.id); setKind(transaction.kind); setAccountId(transaction.accountId); setCategoryId(transaction.categoryId);

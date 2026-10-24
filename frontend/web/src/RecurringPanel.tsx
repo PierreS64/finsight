@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { Account } from "./AccountsPanel";
 import { formatVnd } from "./money";
+import { reportDate } from "./reportDate";
 import "./RecurringPanel.css";
 
 type Kind = "INCOME" | "EXPENSE";
@@ -10,10 +11,6 @@ type Category = { id: string; name: string; categoryType: Kind };
 type Rule = { id: string; accountId: string; categoryId: string; name: string; kind: Kind; amount: string;
   cadence: Cadence; nextDueOn: string; active: boolean; note: string | null };
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-const today = () => {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-};
 const validAmount = (value: string) => /^\d{1,17}(?:[.,]\d{1,2})?$/.test(value.trim()) && /[1-9]/.test(value);
 
 export default function RecurringPanel({ session, accounts, onChanged }: { session: Session; accounts: Account[]; onChanged: () => void }) {
@@ -27,7 +24,7 @@ export default function RecurringPanel({ session, accounts, onChanged }: { sessi
   const [categoryId, setCategoryId] = useState("");
   const [amount, setAmount] = useState("");
   const [cadence, setCadence] = useState<Cadence>("MONTHLY");
-  const [nextDueOn, setNextDueOn] = useState(today);
+  const [nextDueOn, setNextDueOn] = useState(reportDate);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -51,7 +48,7 @@ export default function RecurringPanel({ session, accounts, onChanged }: { sessi
   const categoryName = (id: string) => categories.find((item) => item.id === id)?.name ?? "Danh mục đã thay đổi";
   const accountName = (id: string) => accounts.find((item) => item.id === id)?.name ?? "Tài khoản đã thay đổi";
 
-  function reset() { setEditing(null); setName(""); setAccountId(""); setKind("EXPENSE"); setCategoryId(""); setAmount(""); setCadence("MONTHLY"); setNextDueOn(today()); setNote(""); }
+  function reset() { setEditing(null); setName(""); setAccountId(""); setKind("EXPENSE"); setCategoryId(""); setAmount(""); setCadence("MONTHLY"); setNextDueOn(reportDate()); setNote(""); }
   function edit(rule: Rule) { setEditing(rule.id); setName(rule.name); setAccountId(rule.accountId); setKind(rule.kind); setCategoryId(rule.categoryId); setAmount(rule.amount); setCadence(rule.cadence); setNextDueOn(rule.nextDueOn); setNote(rule.note ?? ""); }
 
   async function save(event: FormEvent<HTMLFormElement>) {
@@ -106,7 +103,7 @@ export default function RecurringPanel({ session, accounts, onChanged }: { sessi
 
   return <><div className="recurring-info">Lịch chỉ nhắc khoản định kỳ. Giao dịch thật chỉ được tạo khi bạn bấm “Ghi nhận đến hạn”. Mỗi ngày đến hạn được ghi một lần.</div>
     <div className="recurring-layout"><section className="surface-card"><div className="section-head"><div><p className="eyebrow">LỊCH CỦA BẠN</p><h2>Khoản định kỳ</h2></div><span className="small-badge">{loaded ? rules.length : "—"} khoản</span></div>
-      {!loaded ? <p className="muted">Đang tải lịch...</p> : rules.length ? <div className="recurring-list">{rules.map((rule) => <article key={rule.id}><div><strong>{rule.name}</strong><span>{rule.active ? "Đang chạy" : "Tạm dừng"}</span></div><p>{formatVnd(rule.amount)} · {rule.kind === "EXPENSE" ? "Chi" : "Thu"} · {rule.cadence === "WEEKLY" ? "Hàng tuần" : "Hàng tháng"}</p><small>{accountName(rule.accountId)} · {categoryName(rule.categoryId)} · đến hạn {rule.nextDueOn}</small><div className="recurring-actions"><button className="link-button" onClick={() => edit(rule)}>Sửa</button><button className="link-button" disabled={busy} onClick={() => changeActive(rule)}>{rule.active ? "Tạm dừng" : "Tiếp tục"}</button>{rule.active && rule.nextDueOn <= today() && <button className="button-primary" disabled={busy} onClick={() => process(rule)}>Ghi nhận đến hạn</button>}</div></article>)}</div> : <div className="empty-state compact"><span>↻</span><h3>Chưa có khoản định kỳ</h3><p>Tạo lịch lương, tiền thuê hoặc dịch vụ thường kỳ.</p></div>}
+      {!loaded ? <p className="muted">Đang tải lịch...</p> : rules.length ? <div className="recurring-list">{rules.map((rule) => <article key={rule.id}><div><strong>{rule.name}</strong><span>{rule.active ? "Đang chạy" : "Tạm dừng"}</span></div><p>{formatVnd(rule.amount)} · {rule.kind === "EXPENSE" ? "Chi" : "Thu"} · {rule.cadence === "WEEKLY" ? "Hàng tuần" : "Hàng tháng"}</p><small>{accountName(rule.accountId)} · {categoryName(rule.categoryId)} · đến hạn {rule.nextDueOn}</small><div className="recurring-actions"><button className="link-button" onClick={() => edit(rule)}>Sửa</button><button className="link-button" disabled={busy} onClick={() => changeActive(rule)}>{rule.active ? "Tạm dừng" : "Tiếp tục"}</button>{rule.active && rule.nextDueOn <= reportDate() && <button className="button-primary" disabled={busy} onClick={() => process(rule)}>Ghi nhận đến hạn</button>}</div></article>)}</div> : <div className="empty-state compact"><span>↻</span><h3>Chưa có khoản định kỳ</h3><p>Tạo lịch lương, tiền thuê hoặc dịch vụ thường kỳ.</p></div>}
     </section><section className="surface-card recurring-form"><p className="eyebrow">THIẾT LẬP</p><h2>{editing ? "Sửa lịch" : "Tạo lịch mới"}</h2><form onSubmit={save}>
       <label>Tên khoản<input value={name} onChange={(event) => setName(event.target.value)} maxLength={100} required placeholder="Ví dụ: Internet" /></label>
       <label>Loại<select value={kind} onChange={(event) => { setKind(event.target.value as Kind); setCategoryId(""); }}><option value="EXPENSE">Chi tiêu</option><option value="INCOME">Thu nhập</option></select></label>

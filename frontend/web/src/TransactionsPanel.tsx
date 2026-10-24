@@ -3,6 +3,7 @@ import CategorySuggestion from "./CategorySuggestion";
 import type { Session } from "@supabase/supabase-js";
 import type { Account } from "./AccountsPanel";
 import { formatVnd, sumBalances } from "./money";
+import { reportDate } from "./reportDate";
 import "./TransactionsPanel.css";
 
 type Kind = "INCOME" | "EXPENSE";
@@ -14,10 +15,6 @@ type History = { items: Transaction[]; page: number; size: number; totalElements
 type OcrResult = { merchant: string | null; occurredOn: string | null; amount: string | null; duplicateTransactionId: string | null; readable: boolean };
 const emptyFilters: HistoryFilters = { search: "", from: "", to: "", month: "", kind: "", categoryId: "", sort: "desc" };
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-const today = () => {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-};
 
 export default function TransactionsPanel({ session, accounts, onChanged, onCategories, onMerchants }: {
   session: Session; accounts: Account[]; onChanged: () => void; onCategories: () => void; onMerchants: () => void;
@@ -31,7 +28,7 @@ export default function TransactionsPanel({ session, accounts, onChanged, onCate
   const [categoryId, setCategoryId] = useState("");
   const [merchantId, setMerchantId] = useState("");
   const [amount, setAmount] = useState("");
-  const [occurredOn, setOccurredOn] = useState(today);
+  const [occurredOn, setOccurredOn] = useState(reportDate);
   const [note, setNote] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -107,7 +104,7 @@ export default function TransactionsPanel({ session, accounts, onChanged, onCate
   const income = sumBalances(transactions.filter((item) => item.kind === "INCOME").map((item) => item.amount));
   const expense = sumBalances(transactions.filter((item) => item.kind === "EXPENSE").map((item) => item.amount));
 
-  function reset() { setAmount(""); setNote(""); setMerchantId(""); setOccurredOn(today()); setEditingId(null); setDeletingId(null); setPendingReceipt(null); setOcrResult(null); setDuplicateConfirmed(false); }
+  function reset() { setAmount(""); setNote(""); setMerchantId(""); setOccurredOn(reportDate()); setEditingId(null); setDeletingId(null); setPendingReceipt(null); setOcrResult(null); setDuplicateConfirmed(false); }
   function edit(transaction: Transaction) {
     setPendingReceipt(null); setOcrResult(null); setDuplicateConfirmed(false);
     setEditingId(transaction.id); setKind(transaction.kind); setAccountId(transaction.accountId);

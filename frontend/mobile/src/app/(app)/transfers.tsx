@@ -4,14 +4,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { deleteTransfer, getAccounts, getTransfers, saveTransfer, type Account, type Transfer } from '../../api';
 import { formatVnd } from '../../money';
+import { reportDate } from '../../reportDate';
 import { useSession } from '../../session';
 import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
 import { color } from '../../theme';
 
-function today() {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
 
 export default function Transfers() {
   const { session } = useSession();
@@ -21,7 +18,7 @@ export default function Transfers() {
   const [fromAccountId, setFromAccountId] = useState('');
   const [toAccountId, setToAccountId] = useState('');
   const [amount, setAmount] = useState('');
-  const [occurredOn, setOccurredOn] = useState(today);
+  const [occurredOn, setOccurredOn] = useState(reportDate);
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -56,7 +53,7 @@ export default function Transfers() {
     try {
       const saved = await saveTransfer(session, { fromAccountId: source, toAccountId: destination, amount: value, occurredOn, note: note.trim() || null });
       setTransfers((current) => [saved, ...current].sort((a, b) => b.occurredOn.localeCompare(a.occurredOn) || b.id.localeCompare(a.id)));
-      setAmount(''); setNote(''); setOccurredOn(today()); setMessage('Đã lưu chuyển khoản.');
+      setAmount(''); setNote(''); setOccurredOn(reportDate()); setMessage('Đã lưu chuyển khoản.');
       await refreshAccounts();
     } catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Không lưu được chuyển khoản.'); }
     finally { setBusy(false); }

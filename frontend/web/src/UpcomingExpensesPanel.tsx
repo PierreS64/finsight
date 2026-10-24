@@ -1,19 +1,16 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { formatVnd } from "./money";
+import { reportDatePlusDays } from "./reportDate";
 import "./UpcomingExpensesPanel.css";
 
 type Item = { ruleId: string; name: string; amount: string; dueOn: string; overdue: boolean };
 type Summary = { from: string; to: string; total: string; count: number; items: Item[]; calculationRule: string };
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-const dateValue = (offset: number) => {
-  const date = new Date(); date.setDate(date.getDate() + offset);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-};
 
 export default function UpcomingExpensesPanel({ session }: { session: Session }) {
-  const [from, setFrom] = useState(() => dateValue(-30));
-  const [to, setTo] = useState(() => dateValue(30));
+  const [from, setFrom] = useState(() => reportDatePlusDays(-30));
+  const [to, setTo] = useState(() => reportDatePlusDays(30));
   const [range, setRange] = useState({ from, to });
   const [summary, setSummary] = useState<Summary | null>(null);
   const [error, setError] = useState("");

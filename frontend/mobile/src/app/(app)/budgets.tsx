@@ -5,18 +5,18 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { deleteBudget, getBudget, getCategories, saveBudget, type BudgetSummary, type Category } from '../../api';
 import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
 import { formatVnd } from '../../money';
+import { reportMonth } from '../../reportDate';
 import { useSession } from '../../session';
 import { color } from '../../theme';
 
-const currentMonth = () => { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`; };
 const validAmount = (amount: string) => /^\d{1,17}(?:[.,]\d{1,2})?$/.test(amount.trim()) && /[1-9]/.test(amount);
 const barWidth = (percent: string): `${number}%` => `${Math.min(100, Math.max(0, Number.parseFloat(percent) || 0))}%` as `${number}%`;
 const alertLabel = (threshold: number) => threshold === 100 ? 'Đã đạt hoặc vượt 100% hạn mức' : `Đã đạt ngưỡng ${threshold}% hạn mức`;
 
 export default function Budgets() {
   const { session } = useSession();
-  const [month, setMonth] = useState(currentMonth);
-  const [monthInput, setMonthInput] = useState(currentMonth);
+  const [month, setMonth] = useState(reportMonth);
+  const [monthInput, setMonthInput] = useState(reportMonth);
   const [budget, setBudget] = useState<BudgetSummary | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [totalLimit, setTotalLimit] = useState('');

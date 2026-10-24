@@ -37,6 +37,8 @@ jobs:
       - name: Lint and build
         working-directory: frontend/web
         run: npm run lint && npm run build
+      - name: Report calendar boundaries
+        run: node --experimental-strip-types --test scripts/check-report-date.mjs
 
   mobile:
     name: Mobile

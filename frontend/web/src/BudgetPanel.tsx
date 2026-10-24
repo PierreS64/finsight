@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { formatVnd } from "./money";
+import { reportMonth } from "./reportDate";
 import "./BudgetPanel.css";
 
 type BudgetLine = { limitAmount: string; spent: string; remaining: string; usedPercent: string; alertThresholdPercent: number };
@@ -8,13 +9,12 @@ type CategoryLine = { categoryId: string; categoryName: string; values: BudgetLi
 type BudgetSummary = { month: string; totalSpent: string; total: BudgetLine | null; categories: CategoryLine[] };
 type Category = { id: string; name: string; categoryType: "INCOME" | "EXPENSE" };
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-const currentMonth = () => { const date = new Date(); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`; };
 const validAmount = (amount: string) => /^\d{1,17}(?:[.,]\d{1,2})?$/.test(amount.trim()) && /[1-9]/.test(amount);
 const barWidth = (percent: string) => `${Math.min(100, Math.max(0, Number.parseFloat(percent) || 0))}%`;
 const alertLabel = (threshold: number) => threshold === 100 ? "Đã đạt hoặc vượt 100% hạn mức" : `Đã đạt ngưỡng ${threshold}% hạn mức`;
 
 export default function BudgetPanel({ session }: { session: Session }) {
-  const [month, setMonth] = useState(currentMonth);
+  const [month, setMonth] = useState(reportMonth);
   const [snapshot, setSnapshot] = useState<{ key: string; value: BudgetSummary } | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [totalLimit, setTotalLimit] = useState("");

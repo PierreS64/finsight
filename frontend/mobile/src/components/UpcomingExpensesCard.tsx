@@ -3,15 +3,15 @@ import { useFocusEffect } from 'expo-router';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getUpcomingExpenses, type UpcomingExpenses } from '../api';
 import { formatVnd } from '../money';
+import { reportDatePlusDays } from '../reportDate';
 import { useSession } from '../session';
 import { color } from '../theme';
 import { Card, Kicker, common } from './Ui';
 
-const dateValue = (offset: number) => { const date = new Date(); date.setDate(date.getDate() + offset); return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`; };
 export default function UpcomingExpensesCard() {
   const { session } = useSession();
-  const [from, setFrom] = useState(() => dateValue(-30));
-  const [to, setTo] = useState(() => dateValue(30));
+  const [from, setFrom] = useState(() => reportDatePlusDays(-30));
+  const [to, setTo] = useState(() => reportDatePlusDays(30));
   const [range, setRange] = useState({ from, to });
   const [summary, setSummary] = useState<UpcomingExpenses | null>(null);
   const [error, setError] = useState('');

@@ -2,14 +2,11 @@ import { useEffect, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { Account } from "./AccountsPanel";
 import { formatVnd } from "./money";
+import { reportDate } from "./reportDate";
 import "./TransfersPanel.css";
 
 type Transfer = { id: string; fromAccountId: string; toAccountId: string; amount: string; occurredOn: string; note: string | null };
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
-const today = () => {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-};
 
 export default function TransfersPanel({ session, accounts, onChanged }: { session: Session; accounts: Account[]; onChanged: () => void }) {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
@@ -17,7 +14,7 @@ export default function TransfersPanel({ session, accounts, onChanged }: { sessi
   const [fromAccountId, setFromAccountId] = useState("");
   const [toAccountId, setToAccountId] = useState("");
   const [amount, setAmount] = useState("");
-  const [occurredOn, setOccurredOn] = useState(today);
+  const [occurredOn, setOccurredOn] = useState(reportDate);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -52,7 +49,7 @@ export default function TransfersPanel({ session, accounts, onChanged }: { sessi
       if (!response.ok) throw new Error(`Không lưu được chuyển khoản (HTTP ${response.status}).`);
       const saved = await response.json() as Transfer;
       setTransfers((current) => [saved, ...current].sort((a, b) => b.occurredOn.localeCompare(a.occurredOn) || b.id.localeCompare(a.id)));
-      setAmount(""); setNote(""); setOccurredOn(today()); onChanged(); setMessage("Đã lưu chuyển khoản.");
+      setAmount(""); setNote(""); setOccurredOn(reportDate()); onChanged(); setMessage("Đã lưu chuyển khoản.");
     } catch (error) { setMessage(error instanceof Error ? error.message : "Không lưu được chuyển khoản."); }
     finally { setBusy(false); }
   }
