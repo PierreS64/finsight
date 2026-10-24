@@ -12,6 +12,8 @@ Copy `.env.example` to a root `.env` locally. In the Supabase project, click **C
 
 From the repository root, run `powershell -ExecutionPolicy Bypass -File .\scripts\start-supabase-api.ps1`. This loads the ignored `.env`, selects the `supabase` profile, and starts the API on port 8086 using JDK 17. Flyway stores its migration history in the separate `finsight` schema because Supabase's `public` schema already contains managed objects. Migrations V1–V13 have been applied to this project's database. Check `http://localhost:8086/actuator/health` for a healthy API.
 
+For a repeatable read-only check, run `powershell -ExecutionPolicy Bypass -File .\scripts\smoke-supabase-api.ps1` in another PowerShell window. It checks health and that protected routes reject missing/malformed tokens. To include authenticated reads, set a short-lived user access token only in that shell as `FINSIGHT_SMOKE_BEARER_TOKEN` and rerun; clear the variable afterwards. The script never prints the token or writes financial data. Without that variable, it explicitly reports the authenticated checks as skipped.
+
 For statement import, use the sample [`docs/examples/statement-import-template.csv`](examples/statement-import-template.csv) as a starting point. CSV must be UTF-8 and comma- or semicolon-separated; XLSX uses the first worksheet and the same header. Select an owned account, preview the rows, choose categories and confirm possible duplicates before saving. Maximum size is 2 MB and 200 rows. Import never requests bank credentials.
 
 ## AI assistant

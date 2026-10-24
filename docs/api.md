@@ -1,16 +1,18 @@
 # API contract
 
-Base URL: `http://localhost:8080` for local development. Error responses currently use Spring Boot defaults; a stable error schema is a future task.
+The API listens on `http://127.0.0.1:8086` with the real Supabase profile and `http://localhost:8080` with local H2 by default. `GET /actuator/health` is public. Every `/api/v1/` route requires a Supabase bearer JWT with verified issuer, JWKS signature and `authenticated` audience. Missing or invalid tokens return 401. Financial reads and writes derive the owner from the JWT subject, never from client input.
 
-| Method | Path | Auth | Current response |
-| --- | --- | --- | --- |
-| GET | `/actuator/health` | Public | Actuator health JSON |
-| GET | `/api/v1/session` | Bearer JWT | `{ "subject": "<Supabase user UUID>" }` |
-| GET | `/api/v1/profile` | Bearer JWT | Own `{ "userId", "displayName", "currencyCode" }`; 404 until first PUT |
-| PUT | `/api/v1/profile` | Bearer JWT | Accepts `{ "displayName": "..." }` (1–80 nonblank characters), returns the updated own profile |
-| GET | `/api/v1/accounts` | Bearer JWT | Array of the signed-in user's own virtual accounts |
-| POST | `/api/v1/accounts` | Bearer JWT | Creates an owned virtual account; returns 201 and its representation |
+| Area | Routes | Behavior |
+| --- | --- | --- |
+| Session/profile | `/api/v1/session`, `/api/v1/profile` | Own session subject and display profile |
+| Accounts | `/api/v1/accounts`, `/api/v1/accounts/{id}/reconciliations`, `/api/v1/net-worth` | Virtual balances, reconciliation snapshots, net worth |
+| Transactions | `/api/v1/transactions`, `/api/v1/transactions/history`, `/{id}/receipt`, `/api/v1/transfers` | Owned income/expense, paged history, private receipt, separate transfers |
+| Categories/merchants | `/api/v1/categories`, `/api/v1/categories/suggestion`, `/api/v1/merchants` | User-managed labels and read-only category suggestions |
+| Statement/OCR | `/api/v1/statements/preview`, `/api/v1/statements/import`, `/api/v1/receipts/recognize` | Review before creating records; local OCR |
+| Planning | `/api/v1/budgets`, `/api/v1/goals`, `/api/v1/recurring-rules`, `/api/v1/subscription-suggestions`, `/api/v1/upcoming-expenses` | Exact budgets, goals, explicit recurring processing, read-only suggestions |
+| Overview/intelligence | `/api/v1/dashboard`, `/api/v1/charts`, `/api/v1/insights`, `/api/v1/expense-forecast`, `/api/v1/safe-to-spend`, `/api/v1/spending-explanation`, `/api/v1/spending-profile`, `/api/v1/spending-trends`, `/api/v1/financial-health`, `/api/v1/what-if` | Owner-scoped deterministic metrics; What-if does not write |
+| AI assistant | `POST /api/v1/assistant/ask` | Optional server-side explanation of backend-calculated monthly facts |
 
-The protected endpoints require an ES256-signed token with the configured Supabase issuer and audience `authenticated`. The profile ID is always derived from the token's `sub`, never from a client-supplied user ID. When using the `local` profile, the JWKS URI is a placeholder, so a real bearer token cannot be verified. A real user signed in and saved a profile on web, then signed in and retrieved that profile on Android.
+This is a route-family overview. Use [API conventions](api-conventions.md) for exact request constraints, pagination, money formats and special endpoints; refer to controller code for the full route list. JSON uses camelCase. Money is returned as decimal strings. Input errors generally return 400, unauthorized access 401, missing or other-owner items 404, conflicts 409. Spring-generated error bodies are not yet a stable API contract.
 
-Account creation accepts `{ "name": "Cash", "accountType": "CASH", "openingBalance": "100000" }`. Other types are `BANK`, `E_WALLET`, and `OTHER`. The opening balance is a decimal string in responses to preserve exact digits in JavaScript. Currency is currently VND. It is an initial balance, not a live balance from transactions; transactions are not implemented yet. Account ownership comes only from the verified JWT subject. A user created an account on web, saw it after reloading the page, and the same account rendered on Android.
+Run [smoke-supabase-api.ps1](../scripts/smoke-supabase-api.ps1) after starting the real API. It checks health and protected routes without writing data. If a short-lived user access token is set only in the current shell as `FINSIGHT_SMOKE_BEARER_TOKEN`, it also checks read-only authenticated endpoints; the script never prints the token. Do not send tokens in chat or store them in Git. The local H2 profile has a placeholder JWKS URL and cannot verify a real Supabase JWT.

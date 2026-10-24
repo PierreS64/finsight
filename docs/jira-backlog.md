@@ -67,3 +67,5 @@ The eight initially unassigned Epics FNS-3 through FNS-10 and six Tasks FNS-11, 
 [FNS-46](https://finsight-team.atlassian.net/browse/FNS-46) tracks the owner-scoped AI explanation of backend financial metrics under AI Interaction. It is assigned to Nguyễn Thuận Phong.
 
 [FNS-47](https://finsight-team.atlassian.net/browse/FNS-47) tracks reviewable category suggestions from each user's own transaction history under Automation. It is assigned to Nguyễn Thuận Phong.
+
+[FNS-48](https://finsight-team.atlassian.net/browse/FNS-48) tracks the reproducible Supabase API smoke check and current architecture/database/API documentation under DevOps & Infrastructure. It is assigned to Nguyễn Thuận Phong.

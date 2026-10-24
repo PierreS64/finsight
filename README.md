@@ -22,6 +22,8 @@ The local profile uses in-memory H2 and a nonfunctional JWKS URL. `GET http://lo
 
 For the real Supabase project, fill the ignored root `.env` and run `powershell -ExecutionPolicy Bypass -File .\scripts\start-supabase-api.ps1` from the repository root. The API listens on `localhost:8086`. See [setup](docs/setup.md) for web configuration and sign-in.
 
+With the API running, `powershell -ExecutionPolicy Bypass -File .\scripts\smoke-supabase-api.ps1` performs read-only health and authentication checks against the real profile.
+
 ```powershell
 cd frontend/web
 npm ci
