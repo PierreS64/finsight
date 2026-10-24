@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class FinancialAssistantControllerTests {
     private static final String OWNER = "46464646-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
     private static final String OTHER = "46464646-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    private static final String BALANCE_OWNER = "46464646-dddd-4ddd-8ddd-dddddddddddd";
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
     @MockitoBean ExplanationClient explanations;
@@ -68,5 +69,23 @@ class FinancialAssistantControllerTests {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json.writeValueAsString(new FinancialAssistantController.Question("a".repeat(501)))))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void answersCurrentBalanceFromVerifiedAccountDataWithoutCallingModel() throws Exception {
+        mvc.perform(post("/api/v1/accounts").with(jwt().jwt(token -> token.subject(BALANCE_OWNER)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Synthetic cash\",\"accountType\":\"CASH\",\"openingBalance\":\"100000\"}"))
+                .andExpect(status().isCreated());
+
+        mvc.perform(post("/api/v1/assistant/ask").with(jwt().jwt(token -> token.subject(BALANCE_OWNER)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"question\":\"Tôi đang có bao nhiêu tiền\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.source").value("VERIFIED_ONLY"))
+                .andExpect(jsonPath("$.explanation").value("Tổng số dư hiện tại của các tài khoản bạn đã nhập là 100.000 đ."))
+                .andExpect(jsonPath("$.verifiedFacts[0].unit").value(""))
+                .andExpect(jsonPath("$.verifiedFacts[3].value").value("100000.00"));
+        verify(explanations, never()).explain(eq("Tôi đang có bao nhiêu tiền"), anyList());
     }
 }

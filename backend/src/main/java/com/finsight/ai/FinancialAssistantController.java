@@ -6,10 +6,13 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.text.NumberFormat;
+import java.text.Normalizer;
 import java.time.YearMonth;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -43,7 +46,7 @@ public class FinancialAssistantController {
         BigDecimal balance = accounts.openingBalance().add(dashboard.allTimeNet(owner));
         BigDecimal budget = budgets.totalLimit(owner, month.atDay(1)).orElse(null);
         List<Fact> facts = new ArrayList<>();
-        facts.add(new Fact("month", "Tháng hiện tại", month.toString(), "YYYY-MM"));
+        facts.add(new Fact("month", "Tháng hiện tại", month.toString(), ""));
         facts.add(new Fact("accountCount", "Số tài khoản", Long.toString(accounts.count()), "tài khoản"));
         facts.add(new Fact("transactionCount", "Số giao dịch thu/chi tháng", Long.toString(monthly.transactionCount()), "giao dịch"));
         facts.add(new Fact("balance", "Tổng số dư tài khoản hiện tại", balance.toPlainString(), "VND"));
@@ -59,8 +62,25 @@ public class FinancialAssistantController {
         if (accounts.count() == 0 && monthly.transactionCount() == 0 && budget == null)
             return new Answer("FinSight chưa có đủ dữ liệu để giải thích. Hãy thêm tài khoản hoặc giao dịch trước.",
                     "NO_DATA", facts);
+        if (isCurrentBalanceQuestion(request.question())) {
+            NumberFormat amount = NumberFormat.getNumberInstance(Locale.forLanguageTag("vi-VN"));
+            amount.setMinimumFractionDigits(0);
+            amount.setMaximumFractionDigits(2);
+            return new Answer("Tổng số dư hiện tại của các tài khoản bạn đã nhập là "
+                    + amount.format(balance) + " đ.", "VERIFIED_ONLY", facts);
+        }
         var explanation = explanations.explain(request.question().trim(), List.copyOf(facts));
         return new Answer(explanation.text(), explanation.source(), facts);
+    }
+
+    private static boolean isCurrentBalanceQuestion(String question) {
+        String normalized = Normalizer.normalize(question, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT).replace('đ', 'd').trim();
+        return (normalized.contains("bao nhieu tien")
+                && (normalized.contains("dang co") || normalized.contains("hien co")
+                    || normalized.contains("toi co") || normalized.contains("con bao nhieu tien"))
+                && !normalized.contains("thu nhap") && !normalized.contains("chi tieu"))
+                || (normalized.contains("so du") && normalized.contains("bao nhieu"));
     }
 
     private static UUID userId(Jwt jwt) {
