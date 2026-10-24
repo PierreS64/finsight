@@ -39,6 +39,20 @@ export type NetWorthItem = { id: string; name: string; kind: 'ASSET' | 'LIABILIT
 export type NetWorth = { accountAssets: string; accountLiabilities: string; totalAssets: string; totalLiabilities: string; netWorth: string; accounts: { id: string; name: string; balance: string }[]; items: NetWorthItem[] };
 export type FinancialHealth = { month: string; score: string | null; coveragePercent: number; status: 'COMPLETE' | 'PARTIAL' | 'INSUFFICIENT_DATA'; components: { key: string; label: string; weight: number; points: string | null; explanation: string }[]; calculationRule: string };
 export type SubscriptionSuggestions = { items: { accountId: string; categoryId: string; merchantId: string | null; label: string; estimatedAmount: string; observedPayments: number; lastPaymentOn: string; nextExpectedOn: string }[]; calculationRule: string };
+export type AssistantFact = { key: string; label: string; value: string; unit: string };
+export type AssistantAnswer = { explanation: string; source: 'AI_EXPLANATION' | 'NO_DATA' | 'VERIFIED_ONLY'; verifiedFacts: AssistantFact[] };
+
+export async function askAssistant(session: Session, question: string): Promise<AssistantAnswer> {
+  const response = await fetch(`${apiBase}/api/v1/assistant/ask`, {
+    method: 'POST', headers: { Authorization: `Bearer ${session.access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ question }),
+  });
+  if (!response.ok) {
+    const problem = await response.json().catch(() => ({})) as { detail?: string };
+    throw new Error(problem.detail || (response.status === 503 ? 'AI chat chưa được cấu hình trên backend.' : `Không nhận được câu trả lời (HTTP ${response.status}).`));
+  }
+  return await response.json() as AssistantAnswer;
+}
 
 export async function getSubscriptionSuggestions(session: Session, signal?: AbortSignal): Promise<SubscriptionSuggestions> {
   const response = await fetch(`${apiBase}/api/v1/subscription-suggestions`, { headers: { Authorization: `Bearer ${session.access_token}` }, signal });

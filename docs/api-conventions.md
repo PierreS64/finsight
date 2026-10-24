@@ -22,6 +22,7 @@ This records the behavior implemented on `develop` as of 2026-10-21. Use it when
 - `GET /api/v1/net-worth` returns current account balances, manually estimated assets/liabilities and exact totals. `POST /api/v1/net-worth/items` and `PUT/DELETE /api/v1/net-worth/items/{id}` manage owner-scoped current estimates. Negative account balances count as liabilities; savings goals are excluded.
 - `GET /api/v1/financial-health` returns a current-month score, each available/missing component and data coverage. A null score means there is no usable input. See `docs/decisions/0007-financial-health-score.md` for exact thresholds.
 - `GET /api/v1/subscription-suggestions` returns read-only possible monthly expense patterns from owner-scoped transactions. It never schedules or writes a transaction. See `docs/decisions/0008-subscription-suggestions.md` for the heuristic and limits.
+- `POST /api/v1/assistant/ask` accepts an authenticated question of at most 500 characters and returns `explanation`, `source` (`AI_EXPLANATION`, `VERIFIED_ONLY` or `NO_DATA`) and backend-calculated `verifiedFacts`. Facts are current-month aggregates scoped to the JWT owner. No model call occurs without account, transaction or total-budget data. The AI service may return 502 or 503 without changing financial records. See `docs/decisions/0009-grounded-ai-assistant.md`.
 
 ## Money and calculations
 

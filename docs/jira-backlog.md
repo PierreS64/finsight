@@ -63,3 +63,5 @@ The eight initially unassigned Epics FNS-3 through FNS-10 and six Tasks FNS-11, 
 [FNS-44](https://finsight-team.atlassian.net/browse/FNS-44) tracks explainable current-month financial health scoring under Financial Intelligence. It is assigned to Nguyễn Thuận Phong.
 
 [FNS-45](https://finsight-team.atlassian.net/browse/FNS-45) tracks read-only monthly subscription suggestions under Automation. It is assigned to Nguyễn Thuận Phong.
+
+[FNS-46](https://finsight-team.atlassian.net/browse/FNS-46) tracks the owner-scoped AI explanation of backend financial metrics under AI Interaction. It is assigned to Nguyễn Thuận Phong.

@@ -57,6 +57,7 @@ export default function Dashboard() {
     {!loaded && <Text style={common.helper}>Đang tải tổng quan...</Text>}{!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}
     <View style={styles.metrics}><Card style={styles.metric}><Text style={styles.metricLabel}>THU NHẬP THÁNG</Text><Text style={[styles.metricValue, styles.income]}>{dashboard && !error ? formatVnd(dashboard.income) : '—'}</Text></Card><Card style={styles.metric}><Text style={styles.metricLabel}>CHI TIÊU THÁNG</Text><Text style={[styles.metricValue, styles.expense]}>{dashboard && !error ? formatVnd(dashboard.expense) : '—'}</Text></Card></View>
     <Card style={styles.budgetCard}><Text style={styles.metricLabel}>NGÂN SÁCH CÒN LẠI</Text><Text style={[styles.metricValue, dashboard?.budget?.remaining.startsWith('-') && styles.over]}>{dashboard?.budget ? formatVnd(dashboard.budget.remaining) : '—'}</Text><Text style={common.helper}>{dashboard?.budget ? `Hạn mức ${formatVnd(dashboard.budget.limitAmount)} · đã dùng ${dashboard.budget.usedPercent}%` : 'Chưa đặt ngân sách tổng cho tháng này'}</Text><Pressable accessibilityRole="button" onPress={() => router.replace('/budgets')}><Text style={styles.seeAll}>Xem ngân sách ›</Text></Pressable></Card>
+    <Pressable accessibilityRole="button" onPress={() => router.push('/assistant')} style={styles.aiLink}><Text style={styles.seeAll}>✦ Hỏi trợ lý FinSight về các chỉ số của bạn ›</Text></Pressable>
     <Text style={[common.sectionTitle, styles.section]}>Insight trong {month}</Text>
     {!!insightError && <Text accessibilityRole="alert" style={common.error}>{insightError}</Text>}
     {!insights && !insightError && <Text style={common.helper}>Đang tính insight...</Text>}
@@ -82,6 +83,7 @@ export default function Dashboard() {
 }
 
 const styles = StyleSheet.create({
+  aiLink: { marginTop: 18, padding: 12, borderWidth: 1, borderColor: color.border, borderRadius: 12, backgroundColor: color.white },
   monthCard: { marginBottom: 16 }, monthRow: { flexDirection: 'row', gap: 10 }, monthInput: { flex: 1 }, monthButton: { minWidth: 70, backgroundColor: color.green, borderRadius: 12, alignItems: 'center', justifyContent: 'center' }, monthButtonText: { color: color.white, fontWeight: '800' },
   metrics: { flexDirection: 'row', gap: 10, marginBottom: 10 }, metric: { flex: 1 }, metricLabel: { color: color.muted, fontSize: 10, fontWeight: '800', letterSpacing: 1 }, metricValue: { color: color.navy, fontSize: 20, fontWeight: '800', marginTop: 12 }, income: { color: color.greenDark }, expense: { color: '#b45309' }, over: { color: '#b91c1c' }, budgetCard: { gap: 9, marginBottom: 13 }, emptySummary: { gap: 8, marginBottom: 14 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 30 }, avatar: { width: 39, height: 39, borderRadius: 20, backgroundColor: color.blueLight, alignItems: 'center', justifyContent: 'center' },

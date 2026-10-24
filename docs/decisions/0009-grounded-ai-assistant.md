@@ -1,0 +1,7 @@
+# 0009 — AI explains only backend-calculated facts
+
+The assistant answers one question at a time. The API uses the verified Supabase JWT subject to read current-month totals for the same owner: account count and balance, income, expense, net flow, transaction count and optional total budget. All amounts are calculated with `BigDecimal` before any external request. Transfers stay outside income and expense. The model receives only the user's question text and these aggregate facts, without account names, transaction notes, receipt bytes, user ID or email. Question text is sent verbatim, so the UI warns users not to type private details into it.
+
+The backend calls the OpenAI Responses API with `store: false` and instructions to explain supplied facts, avoid new calculations, write no digits and acknowledge missing information. Any output containing digits, empty output or oversized output is replaced by a generic `VERIFIED_ONLY` message; clients show the exact backend facts separately. This filter cannot prove a model explanation is accurate, including numbers written as words. Users should compare prose with the verified facts. The model never writes financial records, and each exchange remains in client memory only.
+
+No-data requests return `NO_DATA` without a provider call. A missing server-side key returns 503 for requests with data; provider/network failures return 502. Credentials stay on the API and are never included in web/mobile bundles. No new schema is needed.
