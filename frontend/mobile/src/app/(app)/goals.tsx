@@ -6,6 +6,7 @@ import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../..
 import { formatVnd } from '../../money';
 import { useSession } from '../../session';
 import { color } from '../../theme';
+import PlanningTabs from '../../components/PlanningTabs';
 
 const validMoney = (value: string, positive: boolean) => /^\d{1,17}(?:[.,]\d{1,2})?$/.test(value.trim()) && (!positive || /[1-9]/.test(value));
 const barWidth = (value: string): `${number}%` => `${Math.min(100, Math.max(0, Number.parseFloat(value) || 0))}%` as `${number}%`;
@@ -59,7 +60,7 @@ export default function Goals() {
     finally { setBusy(false); }
   }
 
-  return <Page><Brand subtitle="KẾ HOẠCH TÀI CHÍNH" /><Text style={[common.title, styles.title]}>Mục tiêu tiết kiệm</Text><Text style={common.subtitle}>Số tiền đã dành là giá trị bạn tự theo dõi, không tự thay đổi số dư tài khoản.</Text>
+  return <Page><Brand subtitle="KẾ HOẠCH TÀI CHÍNH" /><PlanningTabs /><Text style={[common.title, styles.title]}>Mục tiêu tiết kiệm</Text><Text style={common.subtitle}>Số tiền đã dành là giá trị bạn tự theo dõi, không tự thay đổi số dư tài khoản.</Text>
     {error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}{!loaded && <Text style={common.helper}>Đang tải mục tiêu...</Text>}
     {loaded && goals.length === 0 && !error && <Card style={styles.empty}><Text style={common.sectionTitle}>Chưa có mục tiêu</Text><Text style={common.helper}>Thêm mục tiêu đầu tiên để theo dõi kế hoạch tiết kiệm.</Text></Card>}
     {goals.map((goal) => <Card key={goal.id} style={styles.goalCard}><View style={styles.row}><Text style={styles.goalName}>{goal.name}</Text><Text style={styles.percent}>{goal.progressPercent}%</Text></View><Text style={common.helper}>{formatVnd(goal.savedAmount)} / {formatVnd(goal.targetAmount)}</Text><View style={styles.track}><View style={[styles.fill, { width: barWidth(goal.progressPercent) }]} /></View><View style={styles.row}><Text style={styles.detail}>{goal.achieved ? 'Đã đạt mục tiêu' : goal.overdue ? 'Đã qua hạn' : `Còn ${formatVnd(goal.remainingAmount)}`}</Text><Text style={styles.detail}>{goal.targetDate ? `Hạn ${goal.targetDate.split('-').reverse().join('/')}` : 'Không đặt hạn'}</Text></View>{!!goal.note && <Text style={common.helper}>{goal.note}</Text>}<View style={styles.actions}><Pressable accessibilityRole="button" onPress={() => edit(goal)}><Text style={styles.link}>Sửa</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setDeletingId(goal.id)}><Text style={styles.delete}>Xóa</Text></Pressable></View>{deletingId === goal.id && <View style={styles.confirm}><Text style={common.helper}>Xóa mục tiêu này?</Text><Pressable accessibilityRole="button" disabled={busy} onPress={() => remove(goal.id)}><Text style={styles.delete}>Xác nhận xóa</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setDeletingId(null)}><Text style={styles.link}>Hủy</Text></Pressable></View>}</Card>)}

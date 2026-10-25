@@ -8,6 +8,7 @@ import { formatVnd } from '../../money';
 import { reportMonth } from '../../reportDate';
 import { useSession } from '../../session';
 import { color } from '../../theme';
+import PlanningTabs from '../../components/PlanningTabs';
 
 const validAmount = (amount: string) => /^\d{1,17}(?:[.,]\d{1,2})?$/.test(amount.trim()) && /[1-9]/.test(amount);
 const barWidth = (percent: string): `${number}%` => `${Math.min(100, Math.max(0, Number.parseFloat(percent) || 0))}%` as `${number}%`;
@@ -76,7 +77,7 @@ export default function Budgets() {
   }
 
   const expenseCategories = categories.filter((category) => category.categoryType === 'EXPENSE');
-  return <Page><View style={styles.header}><Brand subtitle="NGÂN SÁCH" /><View style={styles.headerIcon}><Ionicons name="pie-chart-outline" size={22} color={color.greenDark} /></View></View>
+  return <Page><View style={styles.header}><Brand subtitle="NGÂN SÁCH" /><Pressable accessibilityRole="button" onPress={() => router.push('/profile')} style={styles.headerIcon}><Ionicons name="person-outline" size={22} color={color.greenDark} /></Pressable></View><PlanningTabs />
     <Text style={common.title}>Kế hoạch chi tiêu</Text><Text style={[common.subtitle, styles.intro]}>Đặt hạn mức tháng và theo dõi chi tiêu từ giao dịch đã ghi.</Text><SecondaryButton onPress={() => router.push('/goals')}>Mục tiêu tiết kiệm →</SecondaryButton>
     <Card style={styles.monthCard}><Text style={common.label}>Tháng ngân sách (YYYY-MM)</Text><View style={styles.monthRow}><TextInput style={[common.input, styles.monthInput]} value={monthInput} onChangeText={setMonthInput} placeholder="2026-10" placeholderTextColor="#94a3b8" /><Pressable accessibilityRole="button" onPress={viewMonth} style={styles.monthButton}><Text style={styles.monthButtonText}>Xem</Text></Pressable></View></Card>
     {loading && <Text style={common.helper}>Đang tải ngân sách...</Text>}{!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}

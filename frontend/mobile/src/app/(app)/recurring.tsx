@@ -9,6 +9,7 @@ import { formatVnd } from '../../money';
 import { reportDate } from '../../reportDate';
 import { useSession } from '../../session';
 import { color } from '../../theme';
+import PlanningTabs from '../../components/PlanningTabs';
 
 const validAmount = (value: string) => /^\d{1,17}(?:[.,]\d{1,2})?$/.test(value.trim()) && /[1-9]/.test(value);
 
@@ -84,7 +85,7 @@ export default function Recurring() {
     } catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Không ghi nhận được kỳ đến hạn.'); }
     finally { setBusy(false); }
   }
-  return <Page><Brand subtitle="GIAO DỊCH ĐỊNH KỲ" /><Text style={[common.title, styles.title]}>Lịch thu chi</Text>
+  return <Page><Brand subtitle="GIAO DỊCH ĐỊNH KỲ" /><PlanningTabs /><Text style={[common.title, styles.title]}>Lịch thu chi</Text>
     <Text style={common.subtitle}>Giao dịch thật chỉ được tạo khi bạn bấm “Ghi nhận đến hạn”. Một kỳ chỉ được ghi một lần.</Text>
     <SubscriptionSuggestionsCard />
     <Text style={styles.heading}>Các khoản đã lên lịch</Text>
