@@ -18,3 +18,9 @@ After a clean `npm ci`, the production audit reports 7 package-level findings (5
 The audit includes build tooling even with `--omit=dev` because Expo and React Native depend on those tools from their production dependency graph. Findings are not evidence that the Android application executes every affected code path. Recheck advisories and dependency compatibility before release or SDK upgrades.
 
 Verification: clean `npm ci --ignore-scripts`, `npx tsc --noEmit`, `npm run lint`, `npx expo-doctor` (18/18), `npx expo export --platform android --output-dir dist`, `xcode` UUID generation, and `npm audit --omit=dev`. The export did not install or interact with an Android emulator; no authenticated device flow was exercised for this dependency change.
+
+## 2026-10-25 recheck and integration decision
+
+`npm audit --omit=dev --json` still reports seven mobile package-level findings (five high, two moderate) across the same three leaf packages and their dependent flags; the web production audit reports zero. GitHub Actions Backend, Web and Mobile all passed for both the push and draft PR workflows on exact head `f1b58b8`. The GitHub advisories still list no patched `node-forge` release, `image-size` 2.0.3 as its fix, and `decode-uri-component` 0.5.0 as its fix. The compatibility constraints above still apply to Expo SDK 53, so no additional override was made.
+
+The dependency assessment is complete for FNS-50, but this is a documented residual availability/integrity risk, not a zero-vulnerability release claim. Keep PR #1 as a draft while Phase 7 Android, recovery-email and signed-in workflow acceptance is incomplete. Reassess these packages before a production release or a compatible Expo/React Native upgrade. The local Jenkins build has not been rerun on `f1b58b8`; its last passing build #4 predates the dependency overrides.
