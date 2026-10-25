@@ -1,55 +1,43 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { getProfile, saveProfile, type Profile } from '../../api';
-import { Brand, Card, Page, PrimaryButton, common } from '../../components/Ui';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { getProfile, type Profile } from '../../api';
 import { useSession } from '../../session';
-import { color } from '../../theme';
 import { supabase } from '../../../supabase';
+import { Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
+import { color } from '../../theme';
 
 export default function ProfileScreen() {
   const { session } = useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [name, setName] = useState(String(session?.user.user_metadata?.display_name || ''));
-  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState('');
+  const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmNewPassword, setConfirmNewPassword] = useState('');
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     if (!session) return;
     const controller = new AbortController();
-    getProfile(session, controller.signal).then((found) => { setProfile(found); if (found) setName(found.displayName || ''); setLoaded(true); }).catch((reason: unknown) => { if (!controller.signal.aborted) { setMessage(reason instanceof Error ? reason.message : 'Không tải được hồ sơ.'); setLoaded(true); } });
+    getProfile(session, controller.signal).then(setProfile)
+      .catch((reason: unknown) => { if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : 'Không tải được hồ sơ.'); });
     return () => controller.abort();
-  }, [session]);
-  async function save() {
-    if (!session || !name.trim() || busy) return;
-    setBusy(true); setMessage('');
-    try { const saved = await saveProfile(session, name.trim()); setProfile(saved); setMessage('Đã lưu hồ sơ.'); }
-    catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Không thể lưu hồ sơ.'); }
-    finally { setBusy(false); }
-  }
+  }, [session]));
   async function signOut() {
     if (!supabase || busy) return;
-    setBusy(true);
-    const { error } = await supabase.auth.signOut();
-    if (error) setMessage(error.message);
+    setBusy(true); setError('');
+    const { error: failure } = await supabase.auth.signOut();
+    if (failure) setError(failure.message);
+    else setConfirm(false);
     setBusy(false);
   }
-  async function changePassword() {
-    if (!supabase || busy) return;
-    if (newPassword.length < 6 || newPassword !== confirmNewPassword) { setMessage('Mật khẩu cần ít nhất 6 ký tự và hai lần nhập phải khớp.'); return; }
-    setBusy(true); setMessage('');
-    const { error } = await supabase.auth.updateUser({ password: newPassword });
-    setNewPassword(''); setConfirmNewPassword('');
-    setMessage(error?.message ?? 'Đã đổi mật khẩu.'); setBusy(false);
-  }
-  return <Page><Brand subtitle="CÁ NHÂN" /><Text style={[common.title, styles.title]}>Hồ sơ của bạn</Text><Text style={[common.subtitle, styles.subtitle]}>Tên hiển thị và thông tin tài khoản FinSight.</Text>
-    <Card style={styles.profileCard}><View style={styles.avatar}><Text style={styles.avatarText}>{name.slice(0, 1).toUpperCase() || 'F'}</Text></View><Text style={styles.name}>{profile?.displayName || 'Hoàn tất hồ sơ'}</Text><Text style={common.helper}>{session?.user.email}</Text><View style={styles.divider} /><Text style={common.label}>Tên hiển thị</Text><TextInput style={common.input} value={name} onChangeText={setName} maxLength={80} placeholder="Tên của bạn" placeholderTextColor="#94a3b8" /><PrimaryButton onPress={save} disabled={busy || !name.trim()}>{busy ? 'Đang lưu...' : 'Lưu hồ sơ'}</PrimaryButton>{loaded && !profile && <Text style={common.helper}>Bạn chưa lưu hồ sơ. Hãy nhập tên để hoàn tất.</Text>}{!!message && <Text accessibilityRole="alert" style={common.message}>{message}</Text>}</Card>
-    <Card style={styles.info}><View style={styles.infoRow}><Ionicons name="mail-outline" size={20} color={color.greenDark} /><View><Text style={styles.infoLabel}>Email</Text><Text style={styles.infoValue}>{session?.user.email}</Text></View></View><View style={[styles.infoRow, styles.divider]}><Ionicons name="cash-outline" size={20} color={color.greenDark} /><View><Text style={styles.infoLabel}>Đơn vị tiền</Text><Text style={styles.infoValue}>{profile?.currencyCode || 'VND'}</Text></View></View></Card>
-    <Card style={styles.passwordCard}><Text style={common.sectionTitle}>Đổi mật khẩu</Text><Text style={common.label}>Mật khẩu mới</Text><TextInput style={common.input} value={newPassword} onChangeText={setNewPassword} secureTextEntry autoComplete="new-password" placeholder="Ít nhất 6 ký tự" placeholderTextColor={color.muted} /><Text style={common.label}>Nhập lại mật khẩu</Text><TextInput style={common.input} value={confirmNewPassword} onChangeText={setConfirmNewPassword} secureTextEntry autoComplete="new-password" placeholder="Nhập lại mật khẩu" placeholderTextColor={color.muted} /><PrimaryButton onPress={changePassword} disabled={busy || newPassword.length < 6 || newPassword !== confirmNewPassword}>Đổi mật khẩu</PrimaryButton></Card>
-    <Pressable accessibilityRole="button" style={styles.signOut} onPress={signOut}><Ionicons name="log-out-outline" size={20} color="#b91c1c" /><Text style={styles.signOutText}>Đăng xuất</Text></Pressable><Text style={styles.footnote}>Dữ liệu được truy cập bằng phiên đăng nhập của bạn.</Text>
+  const name = profile?.displayName || String(session?.user.user_metadata?.display_name || 'Hồ sơ của bạn');
+  return <Page style={styles.page}><View style={styles.header}><Pressable accessibilityRole="button" onPress={() => router.back()}><Ionicons name="arrow-back" size={25} color={color.navy} /></Pressable><Text style={styles.title}>Cá nhân & Cài đặt</Text><View style={{ width: 25 }} /></View>
+    <Card style={styles.profileCard}><View style={styles.identity}><View style={styles.avatar}><Text style={styles.initial}>{name.slice(0, 2).toUpperCase()}</Text></View><View style={{ flex: 1 }}><Text style={styles.name}>{name}</Text><Text style={common.helper}>{session?.user.email}</Text></View></View><SecondaryButton onPress={() => router.push('/profile-edit')}>Chỉnh sửa hồ sơ</SecondaryButton></Card>
+    <Text style={styles.section}>TÀI KHOẢN & BẢO MẬT</Text><Card style={styles.menu}><Pressable accessibilityRole="button" onPress={() => router.push('/profile-edit')} style={styles.row}><Ionicons name="person-outline" size={23} color={color.greenDark} /><Text style={styles.rowLabel}>Chỉnh sửa hồ sơ</Text><Ionicons name="chevron-forward" size={20} color={color.muted} /></Pressable><Pressable accessibilityRole="button" onPress={() => router.push('/change-password')} style={styles.row}><Ionicons name="lock-closed-outline" size={23} color={color.greenDark} /><Text style={styles.rowLabel}>Đổi mật khẩu</Text><Ionicons name="chevron-forward" size={20} color={color.muted} /></Pressable></Card>
+    <Text style={styles.section}>THIẾT LẬP ỨNG DỤNG & DỮ LIỆU</Text><Card style={styles.menu}><View style={styles.row}><Ionicons name="cash-outline" size={23} color={color.greenDark} /><View style={{ flex: 1 }}><Text style={styles.rowLabel}>Đơn vị tiền tệ</Text><Text style={common.helper}>{profile?.currencyCode || 'VND'} (đ)</Text></View></View></Card>
+    {!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}
+    <Pressable accessibilityRole="button" style={styles.signOut} onPress={() => setConfirm(true)}><Ionicons name="log-out-outline" size={21} color="#b91c1c" /><Text style={styles.signOutText}>Đăng xuất</Text></Pressable>
+    <Modal transparent visible={confirm} animationType="slide" onRequestClose={() => setConfirm(false)}><View style={styles.backdrop}><View style={styles.sheet}><View style={styles.handle} /><View style={styles.logoutIcon}><Ionicons name="log-out-outline" size={30} color="#b91c1c" /></View><Text style={styles.sheetTitle}>Đăng xuất tài khoản?</Text><Text style={styles.sheetText}>Bạn có chắc chắn muốn đăng xuất khỏi tài khoản FinSight trên thiết bị này không?</Text><Card style={styles.account}><Text style={styles.name}>{name}</Text><Text style={common.helper}>{session?.user.email}</Text></Card><PrimaryButton onPress={signOut} disabled={busy}>{busy ? 'Đang đăng xuất...' : 'Đăng xuất'}</PrimaryButton><SecondaryButton onPress={() => setConfirm(false)}>Ở lại ứng dụng</SecondaryButton></View></View></Modal>
   </Page>;
 }
 
-const styles = StyleSheet.create({ title: { marginTop: 30 }, subtitle: { marginTop: 7, marginBottom: 25 }, profileCard: { alignItems: 'stretch' }, avatar: { width: 65, height: 65, borderRadius: 20, backgroundColor: color.greenLight, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }, avatarText: { color: color.greenDark, fontSize: 27, fontWeight: '800' }, name: { color: color.navy, fontWeight: '800', fontSize: 21, marginBottom: 3 }, divider: { borderTopWidth: 1, borderTopColor: color.border, marginTop: 22, paddingTop: 20 }, info: { marginTop: 16 }, passwordCard: { gap: 12, marginTop: 18 }, infoRow: { flexDirection: 'row', alignItems: 'center', gap: 13 }, infoLabel: { color: color.muted, fontSize: 11 }, infoValue: { color: color.navy, fontSize: 14, fontWeight: '700', marginTop: 4 }, signOut: { flexDirection: 'row', gap: 10, alignItems: 'center', justifyContent: 'center', backgroundColor: '#fef2f2', borderRadius: 13, padding: 16, marginTop: 25 }, signOutText: { color: '#b91c1c', fontSize: 14, fontWeight: '800' }, footnote: { textAlign: 'center', color: color.muted, fontSize: 11, marginTop: 20 } });
+const styles = StyleSheet.create({ page: { paddingTop: 7 }, header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 22 }, title: { color: color.navy, fontSize: 20, fontWeight: '800' }, profileCard: { marginBottom: 22 }, identity: { flexDirection: 'row', alignItems: 'center', gap: 13 }, avatar: { width: 55, height: 55, borderRadius: 28, backgroundColor: '#e4effd', alignItems: 'center', justifyContent: 'center' }, initial: { color: color.greenDark, fontSize: 20, fontWeight: '800' }, name: { color: color.navy, fontSize: 18, fontWeight: '800' }, section: { color: color.muted, fontSize: 12, fontWeight: '800', marginBottom: 9 }, menu: { padding: 0, overflow: 'hidden', marginBottom: 22 }, row: { flexDirection: 'row', alignItems: 'center', gap: 16, padding: 18, borderBottomWidth: 1, borderBottomColor: color.border }, rowLabel: { color: color.navy, fontSize: 15, fontWeight: '700', flex: 1 }, signOut: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca', borderRadius: 12, padding: 17, marginTop: 10 }, signOutText: { color: '#b91c1c', fontWeight: '800' }, backdrop: { flex: 1, backgroundColor: '#0009', justifyContent: 'flex-end' }, sheet: { backgroundColor: color.white, borderTopLeftRadius: 27, borderTopRightRadius: 27, padding: 24, alignItems: 'center', gap: 13 }, handle: { width: 40, height: 5, borderRadius: 3, backgroundColor: '#d6ded9', marginBottom: 5 }, logoutIcon: { width: 72, height: 72, borderRadius: 36, backgroundColor: '#fef2f2', alignItems: 'center', justifyContent: 'center' }, sheetTitle: { color: color.navy, fontSize: 22, fontWeight: '800' }, sheetText: { color: color.muted, textAlign: 'center', lineHeight: 22 }, account: { width: '100%', backgroundColor: '#edf4ff' } });
