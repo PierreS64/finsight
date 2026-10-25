@@ -51,7 +51,7 @@ export default function Budgets() {
   const openForm = (categoryId?: string) => router.push({ pathname: '/budget-form', params: { month, ...(categoryId ? { categoryId } : {}) } });
   return <Page style={styles.page}>
     <View style={styles.header}><Brand /><View style={styles.headerActions}><Pressable accessibilityRole="button" accessibilityLabel="Thêm ngân sách" onPress={() => openForm()} style={styles.headerButton}><Ionicons name="add" size={23} color={green} /></Pressable><Pressable accessibilityRole="button" accessibilityLabel="Hồ sơ" onPress={() => router.push('/profile')} style={styles.headerButton}><Ionicons name="person-outline" size={21} color={green} /></Pressable></View></View>
-    <PlanningTabs />
+    <PlanningTabs variant="pill" />
     <View style={styles.periodRow}><View style={styles.period}><Pressable accessibilityRole="button" accessibilityLabel="Tháng trước" onPress={() => setMonth(moveMonth(month, -1))}><Ionicons name="chevron-back" size={18} color={green} /></Pressable><Ionicons name="calendar-outline" size={19} color={green} /><Text style={styles.periodText}>Tháng {month.slice(5)}/{month.slice(0, 4)}</Text><Pressable accessibilityRole="button" accessibilityLabel="Tháng sau" onPress={() => setMonth(moveMonth(month, 1))}><Ionicons name="chevron-forward" size={18} color={green} /></Pressable></View>{safe && <Text style={styles.muted}>Còn {safe.remainingDays} ngày</Text>}</View>
     {!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}
     {!loaded && <Text style={common.helper}>Đang tải ngân sách...</Text>}
