@@ -51,7 +51,7 @@ export default function Transfers() {
     setBusy(true); setError('');
     try {
       await saveTransfer(session, { fromAccountId: source.id, toAccountId: destination.id, amount: value, occurredOn: date, note: note.trim() || null });
-      setConfirm(false); router.back();
+      setConfirm(false); router.replace('/accounts');
     } catch (reason) { setError(reason instanceof Error ? reason.message : 'Không lưu được chuyển khoản.'); setConfirm(false); }
     finally { setBusy(false); }
   }
