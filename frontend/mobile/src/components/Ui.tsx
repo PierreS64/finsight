@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { color } from '../theme';
 
 export function Brand({ subtitle }: { subtitle?: string }) {
-  return <View style={styles.brand}><View style={styles.mark}><Text style={styles.markText}>F<Text style={styles.markDot}>.</Text></Text></View><View><Text style={styles.brandName}>FinSight</Text>{subtitle ? <Text style={styles.brandSubtitle}>{subtitle}</Text> : null}</View></View>;
+  return <Image accessibilityLabel="FinSight" accessibilityHint={subtitle} source={require('../../assets/full-logo.png')} style={styles.brand} resizeMode="contain" />;
 }
 
 export function Page({ children, style }: { children: ReactNode; style?: ViewStyle }) {
@@ -38,12 +38,7 @@ export const common = StyleSheet.create({
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: color.canvas },
   pageContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 34, flexGrow: 1 },
-  brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  mark: { width: 39, height: 39, backgroundColor: color.navy, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
-  markText: { color: color.white, fontSize: 23, fontWeight: '800', letterSpacing: -3 },
-  markDot: { color: '#34d399' },
-  brandName: { color: color.navy, fontSize: 22, fontWeight: '800', letterSpacing: -1.1 },
-  brandSubtitle: { color: color.muted, fontSize: 10, fontWeight: '600', marginTop: 1 },
+  brand: { width: 132, height: 45 },
   primaryButton: { backgroundColor: color.green, borderRadius: 14, minHeight: 52, paddingHorizontal: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 9, marginTop: 8 },
   primaryButtonText: { color: color.white, fontSize: 16, fontWeight: '800' },
   disabled: { opacity: 0.55 },
