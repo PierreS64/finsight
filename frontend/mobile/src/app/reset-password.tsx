@@ -78,7 +78,7 @@ export default function ResetPassword() {
       <Text style={common.label}>Nhập lại mật khẩu</Text><TextInput style={common.input} value={confirmation} onChangeText={setConfirmation} secureTextEntry autoComplete="new-password" placeholder="Nhập lại mật khẩu" placeholderTextColor={color.muted} />
       <PrimaryButton onPress={submit} disabled={!ready || !session || busy || !strong(password) || password !== confirmation}>{busy ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}</PrimaryButton>
       {!ready && !message && <Text style={common.helper}>{checking ? 'Đang kiểm tra liên kết khôi phục...' : 'Hãy mở liên kết khôi phục trong email để tiếp tục.'}</Text>}{!!message && <Text accessibilityRole="alert" style={common.error}>{message}</Text>}
-    </Card><View style={styles.back}><SecondaryButton onPress={() => router.replace('/sign-in')}>Về đăng nhập</SecondaryButton></View>
+    </Card><View style={styles.back}><SecondaryButton onPress={() => router.replace(session ? '/camera' : '/sign-in')}>{session ? 'Về ứng dụng' : 'Về đăng nhập'}</SecondaryButton></View>
   </Page>;
 }
 const styles = StyleSheet.create({ page: { paddingTop: 45 }, brand: { alignItems: 'center' }, icon: { alignSelf: 'center', width: 80, height: 80, borderRadius: 20, backgroundColor: color.greenDark, alignItems: 'center', justifyContent: 'center', marginTop: 20 }, title: { marginTop: 25, textAlign: 'center' }, subtitle: { marginTop: 10, marginBottom: 28, textAlign: 'center' }, form: { gap: 13 }, rules: { backgroundColor: '#edf4ff', borderRadius: 12, padding: 13, gap: 5 }, rulesTitle: { color: color.navy, fontWeight: '800', fontSize: 11 }, back: { marginTop: 18 } });
