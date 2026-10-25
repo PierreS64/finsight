@@ -1,92 +1,84 @@
-import { useEffect, useState } from 'react';
-import { router } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { deleteTransfer, getAccounts, getTransfers, saveTransfer, type Account, type Transfer } from '../../api';
-import { formatVnd } from '../../money';
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { getAccounts, saveTransfer, type Account } from '../../api';
+import { formatVnd, sumBalances } from '../../money';
 import { reportDate } from '../../reportDate';
 import { useSession } from '../../session';
-import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
+import { Card, Page, PrimaryButton, common } from '../../components/Ui';
 import { color } from '../../theme';
 
+function iconFor(account: Account) {
+  return account.accountType === 'BANK' ? 'business-outline' : account.accountType === 'CASH' ? 'cash-outline' : 'wallet-outline';
+}
+
+function validAmount(value: string) { return /^\d{1,17}(?:\.\d{1,2})?$/.test(value) && /[1-9]/.test(value); }
 
 export default function Transfers() {
   const { session } = useSession();
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [fromAccountId, setFromAccountId] = useState('');
-  const [toAccountId, setToAccountId] = useState('');
+  const [sourceId, setSourceId] = useState('');
+  const [destinationId, setDestinationId] = useState('');
   const [amount, setAmount] = useState('');
-  const [occurredOn, setOccurredOn] = useState(reportDate);
+  const [date, setDate] = useState(reportDate);
   const [note, setNote] = useState('');
+  const [picker, setPicker] = useState<'source' | 'destination' | null>(null);
+  const [confirm, setConfirm] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [message, setMessage] = useState('');
-
-  useEffect(() => {
+  const [error, setError] = useState('');
+  useFocusEffect(useCallback(() => {
     if (!session) return;
-    const controller = new AbortController();
-    Promise.all([getAccounts(session, controller.signal), getTransfers(session, controller.signal)])
-      .then(([foundAccounts, foundTransfers]) => { setAccounts(foundAccounts); setTransfers(foundTransfers); setLoaded(true); })
-      .catch((reason: unknown) => { if (!controller.signal.aborted) { setMessage(reason instanceof Error ? reason.message : 'Không tải được chuyển khoản.'); setLoaded(true); } });
+    const controller = new AbortController(); setLoaded(false); setError('');
+    getAccounts(session, controller.signal).then((items) => { setAccounts(items); setLoaded(true); })
+      .catch((reason: unknown) => { if (!controller.signal.aborted) { setError(reason instanceof Error ? reason.message : 'Không tải được tài khoản.'); setLoaded(true); } });
     return () => controller.abort();
-  }, [session]);
-
-  const source = accounts.some((account) => account.id === fromAccountId) ? fromAccountId : accounts[0]?.id ?? '';
-  const destination = accounts.some((account) => account.id === toAccountId && account.id !== source)
-    ? toAccountId : accounts.find((account) => account.id !== source)?.id ?? '';
-  const nameOf = (id: string) => accounts.find((account) => account.id === id)?.name ?? 'Tài khoản đã thay đổi';
-
-  async function refreshAccounts() {
-    if (!session) return;
-    try { setAccounts(await getAccounts(session)); }
-    catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Không cập nhật được số dư.'); }
+  }, [session]));
+  const source = accounts.find((item) => item.id === sourceId) ?? accounts[0];
+  const destination = accounts.find((item) => item.id === destinationId && item.id !== source?.id) ?? accounts.find((item) => item.id !== source?.id);
+  const value = amount.trim().replace(',', '.');
+  const canTransfer = !!source && !!destination && validAmount(value) && !sumBalances([source.currentBalance, `-${value}`]).startsWith('-');
+  function review() {
+    if (!validAmount(value)) { setError('Nhập số tiền lớn hơn 0, tối đa hai chữ số thập phân.'); return; }
+    if (!source || !destination) { setError('Cần ít nhất hai tài khoản để chuyển nội bộ.'); return; }
+    if (!canTransfer) { setError('Số tiền chuyển vượt quá số dư tài khoản nguồn.'); return; }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || Number.isNaN(Date.parse(`${date}T00:00:00Z`))) { setError('Ngày thực hiện phải có dạng YYYY-MM-DD.'); return; }
+    setError(''); setConfirm(true);
   }
-
-  async function save() {
-    if (!session || busy || !source || !destination || source === destination) return;
-    const value = amount.trim().replace(',', '.');
-    if (!/^\d{1,17}(?:\.\d{1,2})?$/.test(value) || !/[1-9]/.test(value)) { setMessage('Số tiền phải lớn hơn 0 và có tối đa hai chữ số thập phân.'); return; }
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(occurredOn)) { setMessage('Ngày chuyển phải có dạng YYYY-MM-DD.'); return; }
-    setBusy(true); setMessage('');
+  async function transfer() {
+    if (!session || !source || !destination || !canTransfer || busy) return;
+    setBusy(true); setError('');
     try {
-      const saved = await saveTransfer(session, { fromAccountId: source, toAccountId: destination, amount: value, occurredOn, note: note.trim() || null });
-      setTransfers((current) => [saved, ...current].sort((a, b) => b.occurredOn.localeCompare(a.occurredOn) || b.id.localeCompare(a.id)));
-      setAmount(''); setNote(''); setOccurredOn(reportDate()); setMessage('Đã lưu chuyển khoản.');
-      await refreshAccounts();
-    } catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Không lưu được chuyển khoản.'); }
+      await saveTransfer(session, { fromAccountId: source.id, toAccountId: destination.id, amount: value, occurredOn: date, note: note.trim() || null });
+      setConfirm(false); router.back();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Không lưu được chuyển khoản.'); setConfirm(false); }
     finally { setBusy(false); }
   }
-
-  async function remove(id: string) {
-    if (!session || busy) return;
-    setBusy(true); setMessage('');
-    try {
-      await deleteTransfer(session, id);
-      setTransfers((current) => current.filter((item) => item.id !== id)); setDeletingId(null); setMessage('Đã xóa chuyển khoản.');
-      await refreshAccounts();
-    } catch (reason) { setMessage(reason instanceof Error ? reason.message : 'Không xóa được chuyển khoản.'); }
-    finally { setBusy(false); }
-  }
-
-  return <Page><View style={styles.header}><Brand subtitle="CHUYỂN KHOẢN" /><Pressable accessibilityRole="button" onPress={() => router.replace('/transactions')} style={styles.back}><Ionicons name="arrow-back-outline" size={22} color={color.greenDark} /></Pressable></View>
-    <Text style={common.title}>Chuyển khoản</Text><Text style={[common.subtitle, styles.subtitle]}>Di chuyển tiền giữa các tài khoản do bạn tự quản lý.</Text>
-    <Card style={styles.info}><Text style={styles.infoText}>Chuyển khoản không làm thay đổi tổng tài sản, thu nhập, chi tiêu hoặc ngân sách.</Text></Card>
-    <Text style={[common.sectionTitle, styles.sectionTitle]}>Lịch sử chuyển khoản</Text>
-    <Card>{!loaded ? <Text style={common.helper}>Đang tải chuyển khoản...</Text> : transfers.length ? transfers.map((item, index) => <View key={item.id} style={[styles.row, index > 0 && styles.divider]}><View style={styles.icon}><Ionicons name="swap-horizontal-outline" size={21} color={color.greenDark} /></View><View style={styles.rowMain}><Text style={styles.rowName}>{nameOf(item.fromAccountId)} → {nameOf(item.toAccountId)}</Text><Text style={styles.rowDetail}>{item.occurredOn.split('-').reverse().join('/')}</Text>{!!item.note && <Text style={styles.rowDetail}>{item.note}</Text>}<Text style={styles.amount}>{formatVnd(item.amount)}</Text><Pressable accessibilityRole="button" onPress={() => setDeletingId(item.id)}><Text style={styles.delete}>Xóa chuyển khoản</Text></Pressable>{deletingId === item.id && <View style={styles.confirm}><Pressable accessibilityRole="button" disabled={busy} onPress={() => remove(item.id)}><Text style={styles.delete}>Xác nhận xóa</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setDeletingId(null)}><Text style={styles.link}>Hủy</Text></Pressable></View>}</View></View>) : <View style={styles.empty}><Ionicons name="swap-horizontal-outline" size={31} color={color.greenDark} /><Text style={styles.emptyTitle}>Chưa có chuyển khoản</Text><Text style={common.helper}>Chọn hai tài khoản bên dưới để bắt đầu.</Text></View>}</Card>
-    <Text style={[common.sectionTitle, styles.sectionTitle]}>Chuyển khoản mới</Text><Card>
-      <Text style={common.label}>Từ tài khoản</Text><View style={styles.chips}>{accounts.map((account) => <Pressable accessibilityRole="button" key={account.id} onPress={() => setFromAccountId(account.id)} style={[styles.chip, source === account.id && styles.chipActive]}><Text style={[styles.chipText, source === account.id && styles.chipTextActive]}>{account.name} · {formatVnd(account.currentBalance)}</Text></Pressable>)}</View>
-      <Text style={[common.label, styles.labelGap]}>Đến tài khoản</Text><View style={styles.chips}>{accounts.filter((account) => account.id !== source).map((account) => <Pressable accessibilityRole="button" key={account.id} onPress={() => setToAccountId(account.id)} style={[styles.chip, destination === account.id && styles.chipActive]}><Text style={[styles.chipText, destination === account.id && styles.chipTextActive]}>{account.name}</Text></Pressable>)}</View>{accounts.length < 2 && <Text style={common.helper}>Cần ít nhất hai tài khoản để chuyển tiền.</Text>}
-      <Text style={[common.label, styles.labelGap]}>Số tiền (VND)</Text><TextInput style={common.input} value={amount} onChangeText={setAmount} keyboardType="decimal-pad" placeholder="Ví dụ: 50000" placeholderTextColor="#94a3b8" />
-      <Text style={[common.label, styles.labelGap]}>Ngày chuyển (YYYY-MM-DD)</Text><TextInput style={common.input} value={occurredOn} onChangeText={setOccurredOn} keyboardType="numbers-and-punctuation" placeholder="2026-10-21" placeholderTextColor="#94a3b8" />
-      <Text style={[common.label, styles.labelGap]}>Ghi chú (tùy chọn)</Text><TextInput style={[common.input, styles.noteInput]} value={note} onChangeText={setNote} multiline maxLength={500} placeholder="Ghi chú chuyển khoản" placeholderTextColor="#94a3b8" />
-      <PrimaryButton onPress={save} disabled={busy || !source || !destination || !amount.trim()}>{busy ? 'Đang lưu...' : 'Lưu chuyển khoản'}</PrimaryButton>
-      <SecondaryButton onPress={() => router.replace('/transactions')}>Về giao dịch</SecondaryButton>
-    </Card>{!!message && <Text accessibilityRole="alert" style={common.message}>{message}</Text>}
+  return <Page style={styles.page}>
+    <View style={styles.header}><Pressable accessibilityRole="button" onPress={() => router.back()}><Ionicons name="arrow-back" size={25} color={color.navy} /></Pressable><Text style={styles.title}>Chuyển khoản nội bộ</Text><View style={{ width: 25 }} /></View>
+    {!loaded && <Text style={common.helper}>Đang tải tài khoản...</Text>}{!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}
+    {loaded && !error && accounts.length < 2 && <Card><Text style={common.helper}>Cần ít nhất hai tài khoản để chuyển nội bộ.</Text></Card>}
+    {source && destination && <>
+      <Card style={styles.accounts}>
+        <Pressable accessibilityRole="button" onPress={() => setPicker('source')} style={styles.accountRow}><View style={styles.bankIcon}><Ionicons name={iconFor(source)} size={27} color={color.blue} /></View><View style={styles.accountMain}><Text style={styles.eyebrow}>Từ tài khoản nguồn</Text><Text style={styles.accountName}>{source.name}  ⌄</Text><Text style={styles.sourceBalance}>Số dư: {formatVnd(source.currentBalance)}</Text></View></Pressable>
+        <View style={styles.swapLine}><Ionicons name="swap-vertical" size={22} color={color.greenDark} /></View>
+        <Pressable accessibilityRole="button" onPress={() => setPicker('destination')} style={styles.accountRow}><View style={styles.walletIcon}><Ionicons name={iconFor(destination)} size={27} color="#dc277a" /></View><View style={styles.accountMain}><Text style={styles.eyebrow}>Đến tài khoản nhận</Text><Text style={styles.accountName}>{destination.name}</Text><Text style={styles.balance}>Số dư hiện tại: {formatVnd(destination.currentBalance)}</Text></View><Ionicons name="chevron-forward" size={21} color={color.muted} /></Pressable>
+      </Card>
+      <Card style={styles.amountCard}><Text style={styles.eyebrow}>Số tiền cần chuyển</Text><View style={styles.amountRow}><TextInput accessibilityLabel="Số tiền cần chuyển" keyboardType="decimal-pad" value={amount} onChangeText={setAmount} style={styles.amountInput} placeholder="0" placeholderTextColor={color.muted} /><Text style={styles.currency}>₫</Text><Pressable accessibilityRole="button" accessibilityLabel="Xóa số tiền" onPress={() => setAmount('')}><Ionicons name="close-circle-outline" size={22} color={color.muted} /></Pressable></View><View style={styles.quickAmounts}>{['100000', '200000', '500000', 'all'].map((quick) => <Pressable key={quick} accessibilityRole="button" onPress={() => setAmount(quick === 'all' ? source.currentBalance : sumBalances([value && validAmount(value) ? value : '0', quick]))} style={styles.quick}><Text style={styles.quickText}>{quick === 'all' ? 'Tất cả' : `+${Number(quick) / 1000}k`}</Text></Pressable>)}</View></Card>
+      <Card style={styles.details}><View style={styles.dateRow}><View style={styles.dateIcon}><Ionicons name="calendar-outline" size={23} color={color.muted} /></View><View style={{ flex: 1 }}><Text style={styles.eyebrow}>Ngày thực hiện</Text><Text style={styles.dateValue}>{date === reportDate() ? 'Hôm nay, ' : ''}{date.split('-').reverse().join('/')}</Text></View><Text style={styles.change}>Thay đổi</Text></View><TextInput accessibilityLabel="Ngày thực hiện YYYY-MM-DD" style={styles.dateInput} value={date} onChangeText={setDate} keyboardType="numbers-and-punctuation" /><View style={styles.separator} /><Text style={styles.eyebrow}>Ghi chú giao dịch</Text><TextInput value={note} onChangeText={setNote} maxLength={500} placeholder="Nhập nội dung chuyển khoản" placeholderTextColor={color.muted} style={common.input} /></Card>
+      <View style={styles.notice}><Ionicons name="information-circle" size={23} color={color.greenDark} /><Text style={styles.noticeText}><Text style={styles.noticeStrong}>Lưu ý phân loại tài chính{'\n'}</Text>Giao dịch chuyển nội bộ chỉ thay đổi số dư giữa các tài khoản, hoàn toàn <Text style={styles.noticeStrong}>không tính vào</Text> tổng thu hoặc tổng chi tiêu của bạn.</Text></View>
+      <View style={styles.action}><PrimaryButton onPress={review} disabled={!canTransfer || busy} icon="arrow-forward">Xác nhận chuyển {validAmount(value) ? formatVnd(value) : '0 ₫'}</PrimaryButton></View>
+    </>}
+    <Modal visible={picker !== null} transparent animationType="slide" onRequestClose={() => setPicker(null)}><View style={styles.scrim}><View style={styles.sheet}><View style={styles.handle} /><View style={styles.sheetHead}><Text style={styles.sheetTitle}>{picker === 'source' ? 'Chọn tài khoản nguồn' : 'Chọn tài khoản nhận'}</Text><Pressable onPress={() => setPicker(null)}><Ionicons name="close" size={25} color={color.navy} /></Pressable></View>{accounts.filter((item) => picker === 'source' || item.id !== source?.id).map((item) => <Pressable key={item.id} accessibilityRole="button" onPress={() => { if (picker === 'source') setSourceId(item.id); else setDestinationId(item.id); setPicker(null); }} style={styles.choice}><Ionicons name={iconFor(item)} size={25} color={color.greenDark} /><View style={{ flex: 1 }}><Text style={styles.accountName}>{item.name}</Text><Text style={styles.eyebrow}>{formatVnd(item.currentBalance)}</Text></View><Ionicons name="chevron-forward" size={20} color={color.muted} /></Pressable>)}</View></View></Modal>
+    <Modal visible={confirm} transparent animationType="slide" onRequestClose={() => setConfirm(false)}><View style={styles.scrim}><View style={styles.sheet}><View style={styles.handle} /><View style={styles.sheetHead}><Text style={styles.sheetTitle}>Xác nhận chuyển khoản nội bộ</Text><Pressable onPress={() => setConfirm(false)}><Ionicons name="close" size={25} color={color.navy} /></Pressable></View>{source && destination && <><View style={styles.confirmAmount}><Text style={styles.eyebrow}>SỐ TIỀN CHUYỂN GIAO</Text><Text style={styles.confirmValue}>{formatVnd(value)}</Text><Text style={styles.sourceBalance}>Miễn phí (Nội bộ FinSight)</Text></View><View style={styles.confirmAccounts}><Text style={styles.eyebrow}>Từ tài khoản nguồn</Text><Text style={styles.accountName}>{source.name}</Text><Text style={styles.balance}>Hiện tại: {formatVnd(source.currentBalance)} · Sau chuyển: {formatVnd(sumBalances([source.currentBalance, `-${value}`]))}</Text><View style={styles.separator} /><Text style={styles.eyebrow}>Đến tài khoản nhận</Text><Text style={styles.accountName}>{destination.name}</Text><Text style={styles.balance}>Hiện tại: {formatVnd(destination.currentBalance)} · Sau chuyển: {formatVnd(sumBalances([destination.currentBalance, value]))}</Text></View><Card style={styles.confirmDetails}><Text style={styles.balance}>Thời gian giao dịch: {date.split('-').reverse().join('/')}</Text><Text style={styles.balance}>Nội dung ghi chú: {note.trim() || '—'}</Text><Text style={styles.sourceBalance}>Phí giao dịch: Miễn phí (Nội bộ FinSight)</Text></Card><View style={styles.assurance}><Text style={styles.noticeText}><Text style={styles.noticeStrong}>Cam kết bảo toàn tài sản{'\n'}</Text>Giao dịch chuyển tiền nội bộ không làm thay đổi tổng tài sản ròng của bạn.</Text></View><PrimaryButton onPress={transfer} disabled={busy} icon="checkmark-circle-outline">{busy ? 'Đang lưu...' : 'Xác nhận chuyển ngay'}</PrimaryButton><Pressable onPress={() => setConfirm(false)} style={styles.cancel}><Text style={styles.balance}>Hủy giao dịch</Text></Pressable></>}</View></View></Modal>
   </Page>;
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 30 }, back: { width: 41, height: 41, backgroundColor: color.greenLight, borderRadius: 13, alignItems: 'center', justifyContent: 'center' }, subtitle: { marginTop: 7, marginBottom: 20 }, info: { backgroundColor: color.greenLight, borderColor: '#80e5b4' }, infoText: { color: color.greenDark, fontSize: 13, lineHeight: 20 }, sectionTitle: { marginTop: 24, marginBottom: 13 }, row: { flexDirection: 'row', gap: 10, paddingVertical: 12 }, divider: { borderTopWidth: 1, borderColor: color.border }, icon: { width: 41, height: 41, borderRadius: 12, backgroundColor: color.greenLight, alignItems: 'center', justifyContent: 'center' }, rowMain: { flex: 1, gap: 4 }, rowName: { color: color.navy, fontSize: 13, fontWeight: '800' }, rowDetail: { color: color.muted, fontSize: 11 }, amount: { color: color.greenDark, fontSize: 13, fontWeight: '800', marginTop: 4 }, delete: { color: '#b91c1c', fontSize: 12, fontWeight: '800', marginTop: 5 }, link: { color: color.greenDark, fontSize: 12, fontWeight: '800' }, confirm: { flexDirection: 'row', gap: 16, marginTop: 8 }, empty: { alignItems: 'center', paddingVertical: 22, gap: 9 }, emptyTitle: { color: color.navy, fontSize: 17, fontWeight: '800' }, chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 }, chip: { borderRadius: 18, borderWidth: 1, borderColor: color.border, paddingHorizontal: 12, paddingVertical: 8 }, chipActive: { borderColor: '#6ee7b7', backgroundColor: color.greenLight }, chipText: { color: color.muted, fontSize: 11, fontWeight: '700' }, chipTextActive: { color: color.greenDark }, labelGap: { marginTop: 18 }, noteInput: { minHeight: 83, textAlignVertical: 'top', paddingTop: 13 },
+  page: { paddingTop: 7 }, header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28 }, title: { color: color.navy, fontSize: 20, fontWeight: '800' },
+  accounts: { gap: 2, marginBottom: 20 }, accountRow: { backgroundColor: '#f7f9ff', padding: 13, borderRadius: 13, flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 95 }, accountMain: { flex: 1, gap: 3 }, bankIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#e9f3ff', alignItems: 'center', justifyContent: 'center' }, walletIcon: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#fdf0f8', alignItems: 'center', justifyContent: 'center' }, eyebrow: { color: '#68757a', fontSize: 13 }, accountName: { color: color.navy, fontSize: 17, fontWeight: '700' }, sourceBalance: { color: color.greenDark, fontSize: 14, fontWeight: '700' }, balance: { color: '#45534e', fontSize: 13 }, swapLine: { alignItems: 'center', marginVertical: -7, zIndex: 1 },
+  amountCard: { marginBottom: 20, gap: 9, padding: 22 }, amountRow: { flexDirection: 'row', alignItems: 'center', borderBottomWidth: 1, borderColor: color.border, gap: 9 }, amountInput: { flex: 1, fontSize: 36, fontWeight: '800', color: color.navy, minHeight: 74 }, currency: { fontSize: 21, fontWeight: '800', color: color.greenDark }, quickAmounts: { flexDirection: 'row', gap: 6, marginTop: 7 }, quick: { flex: 1, minHeight: 39, borderRadius: 11, borderWidth: 1, borderColor: color.border, backgroundColor: '#f7f9ff', justifyContent: 'center', alignItems: 'center' }, quickText: { color: color.navy, fontSize: 12, fontWeight: '700' },
+  details: { marginBottom: 20, gap: 10 }, dateRow: { flexDirection: 'row', alignItems: 'center', gap: 10 }, dateIcon: { backgroundColor: '#edf4ff', width: 38, height: 38, borderRadius: 10, alignItems: 'center', justifyContent: 'center' }, dateValue: { color: color.navy, fontSize: 15, marginTop: 3 }, change: { color: color.greenDark, fontWeight: '700', fontSize: 12 }, dateInput: { color: color.muted, fontSize: 12, borderBottomWidth: 1, borderColor: color.border, paddingVertical: 8 }, separator: { borderBottomWidth: 1, borderColor: color.border, marginVertical: 5 }, notice: { backgroundColor: '#e7fbf1', borderWidth: 1, borderColor: '#9ce8c5', borderRadius: 14, padding: 16, flexDirection: 'row', gap: 10 }, noticeText: { flex: 1, color: '#15573d', fontSize: 14, lineHeight: 23 }, noticeStrong: { color: '#006948', fontWeight: '800' }, action: { marginTop: 25, marginBottom: 20 },
+  scrim: { flex: 1, backgroundColor: '#1a273980', justifyContent: 'flex-end' }, sheet: { backgroundColor: color.white, borderTopLeftRadius: 29, borderTopRightRadius: 29, padding: 22, maxHeight: '92%', gap: 15 }, handle: { width: 48, height: 5, borderRadius: 3, backgroundColor: '#d8e1dc', alignSelf: 'center', marginBottom: 6 }, sheetHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, sheetTitle: { color: color.navy, fontSize: 20, fontWeight: '800', flex: 1 }, choice: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 13, borderBottomWidth: 1, borderColor: color.border }, confirmAmount: { backgroundColor: '#f7f9ff', borderRadius: 17, padding: 20, alignItems: 'center', gap: 7 }, confirmValue: { color: '#006948', fontSize: 31, fontWeight: '800' }, confirmAccounts: { backgroundColor: '#f7f9ff', borderRadius: 17, padding: 17, gap: 6 }, confirmDetails: { gap: 11 }, assurance: { backgroundColor: '#e9f1ff', padding: 17, borderRadius: 15 }, cancel: { alignItems: 'center', padding: 13 },
 });
