@@ -12,7 +12,7 @@ import ExpenseForecastCard from '../../../components/ExpenseForecastCard';
 import SafeToSpendCard from '../../../components/SafeToSpendCard';
 import { color } from '../../../theme';
 
-const titles: Record<string, string> = { trends: 'Xu hướng thu chi', health: 'Nhận xét tài chính', explanation: 'Giải thích chi tiêu', profile: 'Hồ sơ hành vi chi tiêu', 'what-if': 'Mô phỏng What-If', forecast: 'Dự báo cuối tháng', safe: 'Chi tiêu an toàn' };
+const titles: Record<string, string> = { trends: 'Xu hướng thu chi', health: 'Nhận xét tài chính', explanation: 'Giải thích chi tiêu', profile: 'Hồ sơ hành vi chi tiêu', 'what-if': 'Mô phỏng What-If', forecast: 'Dự báo cuối tháng', safe: 'Chi tiêu an toàn mỗi ngày' };
 
 export default function AnalyticsTool() {
   const { tool } = useLocalSearchParams<{ tool?: string }>();
