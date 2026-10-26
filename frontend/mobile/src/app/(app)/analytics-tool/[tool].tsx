@@ -7,8 +7,7 @@ import { useSession } from '../../../session';
 import { reportMonth } from '../../../reportDate';
 import { formatVnd } from '../../../money';
 import { Card, Page, common } from '../../../components/Ui';
-import ChartsCard from '../../../components/ChartsCard';
-import SpendingTrendsCard from '../../../components/SpendingTrendsCard';
+import AnalyticsTrends from '../../../components/AnalyticsTrends';
 import FinancialHealthCard from '../../../components/FinancialHealthCard';
 import SpendingProfileCard from '../../../components/SpendingProfileCard';
 import WhatIfCard from '../../../components/WhatIfCard';
@@ -35,7 +34,7 @@ function Explanation() {
 export default function AnalyticsTool() {
   const { tool } = useLocalSearchParams<{ tool?: string }>();
   return <Page style={styles.page}><View style={styles.header}><Pressable accessibilityRole="button" onPress={() => router.back()}><Ionicons name="arrow-back" size={25} color={color.navy} /></Pressable><Text style={styles.title}>{titles[tool ?? ''] || 'Phân tích'}</Text><View style={{ width: 25 }} /></View>
-    {tool === 'trends' && <><ChartsCard month={reportMonth()} /><SpendingTrendsCard month={reportMonth()} /></>}
+    {tool === 'trends' && <AnalyticsTrends />}
     {tool === 'health' && <FinancialHealthCard />}
     {tool === 'explanation' && <Explanation />}
     {tool === 'profile' && <SpendingProfileCard month={reportMonth()} />}
