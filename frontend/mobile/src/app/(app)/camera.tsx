@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
+import * as FileSystem from 'expo-file-system';
 import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
@@ -18,8 +19,14 @@ export default function ReceiptCamera() {
 
   useFocusEffect(useCallback(() => { setFocused(true); return () => setFocused(false); }, []));
 
-  function review(uri: string, mimeType: string) {
-    router.push({ pathname: '/receipt-review', params: { uri, mimeType } });
+  async function review(uri: string, mimeType: string) {
+    if (!FileSystem.cacheDirectory) throw new Error('Thiết bị không có vùng lưu ảnh tạm.');
+    const extension = mimeType === 'image/png' ? 'png' : mimeType === 'image/webp' ? 'webp' : 'jpg';
+    const copyUri = `${FileSystem.cacheDirectory}finsight-receipt-${Date.now()}.${extension}`;
+    await FileSystem.copyAsync({ from: uri, to: copyUri });
+    const copy = await FileSystem.getInfoAsync(copyUri);
+    if (!copy.exists || !copy.size) throw new Error('Không lưu được ảnh hóa đơn đã chọn.');
+    router.push({ pathname: '/receipt-review', params: { uri: copyUri, mimeType } });
   }
 
   async function capture() {
@@ -27,12 +34,14 @@ export default function ReceiptCamera() {
     setBusy(true); setError('');
     try {
       const photo = await camera.current.takePictureAsync({ quality: 0.85 });
-      if (photo?.uri) review(photo.uri, 'image/jpeg');
-    } catch { setError('Không chụp được ảnh. Hãy thử lại hoặc chọn ảnh từ thư viện.'); }
+      if (photo?.uri) await review(photo.uri, 'image/jpeg');
+    } catch { setError('Không lưu được ảnh vừa chụp. Hãy thử lại hoặc chọn ảnh từ thư viện.'); }
     finally { setBusy(false); }
   }
 
   async function chooseImage() {
+    if (busy) return;
+    setBusy(true);
     setError('');
     try {
       const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: false, quality: 0.85 });
@@ -41,8 +50,9 @@ export default function ReceiptCamera() {
       if (!asset.mimeType || !['image/jpeg', 'image/png', 'image/webp'].includes(asset.mimeType) || (asset.fileSize && asset.fileSize > 5_000_000)) {
         setError('Chỉ hỗ trợ ảnh JPEG, PNG hoặc WebP tối đa 5 MB.'); return;
       }
-      review(asset.uri, asset.mimeType);
-    } catch { setError('Không mở được thư viện ảnh.'); }
+      await review(asset.uri, asset.mimeType);
+    } catch { setError('Không lưu được ảnh từ thư viện. Hãy thử chọn lại.'); }
+    finally { setBusy(false); }
   }
 
   return <View style={styles.page}><StatusBar style="light" />
