@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { router } from 'expo-router';
+import * as Linking from 'expo-linking';
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { supabase } from '../../supabase';
@@ -19,7 +20,7 @@ export default function SignUp() {
   async function submit() {
     if (!supabase || busy || !strong(password) || password !== confirmation) return;
     setBusy(true); setMessage('');
-    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { display_name: name.trim() } } });
+    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password, options: { data: { display_name: name.trim() }, emailRedirectTo: Linking.createURL('verify-email') } });
     if (error) setMessage(error.message);
     else if (!data.session) router.replace({ pathname: '/verify-email', params: { email: email.trim() } });
     setBusy(false);
