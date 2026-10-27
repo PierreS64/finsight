@@ -15,6 +15,7 @@ docs/reports/
 .vscode/
 .DS_Store
 frontend/mobile/.git.scaffold-backup/
+frontend/mobile/.expo-export-check/
 frontend/web/public/
 frontend/web/src/assets/
 frontend/mobile design/
