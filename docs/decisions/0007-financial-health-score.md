@@ -1,0 +1,5 @@
+# 0007 — Financial health is an explainable current-month estimate
+
+The score has three independent components: cash flow (40 points), total-budget use (30), and liquidity relative to the current month's expense (30). Cash flow reaches full points when `(income − expense) / income` is at least 20%, and zero at 0% or below. Budget use earns full points through 80% of the saved total limit, decreases linearly, and reaches zero at 120%. Liquidity earns full points when current account balance covers three times the current month's recorded expense. Values are clamped at their bounds and calculated with `BigDecimal`.
+
+A component without its required input has no points. The displayed score is earned points divided by the weight of components with data, scaled to 100; the response also reports data coverage (40%, 30%, 70%, or 100%) and labels partial scores. With no usable component, score is null. The API uses the current Asia/Bangkok month only, so the liquidity numerator and expense denominator describe the same current view. The score is informational, not a credit assessment. Transfers do not create income or expense.

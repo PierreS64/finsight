@@ -2,6 +2,9 @@
 .env
 .env.*
 !.env.example
+.secrets/
+# Individual student reports contain personal details and remain local.
+docs/reports/
 **/node_modules/
 **/dist/
 **/target/
@@ -12,5 +15,7 @@
 .vscode/
 .DS_Store
 frontend/mobile/.git.scaffold-backup/
+frontend/mobile/.expo-export-check/
 frontend/web/public/
 frontend/web/src/assets/
+frontend/mobile design/
