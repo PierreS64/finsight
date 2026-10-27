@@ -1,8 +1,9 @@
-import { router } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, Text, View } from 'react-native';
 import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../components/Ui';
 import { color } from '../theme';
+import { useSession } from '../session';
 
 const benefits = [
   { icon: 'wallet-outline' as const, title: 'Tài khoản của bạn', detail: 'Tạo tài khoản và lưu số dư đầu kỳ do chính bạn nhập.', ready: true },
@@ -11,6 +12,8 @@ const benefits = [
 ];
 
 export default function Welcome() {
+  const { session } = useSession();
+  if (session) return <Redirect href="/camera" />;
   return <Page><View style={styles.header}><Brand subtitle="TÀI CHÍNH RÕ RÀNG" /><View style={styles.badge}><View style={styles.dot} /><Text style={styles.badgeText}>ĐANG PHÁT TRIỂN</Text></View></View>
     <Text style={styles.title}>Hiểu tài chính,{"\n"}<Text style={styles.accent}>làm chủ tương lai.</Text></Text>
     <Text style={[common.subtitle, styles.subtitle]}>Bắt đầu từ dữ liệu do bạn tự quản lý. FinSight giúp mọi con số có một nơi rõ ràng để bắt đầu.</Text>

@@ -14,9 +14,10 @@ const items = [
 
 export default function BottomNav() {
   const path = usePathname();
-  if (!items.some((item) => path === item.href) && !['/goals', '/recurring', '/upcoming'].includes(path)) return null;
+  const currentPath = path === '/' ? '/camera' : path;
+  if (!items.some((item) => currentPath === item.href) && !['/goals', '/recurring', '/upcoming'].includes(currentPath)) return null;
   return <SafeAreaView edges={['bottom']} style={styles.safe}><View style={styles.row}>{items.map((item) => {
-    const selected = path === item.href || (item.href === '/budgets' && ['/goals', '/recurring', '/upcoming'].includes(path));
+    const selected = currentPath === item.href || (item.href === '/budgets' && ['/goals', '/recurring', '/upcoming'].includes(currentPath));
     return <Pressable accessibilityRole="button" accessibilityState={{ selected }} key={item.href} onPress={() => router.replace(item.href)} style={[styles.item, item.href === '/camera' && styles.cameraItem]}><View style={[item.href === '/camera' && styles.cameraCircle, selected && item.href === '/camera' && styles.cameraSelected]}><Ionicons name={item.icon} size={item.href === '/camera' ? 29 : 23} color={item.href === '/camera' ? color.white : selected ? color.greenDark : '#667085'} /></View><Text style={[styles.label, selected && styles.selected]}>{item.label}</Text></Pressable>;
   })}</View></SafeAreaView>;
 }
