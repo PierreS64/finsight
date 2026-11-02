@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { deleteNetWorthItem, getNetWorth, saveNetWorthItem, type NetWorth, type NetWorthItem } from '../../api';
 import { Brand, Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
@@ -58,7 +59,7 @@ export default function NetWorthScreen() {
     finally { setBusy(false); }
   }
 
-  return <Page><Brand subtitle="BỨC TRANH TÀI CHÍNH" /><Text style={[common.title, styles.title]}>Tài sản ròng</Text>
+  return <Page><View style={styles.header}><Brand subtitle="BỨC TRANH TÀI CHÍNH" /><Pressable accessibilityRole="button" accessibilityLabel="Quay lại tài khoản" onPress={() => router.back()}><Ionicons name="close-outline" size={27} color={color.navy} /></Pressable></View><Text style={[common.title, styles.title]}>Tài sản ròng</Text>
     <Text style={common.subtitle}>Số dư tài khoản cộng tài sản tự nhập, trừ các khoản nợ. Không tự định giá tài sản.</Text>
     {!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}
     {!data && !error && <Text style={common.helper}>Đang tải bản kê...</Text>}
@@ -74,6 +75,7 @@ export default function NetWorthScreen() {
 }
 
 const styles = StyleSheet.create({
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   title: { marginTop: 28 }, featured: { marginTop: 20, gap: 7, backgroundColor: color.navy },
   featuredLabel: { fontSize: 11, fontWeight: '800', color: '#a7f3d0' }, featuredHint: { color: '#cbd5e1', fontSize: 12 },
   metricLabel: { fontSize: 11, fontWeight: '800', color: color.muted }, net: { fontSize: 27, fontWeight: '800', color: color.white },
