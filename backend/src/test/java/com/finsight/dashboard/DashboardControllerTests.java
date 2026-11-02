@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -21,8 +22,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 @ActiveProfiles("local")
 class DashboardControllerTests {
-    private static final String ALICE = "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee";
-    private static final String BOB = "ffffffff-ffff-4fff-8fff-ffffffffffff";
+    private static final String ALICE = UUID.randomUUID().toString();
+    private static final String BOB = UUID.randomUUID().toString();
     private static final String FOOD = "00000000-0000-4000-8000-000000000201";
     private static final String SALARY = "00000000-0000-4000-8000-000000000101";
     @Autowired MockMvc mvc;
