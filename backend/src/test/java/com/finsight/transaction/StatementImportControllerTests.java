@@ -1,5 +1,7 @@
 package com.finsight.transaction;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -78,7 +80,8 @@ class StatementImportControllerTests {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.rows[0].alreadyImported").value(true))
                 .andExpect(jsonPath("$.rows[1].alreadyImported").value(false));
         mvc.perform(get("/api/v1/accounts").with(jwt().jwt(token -> token.subject(ALICE))))
-                .andExpect(status().isOk()).andExpect(jsonPath("$[0].currentBalance").value("87.75"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == '" + account + "')].currentBalance").value(hasItem("87.75")));
         mvc.perform(post("/api/v1/statements/import").contentType(MediaType.APPLICATION_JSON)
                         .content(batch(account, hash, row(3, "Siêu thị B", "5"))))
                 .andExpect(status().isUnauthorized());
@@ -99,5 +102,25 @@ class StatementImportControllerTests {
         mvc.perform(multipart("/api/v1/statements/preview").file(invalid).param("accountId", account)
                         .with(jwt().jwt(token -> token.subject(BOB))))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value("Row 2: invalid positive amount"));
+    }
+
+    @Test
+    void previewsIsoDateTypedXlsxWithoutImportingIt() throws Exception {
+        String account = account(ALICE);
+        int before = json.readTree(mvc.perform(get("/api/v1/transactions")
+                .with(jwt().jwt(token -> token.subject(ALICE)))).andReturn().getResponse().getContentAsString()).size();
+        var file = new MockMultipartFile("file", "iso-date.xlsx",
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                StatementParserTests.isoDateWorkbook());
+        mvc.perform(multipart("/api/v1/statements/preview").file(file).param("accountId", account)
+                        .with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].occurredOn").value("2026-11-02"))
+                .andExpect(jsonPath("$.rows[0].amount").value("1000"));
+        String transactions = mvc.perform(get("/api/v1/transactions")
+                        .with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertEquals(before, json.readTree(transactions).size());
     }
 }

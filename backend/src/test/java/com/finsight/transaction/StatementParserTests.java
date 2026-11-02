@@ -53,7 +53,13 @@ class StatementParserTests {
 
     @Test
     void parsesIsoDateTypedXlsxCell() throws Exception {
-        byte[] bytes;
+        byte[] bytes = isoDateWorkbook();
+        assertEquals("2026-11-02", StatementParser.parse("iso-date.xlsx", bytes).rows().get(0).occurredOn().toString());
+        assertThrows(ResponseStatusException.class, () -> StatementParser.parse("iso-date.xlsx",
+                withIsoDateCell(bytes, "not-a-date")));
+    }
+
+    static byte[] isoDateWorkbook() throws Exception {
         try (var workbook = new XSSFWorkbook(); var output = new ByteArrayOutputStream()) {
             var sheet = workbook.createSheet();
             var header = sheet.createRow(0);
@@ -65,11 +71,8 @@ class StatementParserTests {
             row.createCell(2).setCellValue(1000);
             row.createCell(3).setCellValue("expense");
             workbook.write(output);
-            bytes = withIsoDateCell(output.toByteArray());
+            return withIsoDateCell(output.toByteArray());
         }
-        assertEquals("2026-11-02", StatementParser.parse("iso-date.xlsx", bytes).rows().get(0).occurredOn().toString());
-        assertThrows(ResponseStatusException.class, () -> StatementParser.parse("iso-date.xlsx",
-                withIsoDateCell(bytes, "not-a-date")));
     }
 
     private static byte[] withIsoDateCell(byte[] workbook) throws Exception {
