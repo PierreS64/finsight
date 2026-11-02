@@ -197,6 +197,7 @@
 
 - FNS-39 signed-in Android goal acceptance (2026-11-02): On the SDK 35 emulator with the existing real Supabase session, created a synthetic 10,000 VND goal with 1,000 VND tracked (10%). Added 4,000 VND to reach 50%, withdrew 3,000 VND to reach 20%, then edited the target to 12,000 VND and observed 16.7% with 10,000 VND remaining. Deleted the synthetic goal in the Android UI; the goals list returned to empty. This tracking did not create a transaction or change the original 100,000 VND fake cash account. Second-owner live isolation remains unverified.
 - FNS-40 signed-in Android reconciliation acceptance (2026-11-02): Against the same 100,000 VND fake cash account, an observed 100,000 VND showed zero difference and saved as matched; an observed 105,000 VND showed +5,000 VND and saved as surplus. Android recent history displayed both while explaining that saving a snapshot does not change the account balance. Deleted both synthetic snapshots through the signed-in web UI, which returned to an empty history. A second owner's live session remains unverified.
+- FNS-41 signed-in Android merchant check (2026-11-02): From the expense form's Nơi giao dịch selector, opened merchant management, created a synthetic QA merchant, renamed it, and deleted it after a confirmation. The list returned to empty. No transaction was saved during this test. Android merchant attachment to a saved transaction and second-owner live isolation remain unverified.
 
 ## Decisions
 
