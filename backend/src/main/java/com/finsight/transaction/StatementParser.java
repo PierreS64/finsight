@@ -1,6 +1,7 @@
 package com.finsight.transaction;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 import java.math.BigDecimal;
@@ -17,7 +18,11 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.poi.ss.usermodel.Cell;
@@ -32,6 +37,10 @@ import org.springframework.web.server.ResponseStatusException;
 final class StatementParser {
     private static final int MAX_BYTES = 2_000_000;
     private static final int MAX_ROWS = 200;
+    private static final int MAX_XLSX_ENTRIES = 200;
+    private static final int MAX_XLSX_ENTRY_BYTES = 8_000_000;
+    private static final int MAX_XLSX_UNCOMPRESSED_BYTES = 24_000_000;
+    private static final Pattern ISO_DATE_CELL = Pattern.compile("(<(?:[A-Za-z0-9_]+:)?c\\b[^>]*\\bt\\s*=\\s*[\"'])d([\"'])");
     private StatementParser() {}
 
     static Preview parse(String fileName, byte[] bytes) {
@@ -91,7 +100,7 @@ final class StatementParser {
     private static List<RawRow> xlsx(byte[] bytes) throws IOException {
         if (bytes.length < 4 || bytes[0] != 'P' || bytes[1] != 'K') throw bad("XLSX content is invalid");
         List<RawRow> rows = new ArrayList<>();
-        try (var workbook = WorkbookFactory.create(new ByteArrayInputStream(bytes))) {
+        try (var workbook = WorkbookFactory.create(new ByteArrayInputStream(normalizeIsoDateCells(bytes)))) {
             if (workbook.getNumberOfSheets() == 0) throw bad("XLSX has no sheet");
             var sheet = workbook.getSheetAt(0);
             if (sheet.getLastRowNum() > MAX_ROWS + 10) throw bad("Statement may contain at most 200 rows");
@@ -115,6 +124,40 @@ final class StatementParser {
         return rows;
     }
 
+    // Apache POI 5.5.1 cannot open OOXML cells with t="d". Read them as ISO strings;
+    // parseDate still validates the date before a row can enter the preview.
+    private static byte[] normalizeIsoDateCells(byte[] bytes) throws IOException {
+        var result = new ByteArrayOutputStream();
+        int entries = 0;
+        int total = 0;
+        try (var input = new ZipInputStream(new ByteArrayInputStream(bytes));
+             var output = new ZipOutputStream(result)) {
+            ZipEntry entry;
+            while ((entry = input.getNextEntry()) != null) {
+                if (++entries > MAX_XLSX_ENTRIES) throw bad("XLSX has too many parts");
+                var content = new ByteArrayOutputStream();
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = input.read(buffer)) != -1) {
+                    if (content.size() + read > MAX_XLSX_ENTRY_BYTES || total + read > MAX_XLSX_UNCOMPRESSED_BYTES)
+                        throw bad("XLSX content is too large");
+                    content.write(buffer, 0, read);
+                    total += read;
+                }
+                byte[] part = content.toByteArray();
+                if (entry.getName().matches("xl/worksheets/sheet[0-9]+\\.xml")) {
+                    String xml = new String(part, StandardCharsets.UTF_8);
+                    String normalized = ISO_DATE_CELL.matcher(xml).replaceAll("$1str$2");
+                    if (!normalized.equals(xml)) part = normalized.getBytes(StandardCharsets.UTF_8);
+                }
+                output.putNextEntry(new ZipEntry(entry.getName()));
+                output.write(part);
+                output.closeEntry();
+            }
+        }
+        return result.toByteArray();
+    }
+
     private static String value(RawRow row, int index) {
         if (index >= row.values().size()) throw bad("Row " + row.number() + ": missing value");
         return row.values().get(index);
@@ -132,8 +175,11 @@ final class StatementParser {
         String value = raw.trim();
         try { return LocalDate.parse(value); }
         catch (DateTimeParseException ignored) {
-            try { return LocalDate.parse(value, DateTimeFormatter.ofPattern("d/M/uuuu")); }
-            catch (DateTimeParseException ex) { throw bad("Row " + row + ": invalid date"); }
+            try { return LocalDate.from(DateTimeFormatter.ISO_DATE_TIME.parse(value)); }
+            catch (DateTimeParseException ignoredTime) {
+                try { return LocalDate.parse(value, DateTimeFormatter.ofPattern("d/M/uuuu")); }
+                catch (DateTimeParseException ex) { throw bad("Row " + row + ": invalid date"); }
+            }
         }
     }
 

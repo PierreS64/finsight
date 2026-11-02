@@ -3,9 +3,13 @@ package com.finsight.transaction;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.server.ResponseStatusException;
@@ -45,5 +49,52 @@ class StatementParserTests {
         assertThrows(ResponseStatusException.class, () -> StatementParser.parse("bank.xlsx", "not xlsx".getBytes(StandardCharsets.UTF_8)));
         assertThrows(ResponseStatusException.class, () -> StatementParser.parse("bank.csv",
                 "date,description,amount,type\n2026-10-22,Test,1.0001,expense\n".getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @Test
+    void parsesIsoDateTypedXlsxCell() throws Exception {
+        byte[] bytes;
+        try (var workbook = new XSSFWorkbook(); var output = new ByteArrayOutputStream()) {
+            var sheet = workbook.createSheet();
+            var header = sheet.createRow(0);
+            String[] columns = {"date", "description", "amount", "type"};
+            for (int i = 0; i < columns.length; i++) header.createCell(i).setCellValue(columns[i]);
+            var row = sheet.createRow(1);
+            row.createCell(0).setCellValue("2026-11-02T00:00:00");
+            row.createCell(1).setCellValue("Synthetic test");
+            row.createCell(2).setCellValue(1000);
+            row.createCell(3).setCellValue("expense");
+            workbook.write(output);
+            bytes = withIsoDateCell(output.toByteArray());
+        }
+        assertEquals("2026-11-02", StatementParser.parse("iso-date.xlsx", bytes).rows().get(0).occurredOn().toString());
+        assertThrows(ResponseStatusException.class, () -> StatementParser.parse("iso-date.xlsx",
+                withIsoDateCell(bytes, "not-a-date")));
+    }
+
+    private static byte[] withIsoDateCell(byte[] workbook) throws Exception {
+        return withIsoDateCell(workbook, "2026-11-02T00:00:00");
+    }
+
+    private static byte[] withIsoDateCell(byte[] workbook, String value) throws Exception {
+        var result = new ByteArrayOutputStream();
+        try (var input = new ZipInputStream(new ByteArrayInputStream(workbook));
+             var output = new ZipOutputStream(result)) {
+            ZipEntry entry;
+            while ((entry = input.getNextEntry()) != null) {
+                output.putNextEntry(new ZipEntry(entry.getName()));
+                byte[] data = input.readAllBytes();
+                if (entry.getName().equals("xl/worksheets/sheet1.xml")) {
+                    String xml = new String(data, StandardCharsets.UTF_8);
+                    String changed = xml.replaceFirst("<c r=\"A2\"[^>]*>.*?</c>",
+                            "<c r=\"A2\" t=\"d\"><v>" + value + "</v></c>");
+                    if (changed.equals(xml)) throw new IllegalStateException("Date cell was not found in XLSX fixture");
+                    data = changed.getBytes(StandardCharsets.UTF_8);
+                }
+                output.write(data);
+                output.closeEntry();
+            }
+        }
+        return result.toByteArray();
     }
 }
