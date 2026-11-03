@@ -21,3 +21,8 @@ export function formatVnd(value: string): string {
   const cents = absolute % 100n;
   return `${sign}${integer}${cents ? `,${String(cents).padStart(2, '0').replace(/0$/, '')}` : ''} ₫`;
 }
+
+export function formatFlowVnd(value: string | undefined, sign: '+' | '−'): string {
+  if (value === undefined) return '—';
+  return `${minorUnits(value) === 0n ? '' : sign}${formatVnd(value)}`;
+}
