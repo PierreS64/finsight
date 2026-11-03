@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { router } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { getAccounts, getCategories, getMerchants, getTransactions, saveTransaction, uploadReceipt, type Account, type Category, type CategoryType, type Merchant, type ReceiptRecognition, type Transaction } from '../api';
@@ -36,13 +36,27 @@ export default function TransactionEditor({ recognition, receiptUri, receiptMime
   useEffect(() => {
     if (!session) return;
     let active = true;
-    Promise.all([getAccounts(session), getCategories(session), getMerchants(session)]).then(([newAccounts, newCategories, newMerchants]) => {
+    Promise.all([getAccounts(session), getCategories(session)]).then(([newAccounts, newCategories]) => {
       if (!active) return;
-      setAccounts(newAccounts); setCategories(newCategories); setMerchants(newMerchants); setLoaded(true);
-      if (recognition?.merchant) setMerchantId(newMerchants.find((item) => item.name.toLocaleLowerCase() === recognition.merchant?.trim().toLocaleLowerCase())?.id ?? '');
+      setAccounts(newAccounts); setCategories(newCategories); setLoaded(true);
     }).catch((reason: unknown) => { if (active) { setError(reason instanceof Error ? reason.message : 'Không tải được tài khoản và danh mục.'); setLoaded(true); } });
     return () => { active = false; };
-  }, [session, recognition?.merchant]);
+  }, [session]);
+
+  useFocusEffect(useCallback(() => {
+    if (!session) return;
+    const controller = new AbortController();
+    getMerchants(session, controller.signal).then((found) => {
+      setMerchants(found);
+      setMerchantId((current) => {
+        if (current && found.some((item) => item.id === current)) return current;
+        return found.find((item) => item.name.toLocaleLowerCase() === recognition?.merchant?.trim().toLocaleLowerCase())?.id ?? '';
+      });
+    }).catch((reason: unknown) => {
+      if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : 'Không tải được nơi giao dịch.');
+    });
+    return () => controller.abort();
+  }, [session, recognition?.merchant]));
 
   useEffect(() => {
     if (!session || !transactionId) return;
