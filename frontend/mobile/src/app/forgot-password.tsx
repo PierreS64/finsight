@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { supabase } from '../../supabase';
 import { Brand, Card, Page, PrimaryButton, common } from '../components/Ui';
+import { recoveryEmailMessage } from '../recoveryEmailMessage';
 import { color } from '../theme';
 
 export default function ForgotPassword() {
@@ -15,7 +16,7 @@ export default function ForgotPassword() {
     if (!supabase || !email.trim() || busy) return;
     setBusy(true); setMessage('');
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: Linking.createURL('reset-password') });
-    setMessage(error?.message ?? 'Nếu email đã đăng ký, bạn sẽ nhận hướng dẫn đặt lại mật khẩu.');
+    setMessage(recoveryEmailMessage(error, 'Nếu email đã đăng ký, bạn sẽ nhận hướng dẫn đặt lại mật khẩu.'));
     setBusy(false);
   }
   return <Page style={styles.page}><View style={styles.brand}><Brand /></View><View style={styles.hero}><View style={styles.icon}><Ionicons name="shield-checkmark-outline" size={42} color={color.greenDark} /></View><Text style={common.title}>Quên mật khẩu?</Text><Text style={styles.description}>Nhập email đã đăng ký để nhận liên kết khôi phục mật khẩu.</Text></View>

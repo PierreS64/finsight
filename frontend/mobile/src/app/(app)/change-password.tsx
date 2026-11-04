@@ -6,6 +6,7 @@ import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { supabase } from '../../../supabase';
 import { useSession } from '../../session';
 import { Card, Page, PrimaryButton, common } from '../../components/Ui';
+import { recoveryEmailMessage } from '../../recoveryEmailMessage';
 import { color } from '../../theme';
 
 const rules = [
@@ -39,7 +40,7 @@ export default function ChangePassword() {
     if (!supabase || !session?.user.email || busy) return;
     setBusy(true);
     const { error } = await supabase.auth.resetPasswordForEmail(session.user.email, { redirectTo: Linking.createURL('reset-password') });
-    setMessage(error?.message ?? 'Đã gửi liên kết đặt lại mật khẩu qua email.');
+    setMessage(recoveryEmailMessage(error, 'Đã gửi liên kết đặt lại mật khẩu qua email.'));
     setBusy(false);
   }
   return <Page style={styles.page}><View style={styles.header}><Pressable onPress={() => router.back()}><Ionicons name="arrow-back" size={25} color={color.navy} /></Pressable><Text style={styles.title}>Đổi mật khẩu</Text><View style={{ width: 25 }} /></View>
