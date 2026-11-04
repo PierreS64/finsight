@@ -131,4 +131,31 @@ class CategoryControllerTests {
         mvc.perform(delete("/api/v1/categories/{id}", categoryId).with(jwt().jwt(token -> token.subject(ALICE))))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void recurringRuleKeepsItsCategoryEvenWhenInactive() throws Exception {
+        String categoryBody = mvc.perform(post("/api/v1/categories").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Recurring reference\",\"categoryType\":\"EXPENSE\",\"icon\":\"food\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String categoryId = json.readTree(categoryBody).get("id").asText();
+        String accountBody = mvc.perform(post("/api/v1/accounts").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Recurring reference cash\",\"accountType\":\"CASH\",\"openingBalance\":\"0\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String accountId = json.readTree(accountBody).get("id").asText();
+        String ruleBody = mvc.perform(post("/api/v1/recurring-rules")
+                        .with(jwt().jwt(token -> token.subject(ALICE)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"accountId\":\"" + accountId + "\",\"categoryId\":\"" + categoryId
+                                + "\",\"name\":\"Reference rule\",\"kind\":\"EXPENSE\",\"amount\":\"1\","
+                                + "\"cadence\":\"MONTHLY\",\"nextDueOn\":\"2026-12-04\",\"active\":false}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String ruleId = json.readTree(ruleBody).get("id").asText();
+        mvc.perform(delete("/api/v1/categories/{id}", categoryId).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isConflict());
+        mvc.perform(get("/api/v1/recurring-rules").with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[?(@.id == '" + ruleId + "')].categoryId").value(categoryId));
+    }
 }
