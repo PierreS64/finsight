@@ -77,6 +77,15 @@ class BudgetControllerTests {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.total.spent").value("100.25"))
                 .andExpect(jsonPath("$.total.remaining").value("-20.25"))
                 .andExpect(jsonPath("$.total.usedPercent").value("125.3"));
+        mvc.perform(post("/api/v1/transactions").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"accountId\":\"" + aliceAccount + "\",\"categoryId\":\"" + SALARY
+                                + "\",\"kind\":\"INCOME\",\"amount\":\"25\",\"occurredOn\":\"2026-03-31\",\"note\":\"Refund\"}"))
+                .andExpect(status().isCreated());
+        mvc.perform(get("/api/v1/budgets").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .param("month", "2026-03"))
+                .andExpect(jsonPath("$.total.spent").value("100.25"))
+                .andExpect(jsonPath("$.total.alertThresholdPercent").value(100));
         mvc.perform(put("/api/v1/budgets/categories/2026-03/{id}", FOOD)
                         .with(jwt().jwt(token -> token.subject(ALICE)))
                         .contentType(MediaType.APPLICATION_JSON).content("{\"limitAmount\":\"50\"}"))
