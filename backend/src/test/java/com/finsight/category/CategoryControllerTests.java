@@ -89,4 +89,46 @@ class CategoryControllerTests {
                 .andExpect(status().isBadRequest());
         mvc.perform(get("/api/v1/categories")).andExpect(status().isUnauthorized());
     }
+
+    @Test
+    void referencedCategoryCannotBeDeletedUntilTransactionsAndBudgetsAreRemoved() throws Exception {
+        String categoryBody = mvc.perform(post("/api/v1/categories").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Referenced category\",\"categoryType\":\"EXPENSE\",\"icon\":\"food\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String categoryId = json.readTree(categoryBody).get("id").asText();
+        String accountBody = mvc.perform(post("/api/v1/accounts").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Reference test cash\",\"accountType\":\"CASH\",\"openingBalance\":\"100\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String accountId = json.readTree(accountBody).get("id").asText();
+        String transactionBody = mvc.perform(post("/api/v1/transactions").with(jwt().jwt(token -> token.subject(ALICE)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"accountId\":\"" + accountId + "\",\"categoryId\":\"" + categoryId
+                                + "\",\"kind\":\"EXPENSE\",\"amount\":\"1\",\"occurredOn\":\"2026-11-04\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+        String transactionId = json.readTree(transactionBody).get("id").asText();
+        mvc.perform(delete("/api/v1/categories/{id}", categoryId).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isConflict());
+        mvc.perform(get("/api/v1/transactions/{id}", transactionId).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isOk());
+
+        mvc.perform(delete("/api/v1/transactions/{id}", transactionId)
+                        .with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isNoContent());
+        mvc.perform(put("/api/v1/budgets/categories/2026-11/{id}", categoryId)
+                        .with(jwt().jwt(token -> token.subject(ALICE)))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"limitAmount\":\"10\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(delete("/api/v1/categories/{id}", categoryId).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isConflict());
+        mvc.perform(get("/api/v1/budgets").param("month", "2026-11")
+                        .with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.categories[0].categoryId").value(categoryId));
+        mvc.perform(delete("/api/v1/budgets/categories/2026-11/{id}", categoryId)
+                        .with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isNoContent());
+        mvc.perform(delete("/api/v1/categories/{id}", categoryId).with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isNoContent());
+    }
 }
