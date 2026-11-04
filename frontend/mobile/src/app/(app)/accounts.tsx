@@ -21,10 +21,11 @@ export default function Accounts() {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState('');
   useFocusEffect(useCallback(() => {
+    setAccounts([]); setSummary(null); setLoaded(false); setError('');
     if (!session) return;
-    const controller = new AbortController(); setLoaded(false); setError('');
+    const controller = new AbortController();
     Promise.all([getAccounts(session, controller.signal), getDashboard(session, reportMonth(), controller.signal)])
-      .then(([items, dashboard]) => { setAccounts(items); setSummary(dashboard); setLoaded(true); })
+      .then(([items, dashboard]) => { if (!controller.signal.aborted) { setAccounts(items); setSummary(dashboard); setLoaded(true); } })
       .catch((reason: unknown) => { if (!controller.signal.aborted) { setError(reason instanceof Error ? reason.message : 'Không tải được tài khoản.'); setLoaded(true); } });
     return () => controller.abort();
   }, [session]));
