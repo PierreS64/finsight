@@ -42,7 +42,7 @@ export default function CategoryForm() {
     finally { setBusy(false); }
   }
   async function remove() {
-    if (!session || !id || original?.isDefault || busy) return;
+    if (!session || !id || !original || original.isDefault || busy) return;
     setBusy(true); setError('');
     try { await deleteCategory(session, id); setConfirm(false); router.back(); }
     catch (reason) { setError(reason instanceof Error ? reason.message : 'Không xóa được danh mục.'); setConfirm(false); }
@@ -55,7 +55,7 @@ export default function CategoryForm() {
     <Card style={styles.nameCard}><Text style={styles.label}>Tên danh mục *</Text><TextInput accessibilityLabel="Tên danh mục" value={name} onChangeText={setName} editable={!original?.isDefault} maxLength={80} placeholder="Tên danh mục" placeholderTextColor="#6d7a72" style={styles.input} /></Card>
     {!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}{!loaded && <Text style={common.helper}>Đang tải danh mục...</Text>}
     {!original?.isDefault && <PrimaryButton onPress={save} disabled={busy || !loaded || !name.trim()}>{id ? 'Lưu danh mục' : 'Tạo danh mục'}</PrimaryButton>}
-    {id && !original?.isDefault && <Pressable accessibilityRole="button" onPress={() => setConfirm(true)} style={styles.delete}><Ionicons name="trash-outline" size={18} color="#ba1a1a" /><Text style={styles.deleteText}>Xóa danh mục này</Text></Pressable>}
+    {id && original && !original.isDefault && <Pressable accessibilityRole="button" onPress={() => setConfirm(true)} style={styles.delete}><Ionicons name="trash-outline" size={18} color="#ba1a1a" /><Text style={styles.deleteText}>Xóa danh mục này</Text></Pressable>}
     {original?.isDefault && <Text style={styles.note}>Danh mục mặc định dùng chung và không thể sửa hoặc xóa.</Text>}
     <Modal visible={confirm} transparent animationType="fade" onRequestClose={() => setConfirm(false)}><View style={styles.overlay}><Pressable style={styles.scrim} onPress={() => setConfirm(false)} /><View style={styles.dialog}><Text style={styles.dialogTitle}>Xóa danh mục?</Text><Text style={common.helper}>Xóa danh mục {name}? Nếu danh mục đang được sử dụng, FinSight sẽ giữ lại để bảo toàn giao dịch.</Text><Pressable accessibilityRole="button" disabled={busy} onPress={remove} style={styles.danger}><Text style={styles.dangerText}>Xác nhận xóa</Text></Pressable><Pressable accessibilityRole="button" onPress={() => setConfirm(false)} style={styles.cancel}><Text style={styles.cancelText}>Hủy</Text></Pressable></View></View></Modal>
   </Page>;
