@@ -56,6 +56,27 @@ class OpenAiExplanationClientTests {
     }
 
     @Test
+    void providerRateLimitReturnsSafeErrorWithoutItsResponseBody() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/v1/responses", exchange -> {
+            exchange.getRequestBody().readAllBytes();
+            byte[] body = "provider-secret-detail".getBytes(StandardCharsets.UTF_8);
+            exchange.sendResponseHeaders(429, body.length);
+            exchange.getResponseBody().write(body);
+            exchange.close();
+        });
+        server.start();
+        try {
+            URI uri = URI.create("http://127.0.0.1:" + server.getAddress().getPort() + "/v1/responses");
+            var client = new OpenAiExplanationClient(HttpClient.newHttpClient(), json, "test-key", "gpt-6-luna", uri);
+            assertThatThrownBy(() -> client.explain("Giải thích", facts))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .hasMessageContaining("502")
+                    .hasMessageNotContaining("provider-secret-detail");
+        } finally { server.stop(0); }
+    }
+
+    @Test
     void filtersRatiosWrittenAsWords() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/v1/responses", exchange -> {
