@@ -1,0 +1,19 @@
+# Android acceptance follow-up — 2026-11-04
+
+Environment: Expo SDK 53 in Expo Go on the Android SDK 35 `FinSight_API_35` emulator; live Supabase Auth and Spring API (port 8086). The owner's existing signed-in session survived a cold emulator boot. All values below were synthetic.
+
+## Passed on device
+
+- FNS-30/FNS-33: Created monthly expense rule `QA_MOBILE_REC_20261104`, 3,000 VND due November 4. It appeared as overdue in Recurring and due today in Upcoming. Upcoming showed one 3,000 VND item and a projected 97,000 VND after payment from 100,000 VND cash. Confirming the period created one 3,000 VND expense, advanced the next due date to December 4, and removed the November 4 action. No second period was processed.
+- FNS-18: Expo Go reopened the signed-in FinSight Camera route after a cold emulator boot; the dashboard still displayed the owner's profile and 100,000 VND before QA transactions. Sign-out and fresh sign-in were not retested because the owner must enter credentials.
+- FNS-24: Added a contextual delete control for existing monthly total or category budgets. Created a 10,000 VND November total budget, reopened its form and confirmed the new delete button and confirmation sheet rendered with the correct month and explanatory text. TypeScript and lint passed. The final Android UI delete action was not run; the temporary budget was removed with guarded database cleanup.
+- FNS-40: Saved reconciliation `QA_MOBILE_RECON_20261104` with 100,000 VND book balance and 99,000 VND observed balance. Android showed the −1,000 VND shortfall, added it to history, and explicitly stated that the account balance did not change.
+- FNS-42: Selected the generated synthetic ISO-date XLSX from Android Downloads. Preview showed one expense on November 2 for 1,000 VND. After assigning `Ăn uống`, import succeeded with “Đã nhập 1 giao dịch.” Selecting the same file again showed that row unchecked as “Đã nhập từ tệp này”; no second import was performed.
+- FNS-36: Created an expense category `QA_MOBILE_CAT_20261104`, then renamed it to `QA_MOBILE_CAT_EDIT_20261104`; the list count rose from seven to eight and showed the new name. Android delete UI was not retested.
+
+## Cleanup and limits
+
+- The 3,000 VND recurring expense was deleted through Android after the owner's confirmation; the transaction list returned to zero and the cash balance to 100,000 VND. The recurrence has no delete route; a guarded JDBC transaction verified its exact name, amount, cadence, next due date and orphaned November occurrence before deleting that rule.
+- A separate guarded JDBC transaction verified the imported statement transaction and its row marker, reconciliation note and values, renamed category, and November 10,000 VND budget before deleting exactly those four QA records. The statement marker was removed by its foreign-key cascade. No real account or financial record was targeted.
+- Still pending on Android: second-account transfer (FNS-38), recovery-email deep link (FNS-53, needs the owner), category and budget delete UI confirmations, populated multi-day forecast/health edge states, and history pagination/merchant search. Camera capture on a physical device remains deferred by the owner. The earlier web and backend tests cover many calculations but do not substitute for these Android checks.
+- Pre-existing uncommitted removals under `frontend/web design/` were not touched.
