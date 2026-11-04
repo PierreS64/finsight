@@ -1,9 +1,9 @@
 import { useCallback, useState } from 'react';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { getBudget, getCategories, saveBudget, type BudgetSummary, type Category } from '../../api';
-import { Card, Page, PrimaryButton, common } from '../../components/Ui';
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { deleteBudget, getBudget, getCategories, saveBudget, type BudgetSummary, type Category } from '../../api';
+import { Card, Page, PrimaryButton, SecondaryButton, common } from '../../components/Ui';
 import { formatVnd, sumBalances } from '../../money';
 import { reportMonth } from '../../reportDate';
 import { useSession } from '../../session';
@@ -37,11 +37,13 @@ export default function BudgetForm() {
   const [total, setTotal] = useState('');
   const [allocations, setAllocations] = useState<Record<string, string>>({});
   const [loaded, setLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
   useFocusEffect(useCallback(() => {
     if (!session) return;
-    const controller = new AbortController(); setLoaded(false); setError('');
+    const controller = new AbortController(); setLoaded(false); setLoadFailed(false); setError('');
     Promise.all([getBudget(session, month, controller.signal), getCategories(session, controller.signal)])
       .then(([summary, all]) => {
         if (controller.signal.aborted) return;
@@ -49,7 +51,7 @@ export default function BudgetForm() {
         setTotal(summary.total?.limitAmount || '');
         setAllocations(Object.fromEntries(summary.categories.map((item) => [item.categoryId, item.values.limitAmount])));
         setLoaded(true);
-      }).catch((reason: unknown) => { if (!controller.signal.aborted) { setError(reason instanceof Error ? reason.message : 'Không tải được ngân sách.'); setLoaded(true); } });
+      }).catch((reason: unknown) => { if (!controller.signal.aborted) { setError(reason instanceof Error ? reason.message : 'Không tải được ngân sách.'); setLoadFailed(true); setLoaded(true); } });
     return () => controller.abort();
   }, [session, month]));
 
@@ -67,13 +69,27 @@ export default function BudgetForm() {
     finally { setBusy(false); }
   }
 
+  const existingCategory = budget?.categories.find((item) => item.categoryId === params.categoryId);
+  const canDelete = params.categoryId ? !!existingCategory : !!budget?.total;
+  const deleteLabel = params.categoryId ? `ngân sách ${existingCategory?.categoryName || 'danh mục'}` : 'tổng ngân sách';
+  async function remove() {
+    if (!session || !canDelete || busy) return;
+    setBusy(true); setError('');
+    try {
+      await deleteBudget(session, month, params.categoryId || undefined);
+      setConfirmDelete(false);
+      router.back();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : 'Không xóa được ngân sách.'); }
+    finally { setBusy(false); }
+  }
+
   const allocated = sumBalances(categories.map((item) => allocations[item.id] && /^\d+(?:[.,]\d{1,2})?$/.test(allocations[item.id]) ? normalize(allocations[item.id]) : '0'));
   const allocatedPercent = percent(allocated, total);
   return <Page style={styles.page}>
     <View style={styles.header}><Pressable accessibilityRole="button" accessibilityLabel="Quay lại" onPress={() => router.back()}><Ionicons name="arrow-back" size={25} color="#121c26" /></Pressable><Text style={styles.heading}>Thiết lập ngân sách</Text><Pressable accessibilityRole="button" disabled={busy} onPress={save}><Text style={styles.save}>Lưu</Text></Pressable></View>
     <View style={styles.period}><Pressable accessibilityRole="button" accessibilityLabel="Tháng trước" onPress={() => setMonth(shiftMonth(month, -1))}><Ionicons name="chevron-back" size={23} color="#3d4a42" /></Pressable><View style={styles.periodCenter}><Ionicons name="calendar-outline" size={22} color={green} /><Text style={styles.periodText}>Tháng {month.slice(5)}/{month.slice(0, 4)}</Text></View><Pressable accessibilityRole="button" accessibilityLabel="Tháng sau" onPress={() => setMonth(shiftMonth(month, 1))}><Ionicons name="chevron-forward" size={23} color="#3d4a42" /></Pressable></View>
     {!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}{!loaded && <Text style={common.helper}>Đang tải ngân sách...</Text>}
-    {loaded && !error && <><View style={styles.hero}><View style={styles.heroLabel}><Ionicons name="wallet-outline" size={19} color="#d1fae5" /><Text style={styles.heroLabelText}>Tổng ngân sách dự kiến</Text><Text style={styles.heroPill}>Hạn mức tháng</Text></View><TextInput accessibilityLabel="Tổng ngân sách dự kiến" value={total} onChangeText={setTotal} keyboardType="decimal-pad" placeholder="0 ₫" placeholderTextColor="#a8d9c5" style={styles.totalInput} /><View style={styles.heroBottom}><Text style={styles.heroSmall}>✓ Đã phân bổ {allocatedPercent}%</Text><Text style={styles.heroSmall}>{formatVnd(allocated)} / {validMoney(total) ? formatVnd(normalize(total)) : '—'}</Text></View></View>
+    {loaded && !loadFailed && <><View style={styles.hero}><View style={styles.heroLabel}><Ionicons name="wallet-outline" size={19} color="#d1fae5" /><Text style={styles.heroLabelText}>Tổng ngân sách dự kiến</Text><Text style={styles.heroPill}>Hạn mức tháng</Text></View><TextInput accessibilityLabel="Tổng ngân sách dự kiến" value={total} onChangeText={setTotal} keyboardType="decimal-pad" placeholder="0 ₫" placeholderTextColor="#a8d9c5" style={styles.totalInput} /><View style={styles.heroBottom}><Text style={styles.heroSmall}>✓ Đã phân bổ {allocatedPercent}%</Text><Text style={styles.heroSmall}>{formatVnd(allocated)} / {validMoney(total) ? formatVnd(normalize(total)) : '—'}</Text></View></View>
       <View style={styles.mode}><View style={styles.modeOff}><Ionicons name="sparkles-outline" size={18} color="#7d8c87" /><Text style={styles.modeOffText}>Tự động tính theo danh mục</Text></View><View style={styles.modeOn}><Ionicons name="options-outline" size={18} color={green} /><Text style={styles.modeOnText}>Nhập thủ công</Text></View></View>
       <View style={styles.sectionHead}><Text style={styles.sectionTitle}>Phân bổ ngân sách chi tiết</Text><Text style={styles.count}>{categories.length} hạng mục</Text></View>
       {categories.map((item) => {
@@ -82,7 +98,9 @@ export default function BudgetForm() {
         return <Card key={item.id} style={[styles.categoryCard, params.categoryId === item.id && styles.focusCard]}><View style={styles.categoryTop}><View style={styles.categoryIcon}><Ionicons name={categoryIcons[item.icon]} size={22} color={green} /></View><View style={styles.categoryLabels}><Text style={styles.categoryName}>{item.name}</Text><Text style={styles.categoryPercent}>Chiếm {share}% tổng ngân sách</Text></View><TextInput accessibilityLabel={`Hạn mức ${item.name}`} value={amount} onChangeText={(value) => setAllocations((current) => ({ ...current, [item.id]: value }))} keyboardType="decimal-pad" placeholder="0" placeholderTextColor="#6d7a72" style={styles.categoryInput} /></View><View style={styles.track}><View style={[styles.fill, { width: barWidth(amount, total) }]} /></View></Card>;
       })}
       <PrimaryButton onPress={save} disabled={busy}>Áp dụng ngân sách tháng {month.slice(5)}</PrimaryButton>
+      {canDelete && <SecondaryButton onPress={() => setConfirmDelete(true)}>Xóa {deleteLabel}</SecondaryButton>}
     </>}
+    <Modal transparent visible={confirmDelete} animationType="slide" onRequestClose={() => setConfirmDelete(false)}><View style={styles.backdrop}><View style={styles.sheet}><View style={styles.handle} /><Text style={styles.confirmTitle}>Xóa {deleteLabel}?</Text><Text style={common.helper}>Hạn mức tháng {month.slice(5)}/{month.slice(0, 4)} sẽ bị xóa. Giao dịch đã ghi vẫn được giữ lại.</Text><PrimaryButton onPress={remove} disabled={busy}>{busy ? 'Đang xóa...' : 'Xác nhận xóa'}</PrimaryButton><SecondaryButton onPress={() => setConfirmDelete(false)}>Hủy</SecondaryButton>{!!error && <Text accessibilityRole="alert" style={common.error}>{error}</Text>}</View></View></Modal>
   </Page>;
 }
 
@@ -92,4 +110,5 @@ const styles = StyleSheet.create({
   hero: { backgroundColor: green, borderRadius: 15, padding: 18, marginBottom: 17 }, heroLabel: { flexDirection: 'row', alignItems: 'center', gap: 7 }, heroLabelText: { color: '#d1fae5', fontSize: 12, fontWeight: '700', flex: 1 }, heroPill: { backgroundColor: '#ffffff44', color: color.white, fontSize: 10, fontWeight: '700', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 13 }, totalInput: { color: color.white, fontSize: 29, fontWeight: '800', paddingVertical: 10 }, heroBottom: { borderTopWidth: 1, borderColor: '#ffffff44', paddingTop: 12, flexDirection: 'row', justifyContent: 'space-between', gap: 8 }, heroSmall: { color: color.white, fontSize: 11, fontWeight: '700' },
   mode: { flexDirection: 'row', backgroundColor: '#e4effd', borderRadius: 12, padding: 5, marginBottom: 19, gap: 4 }, modeOff: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5, paddingVertical: 10 }, modeOffText: { color: '#7d8c87', fontSize: 10, fontWeight: '700', flexShrink: 1, textAlign: 'center' }, modeOn: { flex: 1, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 5, backgroundColor: color.white, borderRadius: 9, paddingVertical: 10 }, modeOnText: { color: green, fontSize: 11, fontWeight: '800' },
   sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 3, marginBottom: 10 }, sectionTitle: { color: '#121c26', fontSize: 14, fontWeight: '800' }, count: { color: '#6d7a72', fontSize: 11 }, categoryCard: { marginBottom: 10, gap: 16, padding: 14 }, focusCard: { borderColor: green }, categoryTop: { flexDirection: 'row', alignItems: 'center', gap: 10 }, categoryIcon: { width: 41, height: 41, borderRadius: 20, backgroundColor: '#ddfbef', alignItems: 'center', justifyContent: 'center' }, categoryLabels: { flex: 1 }, categoryName: { color: '#121c26', fontSize: 14, fontWeight: '800' }, categoryPercent: { color: '#3d4a42', fontSize: 10, marginTop: 3 }, categoryInput: { color: '#121c26', fontWeight: '800', fontSize: 15, textAlign: 'right', minWidth: 84, maxWidth: 130, borderBottomWidth: 1, borderBottomColor: '#dfe9f7', paddingVertical: 4 }, track: { height: 7, borderRadius: 5, backgroundColor: '#edf4ff', overflow: 'hidden' }, fill: { height: 7, backgroundColor: green, borderRadius: 5 },
+  backdrop: { flex: 1, justifyContent: 'flex-end', backgroundColor: '#0008' }, sheet: { backgroundColor: color.white, padding: 24, borderTopLeftRadius: 26, borderTopRightRadius: 26, gap: 11 }, handle: { width: 42, height: 5, borderRadius: 3, backgroundColor: '#d6ded9', alignSelf: 'center' }, confirmTitle: { color: '#121c26', fontSize: 19, fontWeight: '800' },
 });
