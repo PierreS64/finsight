@@ -211,7 +211,7 @@ export async function saveCategory(session: Session, category: { name: string; c
 
 export async function deleteCategory(session: Session, id: string): Promise<void> {
   const response = await fetch(`${apiBase}/api/v1/categories/${id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${session.access_token}` } });
-  if (response.status === 409) throw new Error('Danh mục đang được giao dịch hoặc ngân sách sử dụng. Hãy đổi danh mục của các mục đó trước khi xóa.');
+  if (response.status === 409) throw new Error('Danh mục đang được giao dịch, ngân sách hoặc quy tắc định kỳ sử dụng. Hãy đổi danh mục của các mục đó trước khi xóa.');
   if (!response.ok) throw new Error(`Không xóa được danh mục (HTTP ${response.status}).`);
 }
 

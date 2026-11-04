@@ -79,7 +79,7 @@ public class CategoryController {
             categories.flush();
         } catch (DataIntegrityViolationException ex) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
-                    "Category is in use by a transaction or budget; change those records before deletion", ex);
+                    "Category is in use by a transaction, budget or recurring rule; change those records before deletion", ex);
         }
     }
 
