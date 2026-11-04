@@ -19,3 +19,5 @@ frontend/mobile/.expo-export-check/
 frontend/web/public/
 frontend/web/src/assets/
 frontend/mobile design/
+frontend/mobile/android/
+frontend/mobile/ios/

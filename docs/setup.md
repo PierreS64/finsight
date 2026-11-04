@@ -32,7 +32,7 @@ The API runs Tesseract locally; receipt images are not sent to an external OCR p
 
 ## Android
 
-Copy `frontend/mobile/.env.example` to `frontend/mobile/.env.local` and set `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project's publishable key. For the Android emulator, `EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:8086` reaches the API on the Windows host. Start `FinSight_API_35` in Android Studio, then run `npx expo start --android --port 8082` in `frontend/mobile`. If Expo Go retains an old bundle, run `adb reverse tcp:8082 tcp:8082` and open `exp://127.0.0.1:8082` on the emulator. The user signed in on Android SDK 35 and saw the profile created on web.
+Copy `frontend/mobile/.env.example` to `frontend/mobile/.env.local` and set `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` to the project's publishable key. For the Android emulator, `EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:8086` reaches the API on the Windows host. Start `FinSight_API_35` in Android Studio, then run `npm run android` in `frontend/mobile` with JDK 17 and Android SDK 35 available. The first run compiles and installs the FinSight debug app; use this installed app when testing the stable `finsight://reset-password` and `finsight://verify-email` redirects. If Metro cannot reach the emulator, run `adb reverse tcp:8081 tcp:8081` and `npx expo start --dev-client --localhost --port 8081`, then reopen the installed app. Expo Go can still be used for ordinary UI work, but its changing `exp://` URL should not be used as Android authentication acceptance evidence. The user signed in on Android SDK 35 and saw the profile created on web.
 
 ## Docker
 

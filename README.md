@@ -37,6 +37,8 @@ npx expo-doctor
 npm run android
 ```
 
+`npm run android` compiles and installs the FinSight Android debug app on the running emulator. Use this installed app to test email confirmation and password recovery: it receives the stable `finsight://` links. Expo Go uses an `exp://` URL that can change between development sessions.
+
 For the Docker API demo: `docker compose up --build`. Docker Desktop must be running. See [setup](docs/setup.md) for real database and auth configuration.
 
 API and integration rules are in [API conventions](docs/api-conventions.md).
