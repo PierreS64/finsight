@@ -33,3 +33,28 @@ export function parseRecoveryLink(url: string | null): RecoveryLink {
 
   return { kind: 'invalid' };
 }
+
+type RouteParams = Record<string, string | string[] | undefined>;
+
+export function recoveryUrlFromRouteParams(params: RouteParams): string | null {
+  const first = (name: string) => {
+    const value = params[name];
+    return Array.isArray(value) ? value[0] : value;
+  };
+  const hash = first('#')?.replace(/^#/, '');
+  const query = new URLSearchParams();
+  for (const key of ['access_token', 'refresh_token', 'code', 'type', 'error', 'error_description']) {
+    const value = first(key);
+    if (value) query.set(key, value);
+  }
+  if (!hash && !query.size) return null;
+  return `finsight://reset-password${query.size ? `?${query}` : ''}${hash ? `#${hash}` : ''}`;
+}
+
+export function selectRecoveryUrl(...candidates: (string | null)[]): string | null {
+  const valid = candidates.find((candidate) => {
+    const kind = parseRecoveryLink(candidate).kind;
+    return kind === 'tokens' || kind === 'code' || kind === 'error';
+  });
+  return valid ?? candidates.find((candidate) => candidate?.includes('reset-password')) ?? null;
+}
