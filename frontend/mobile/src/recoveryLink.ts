@@ -15,8 +15,13 @@ export function parseRecoveryLink(url: string | null): RecoveryLink {
     }
     const fragment = new URLSearchParams(incoming.hash.replace(/^#/, ''));
     const value = (name: string) => fragment.get(name) || incoming.searchParams.get(name);
-    const error = value('error_description');
-    if (error) return { kind: 'error', message: error };
+    const error = value('error') || value('error_description');
+    if (error) return {
+      kind: 'error',
+      message: value('error_code') === 'otp_expired'
+        ? 'Liên kết khôi phục đã hết hạn. Hãy yêu cầu email mới.'
+        : 'Liên kết khôi phục không hợp lệ. Hãy yêu cầu email mới.',
+    };
 
     const type = value('type');
     if (type && type !== 'recovery') return { kind: 'invalid' };
@@ -43,7 +48,7 @@ export function recoveryUrlFromRouteParams(params: RouteParams): string | null {
   };
   const hash = first('#')?.replace(/^#/, '');
   const query = new URLSearchParams();
-  for (const key of ['access_token', 'refresh_token', 'code', 'type', 'error', 'error_description']) {
+  for (const key of ['access_token', 'refresh_token', 'code', 'type', 'error', 'error_code', 'error_description']) {
     const value = first(key);
     if (value) query.set(key, value);
   }

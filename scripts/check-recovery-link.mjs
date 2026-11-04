@@ -20,8 +20,11 @@ test('recovery tokens and PKCE codes are recognized without exposing their value
   });
 });
 
-test('Supabase link errors are shown as decoded text', () => {
-  assert.deepEqual(parseRecoveryLink('finsight://reset-password#error_description=Link+has+expired'), {
-    kind: 'error', message: 'Link has expired',
+test('Supabase link errors are localized without echoing URL text', () => {
+  assert.deepEqual(parseRecoveryLink('exp://127.0.0.1:8081/--/reset-password?error=access_denied&error_code=otp_expired&error_description=Email+link+expired'), {
+    kind: 'error', message: 'Liên kết khôi phục đã hết hạn. Hãy yêu cầu email mới.',
+  });
+  assert.deepEqual(parseRecoveryLink('finsight://reset-password#error_description=untrusted+text'), {
+    kind: 'error', message: 'Liên kết khôi phục không hợp lệ. Hãy yêu cầu email mới.',
   });
 });
