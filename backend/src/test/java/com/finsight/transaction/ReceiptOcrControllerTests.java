@@ -43,6 +43,7 @@ class ReceiptOcrControllerTests {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.merchant").value("Cửa hàng B"))
                 .andExpect(jsonPath("$.occurredOn").value("2026-10-21"))
                 .andExpect(jsonPath("$.amount").value("100000"))
+                .andExpect(jsonPath("$.readable").value(true))
                 .andExpect(jsonPath("$.duplicateTransactionId").isEmpty());
         mvc.perform(get("/api/v1/transactions").with(jwt().jwt(token -> token.subject(ALICE))))
                 .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
@@ -52,6 +53,18 @@ class ReceiptOcrControllerTests {
                         .file(new MockMultipartFile("file", "bad.png", "image/png", new byte[] {1, 2, 3}))
                         .with(jwt().jwt(token -> token.subject(ALICE))))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void strayWordsWithoutTotalAmountUseManualEntryFallback() throws Exception {
+        when(engine.recognize(any(), eq(".png"))).thenReturn("Ay ee a Pe rh ee Ci bu\nDate: 05/11/2026");
+        mvc.perform(multipart("/api/v1/receipts/recognize").file(image())
+                        .with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.amount").isEmpty())
+                .andExpect(jsonPath("$.readable").value(false));
+        mvc.perform(get("/api/v1/transactions").with(jwt().jwt(token -> token.subject(ALICE))))
+                .andExpect(status().isOk()).andExpect(jsonPath("$").isEmpty());
     }
 
     @Test

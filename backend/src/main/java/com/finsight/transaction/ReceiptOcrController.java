@@ -47,7 +47,7 @@ public class ReceiptOcrController {
         ReceiptOcrParser.Result parsed = ReceiptOcrParser.parse(raw);
         return new Recognition(parsed.merchant(), parsed.occurredOn(),
                 parsed.amount() == null ? null : parsed.amount().toPlainString(), duplicate,
-                parsed.merchant() != null || parsed.occurredOn() != null || parsed.amount() != null);
+                parsed.amount() != null);
     }
 
     public record Recognition(String merchant, LocalDate occurredOn, String amount,
