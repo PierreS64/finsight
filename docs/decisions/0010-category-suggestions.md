@@ -1,0 +1,5 @@
+# 0010 — Category suggestions use private transaction history
+
+The API reads only transactions owned by the verified JWT subject and with the requested income/expense kind. It first checks up to 500 most recent entries for the selected merchant. If that does not yield a category, it compares whitespace-normalized, case-insensitive notes among the 500 most recent owner transactions with notes. At least two matching examples and a unique most-common category are required. A unanimous group of at least three is `HIGH` confidence; other valid winners are `MEDIUM`. A tie or insufficient evidence returns 204. The 500-entry cap can omit older examples; this is shown as a suggestion rather than a classification guarantee.
+
+Web and Android request suggestions as the form's merchant or note changes, show the source and supporting/total counts, and offer a button to use the category. The suggestion never changes a category or persists a transaction on its own. No external AI service receives merchant or note text. The existing transaction create/update ownership checks still apply when the user saves.

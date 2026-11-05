@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+
+<html lang="vi"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_blank" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "secondary-fixed-dim": "#bec6e0",
+          "on-primary-container": "#00422b",
+          "secondary-fixed": "#dae2fd",
+          "on-secondary-fixed": "#131b2e",
+          "primary": "#006c49",
+          "surface-container-highest": "#d3e4fe",
+          "surface-container-low": "#eff4ff",
+          "secondary": "#565e74",
+          "surface-tint": "#006c49",
+          "tertiary-fixed-dim": "#b4c5ff",
+          "on-error-container": "#93000a",
+          "on-surface": "#0b1c30",
+          "tertiary": "#0053db",
+          "error-container": "#ffdad6",
+          "primary-fixed-dim": "#4edea3",
+          "outline": "#6c7a71",
+          "surface-container-high": "#dce9ff",
+          "on-secondary-container": "#5c647a",
+          "on-secondary-fixed-variant": "#3f465c",
+          "primary-fixed": "#6ffbbe",
+          "surface-container": "#e5eeff",
+          "surface-bright": "#f8f9ff",
+          "inverse-on-surface": "#eaf1ff",
+          "on-primary-fixed-variant": "#005236",
+          "tertiary-container": "#7f9fff",
+          "on-tertiary-fixed": "#00174b",
+          "on-error": "#ffffff",
+          "tertiary-fixed": "#dbe1ff",
+          "inverse-primary": "#4edea3",
+          "on-background": "#0b1c30",
+          "surface-variant": "#d3e4fe",
+          "on-tertiary": "#ffffff",
+          "surface-container-lowest": "#ffffff",
+          "outline-variant": "#bbcabf",
+          "on-primary-fixed": "#002113",
+          "on-surface-variant": "#3c4a42",
+          "secondary-container": "#dae2fd",
+          "on-secondary": "#ffffff",
+          "on-tertiary-container": "#00328b",
+          "surface": "#f8f9ff",
+          "surface-dim": "#cbdbf5",
+          "on-primary": "#ffffff",
+          "inverse-surface": "#213145",
+          "on-tertiary-fixed-variant": "#003ea8",
+          "background": "#f8f9ff",
+          "error": "#ba1a1a",
+          "primary-container": "#10b981"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.25rem",
+          "lg": "0.5rem",
+          "xl": "0.75rem",
+          "full": "9999px"
+        },
+        "spacing": {
+          "space-xl": "2rem",
+          "gutter-desktop": "1.5rem",
+          "space-xs": "0.25rem",
+          "space-sm": "0.5rem",
+          "gutter": "1.5rem",
+          "margin": "2rem",
+          "space-md": "1rem",
+          "space-lg": "1.5rem",
+          "gutter-mobile": "1rem",
+          "margin-mobile": "1rem",
+          "margin-desktop": "2.5rem"
+        },
+        "fontFamily": {
+          "headline-sm": ["Inter"],
+          "headline-lg": ["Inter"],
+          "label-md": ["Inter"],
+          "headline-md": ["Inter"],
+          "currency-sm": ["Inter"],
+          "currency-display": ["Inter"],
+          "body-lg": ["Inter"],
+          "body-md": ["Inter"],
+          "currency-md": ["Inter"],
+          "body-sm": ["Inter"],
+          "label-sm": ["Inter"],
+          "display-hero": ["Inter"]
+        },
+        "fontSize": {
+          "headline-sm": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+          "headline-lg": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+          "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+          "headline-md": ["22px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "currency-sm": ["15px", {"lineHeight": "20px", "fontWeight": "600"}],
+          "currency-display": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+          "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+          "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+          "currency-md": ["20px", {"lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+          "body-sm": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+          "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "600"}],
+          "display-hero": ["36px", {"lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+        }
+      }
+    }
+  }</script></head><body class="bg-background font-body-md text-on-surface antialiased"><main class="w-full min-h-screen bg-background flex items-center justify-center p-space-md"><div class="flex flex-col w-full">
+<div class="w-full max-w-7xl mx-auto min-h-[780px] bg-surface-container-lowest rounded-xl shadow-xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 my-auto">
+<!-- LEFT COLUMN: AUTHENTICATION FORM -->
+<div class="lg:col-span-6 xl:col-span-5 p-space-lg sm:p-space-xl flex flex-col justify-between bg-surface-container-lowest">
+<div>
+<!-- Brand Header -->
+<div class="flex items-center gap-space-sm mb-space-lg">
+<img alt="FinSight Logo" class="w-9 h-9 object-contain rounded-lg shadow-sm" src="https://lh3.googleusercontent.com/aida/AEtjO1VFn1w5gK7JeFs8CwftYA8SvnQrOc4d6vlAZcFtR6yVy-V2ky5czeluCg3IPCgHrazxi0JHp1HWBHO1zKjleZ5AZ59Kf2m3Fm20rVG6i4-ybEAi4yUSUXthOER53kxWzU0nDSc_LPIBKA7wa9SyZIWvYoqW235lhgffTNsbE-fjeyyHidaOaNomZGL4zQN_jSEb4w4mHqt5Ih96-SWQBqv0NgLDIWeNql0mXCHmmhTkrvLMx4dUisGRH4c"/>
+<span class="font-headline-md text-headline-md text-on-surface tracking-tight">FinSight</span>
+<span class="px-2 py-0.5 ml-2 bg-primary-fixed text-on-primary-fixed font-label-sm text-body-sm rounded-full">PRO</span>
+</div>
+<!-- Greeting & Subtext -->
+<div class="mb-space-lg">
+<h1 class="font-headline-lg text-headline-lg text-on-surface mb-space-xs">Chào mừng bạn trở lại</h1>
+<p class="font-body-md text-body-md text-secondary">Đăng nhập vào bảng điều khiển tài chính FinSight của bạn</p>
+</div>
+<!-- Social SSO Buttons -->
+<div class="grid grid-cols-2 gap-space-sm mb-space-lg">
+<button class="group flex items-center justify-center gap-space-xs h-11 px-space-md bg-surface-container-low hover:bg-surface-container text-on-surface rounded-lg transition-colors duration-150" type="button">
+<svg class="w-4 h-4" viewbox="0 0 24 24">
+<path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
+<path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
+<path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"></path>
+<path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"></path>
+</svg>
+<span class="font-label-md text-label-md">Google</span>
+</button>
+<button class="group flex items-center justify-center gap-space-xs h-11 px-space-md bg-surface-container-low hover:bg-surface-container text-on-surface rounded-lg transition-colors duration-150" type="button">
+<svg class="w-4 h-4 fill-current" viewbox="0 0 24 24">
+<path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.62-.75 1.04-1.8 1.01-2.87-.9.04-1.99.6-2.64 1.36-.57.65-1.07 1.71-.93 2.73.99.08 2.02-.52 2.56-1.22z"></path>
+</svg>
+<span class="font-label-md text-label-md">Apple</span>
+</button>
+</div>
+<!-- Sectional Divider -->
+<div class="relative flex items-center justify-center mb-space-lg">
+<div class="w-full h-px bg-surface-container"></div>
+<span class="absolute bg-surface-container-lowest px-3 font-body-sm text-body-sm text-secondary">Hoặc đăng nhập bằng email</span>
+</div>
+<!-- Authentication Form -->
+<form class="space-y-space-md" id="loginForm" onsubmit="event.preventDefault(); handleLogin();">
+<!-- Email Input -->
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1" for="email">Địa chỉ Email</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-secondary text-[20px]">mail</span>
+<input class="w-full h-11 pl-10 pr-10 bg-surface-container-low text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:bg-surface-container transition-all" id="email" placeholder="ten@congty.vn" required="" type="email"/>
+<span class="material-symbols-outlined absolute right-3 text-primary text-[20px]">check_circle</span>
+</div>
+</div>
+<!-- Password Input -->
+<div>
+<div class="flex justify-between items-center mb-1">
+<label class="font-label-md text-label-md text-on-surface" for="password">Mật khẩu</label>
+<a class="font-label-sm text-label-sm text-primary hover:text-on-primary-fixed-variant transition-colors" href="javascript:void(0)">Quên mật khẩu?</a>
+</div>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-secondary text-[20px]">lock</span>
+<input class="w-full h-11 pl-10 pr-10 bg-surface-container-low text-on-surface font-body-md text-body-md rounded-lg focus:outline-none focus:bg-surface-container transition-all tracking-widest" id="password" placeholder="••••••••••••" required="" type="password"/>
+<button class="absolute right-3 flex items-center text-secondary hover:text-on-surface transition-colors focus:outline-none" onclick="togglePasswordVisibility()" type="button">
+<span class="material-symbols-outlined text-[20px]" id="pwdEyeIcon">visibility</span>
+</button>
+</div>
+</div>
+<!-- Remember Me -->
+<div class="flex items-center gap-space-xs py-1">
+<input checked="" class="w-4 h-4 accent-primary rounded cursor-pointer" id="remember" type="checkbox"/>
+<label class="font-body-md text-body-md text-secondary select-none cursor-pointer" for="remember">Ghi nhớ đăng nhập trên thiết bị này</label>
+</div>
+<!-- Primary Submit Button -->
+<button class="w-full h-11 bg-primary hover:bg-on-primary-fixed-variant text-on-primary font-headline-sm text-headline-sm rounded-lg flex items-center justify-center gap-2 shadow-sm transition-all duration-200 active:scale-[0.99]" id="submitBtn" type="submit">
+<span id="btnText">Đăng nhập</span>
+<span class="hidden animate-spin material-symbols-outlined text-[20px]" id="btnSpinner">progress_activity</span>
+<span class="material-symbols-outlined text-[20px] transition-transform group-hover:translate-x-1">arrow_forward</span>
+</button>
+</form>
+<!-- Register Link -->
+<div class="mt-space-md text-center">
+<p class="font-body-md text-body-md text-secondary">
+            Chưa có tài khoản FinSight?
+            <a class="font-label-md text-label-md text-primary hover:underline ml-1" href="javascript:void(0)">Đăng ký miễn phí ngay</a>
+</p>
+</div>
+</div>
+<!-- Security Trust Footer -->
+<div class="pt-space-lg mt-space-md flex items-center justify-center gap-2 text-secondary bg-surface-container-low p-space-sm rounded-lg">
+<span class="material-symbols-outlined text-primary text-[18px]">verified_user</span>
+<span class="font-label-sm text-label-sm">Dữ liệu được mã hóa an toàn theo tiêu chuẩn ngân hàng SSL/TLS 256-bit</span>
+</div>
+</div>
+<!-- RIGHT COLUMN: FINTECH SHOWCASE & TESTIMONIAL -->
+<div class="hidden lg:flex lg:col-span-6 xl:col-span-7 bg-inverse-surface text-inverse-on-surface p-space-xl flex-col justify-between relative overflow-hidden">
+<!-- Background Ambient Glow & Grid -->
+<div class="absolute -top-32 -right-32 w-96 h-96 bg-primary opacity-20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute bottom-0 -left-20 w-80 h-80 bg-tertiary opacity-15 rounded-full blur-3xl pointer-events-none"></div>
+<!-- Top Header Indicator -->
+<div class="relative z-10 flex items-center justify-between">
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-highest/10 backdrop-blur-md rounded-full text-primary-fixed font-label-sm text-label-sm">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+          Cập nhật thị trường tài chính trực tiếp
+        </div>
+<div class="font-body-sm text-body-sm text-secondary-fixed-dim">VND / VN-INDEX / TIẾT KIỆM</div>
+</div>
+<!-- Center Showcase Card (Glassmorphic Financial Stat) -->
+<div class="relative z-10 my-auto py-space-lg">
+<div class="bg-surface-container-highest/10 backdrop-blur-xl rounded-xl p-space-lg shadow-2xl relative">
+<!-- Card Header & Badge -->
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary-fixed">
+<span class="material-symbols-outlined text-[24px]">savings</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-secondary-fixed-dim uppercase tracking-wider">Hiệu suất phân bổ vốn</p>
+<p class="font-headline-sm text-headline-sm text-on-tertiary">Tháng này tiết kiệm</p>
+</div>
+</div>
+<span class="px-2.5 py-1 bg-primary/20 text-primary-fixed font-currency-sm text-currency-sm rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">trending_up</span> +24.8%
+            </span>
+</div>
+<!-- Currency Valuation Display -->
+<div class="mb-space-md">
+<div class="font-currency-display text-currency-display text-on-tertiary tracking-tight">+11.250.000 <span class="font-headline-md text-headline-md text-primary-fixed">₫</span></div>
+<p class="font-body-sm text-body-sm text-secondary-fixed-dim mt-1">Đã cộng tích lũy tự động từ tài khoản thanh toán Techcombank</p>
+</div>
+<!-- Inline Progress Goal Card -->
+<div class="bg-surface-container-highest/15 rounded-lg p-space-md space-y-2">
+<div class="flex items-center justify-between font-label-md text-label-md">
+<span class="text-secondary-fixed-dim flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-tertiary-fixed">laptop_mac</span>
+                Mục tiêu mua sắm cá nhân
+              </span>
+<span class="text-primary-fixed font-headline-sm text-headline-sm">75%</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-2.5 bg-surface-container-highest/20 rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full transition-all duration-700 ease-out" style="width: 75%;"></div>
+</div>
+<div class="flex justify-between items-center font-body-sm text-body-sm text-secondary-fixed-dim pt-1">
+<span>Đã nạp: 22.500.000 ₫</span>
+<span>Kỳ hạn còn 18 ngày</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Testimonial & Identity Footer -->
+<div class="relative z-10 pt-space-md">
+<div class="relative pl-space-md">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-primary-container rounded-full"></div>
+<p class="font-body-lg text-body-lg text-on-tertiary italic leading-relaxed mb-space-md">
+            “FinSight đã giúp tôi kiểm soát hoàn toàn dòng tiền cá nhân và tiết kiệm thêm 30% mỗi tháng chỉ sau 90 ngày sử dụng.”
+          </p>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<img class="w-12 h-12 rounded-full object-cover shadow-md" data-alt="Close up portrait of a young professional Vietnamese male financial consultant in smart tailored modern dark navy suit smiling confidently against soft neutral interior studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB34JsrYQYCjSQksXeQ4CPduU1im3rvvMuJCybg9cqxSB0X9YZTUAETXDRBeH4ovGCVCRNK_MN5bZCMPU-BAXlQZBll_b9UVVae8bB5W5jbH3cjOhUf9ZKtKiiWmSXDkOhYMlv7xDO9iBjKf3nIMYUhetCawz54AoyB2d-KY0nkKNPbG6cfQ8-YiaaqsbauapaKtWzCCEFUnUAhJ_j9m0ZyjmTipUsYtGDvWeDVBUNkRFZ7Ri0Gj649"/>
+<div>
+<p class="font-label-md text-label-md text-on-tertiary">Trần Minh Quang</p>
+<p class="font-body-sm text-body-sm text-secondary-fixed-dim">Chuyên viên Tài chính &amp; Đầu tư, TP.HCM</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-primary-fixed hidden xl:inline-block">FinSight — Hiểu tài chính, làm chủ tương lai</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function togglePasswordVisibility() {
+    const passwordInput = document.getElementById('password');
+    const eyeIcon = document.getElementById('pwdEyeIcon');
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      eyeIcon.textContent = 'visibility_off';
+    } else {
+      passwordInput.type = 'password';
+      eyeIcon.textContent = 'visibility';
+    }
+  }
+
+  function handleLogin() {
+    const btn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const btnSpinner = document.getElementById('btnSpinner');
+
+    btnText.textContent = 'Đang xác thực...';
+    btnSpinner.classList.remove('hidden');
+    btn.disabled = true;
+
+    setTimeout(() => {
+      btnText.textContent = 'Đăng nhập thành công';
+      btnSpinner.classList.add('hidden');
+      btn.classList.add('bg-on-primary-container');
+    }, 1200);
+  }
+</script></main></body></html>

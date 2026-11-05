@@ -1,12 +1,20 @@
 services:
   controller:
-    image: jenkins/jenkins:lts-jdk21
+    build:
+      context: ../..
+      dockerfile: infrastructure/docker/Jenkins.Dockerfile
+    image: finsight-jenkins:local
     restart: unless-stopped
     ports:
       - "127.0.0.1:8085:8080"
     volumes:
       - finsight_jenkins_home:/var/jenkins_home
+    secrets:
+      - jenkins_admin_password
     environment:
-      JAVA_OPTS: "-Djenkins.install.runSetupWizard=true"
+      JAVA_OPTS: "-Djenkins.install.runSetupWizard=false"
 volumes:
   finsight_jenkins_home:
+secrets:
+  jenkins_admin_password:
+    file: ../../.secrets/jenkins-admin-password
