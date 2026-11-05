@@ -157,14 +157,9 @@ export default function TransactionsPanel({ session, accounts, onChanged, onCate
       });
       if (!response.ok) throw new Error(`Không đọc được hóa đơn (HTTP ${response.status}). Hãy nhập tay.`);
       const result = await response.json() as OcrResult;
-      setOcrResult(result); setKind('EXPENSE'); setCategoryId(''); setMerchantId(''); setEditingId(null);
+      setOcrResult(result); setKind('EXPENSE'); setCategoryId(''); setMerchantId(''); setNote(''); setEditingId(null);
       if (result.amount) setAmount(result.amount);
       if (result.occurredOn) setOccurredOn(result.occurredOn);
-      if (result.merchant) {
-        setNote(result.merchant);
-        const match = merchants.find((item) => item.name.toLocaleLowerCase() === result.merchant?.trim().toLocaleLowerCase());
-        setMerchantId(match?.id ?? "");
-      }
       setMessage(result.readable ? 'Đã điền dữ liệu nhận diện. Hãy kiểm tra và sửa trước khi lưu.' : 'OCR chưa đọc được thông tin. Hãy nhập tay và kiểm tra ảnh trước khi lưu.');
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Không đọc được hóa đơn. Hãy nhập tay.'); }
     finally { setOcrBusy(false); }

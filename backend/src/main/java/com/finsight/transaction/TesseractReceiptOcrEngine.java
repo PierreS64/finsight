@@ -33,24 +33,43 @@ public class TesseractReceiptOcrEngine implements ReceiptOcrEngine {
         Path errors = Files.createTempFile("finsight-ocr-errors-", ".txt");
         try {
             Files.write(source, image);
-            List<String> arguments = new ArrayList<>(List.of(command, source.toString(), "stdout", "-l", languages, "--psm", "6"));
-            if (!dataDirectory.isBlank()) { arguments.add("--tessdata-dir"); arguments.add(dataDirectory); }
-            Process process = new ProcessBuilder(arguments)
-                    .redirectOutput(output.toFile()).redirectError(errors.toFile()).start();
-            boolean finished;
-            try { finished = process.waitFor(Duration.ofSeconds(20).toMillis(), TimeUnit.MILLISECONDS); }
-            catch (InterruptedException ex) {
-                process.destroyForcibly(); Thread.currentThread().interrupt();
-                throw new IOException("OCR interrupted", ex);
+            String standard = run(source, output, errors, false);
+            if (score(standard) == 3) return standard;
+            try {
+                String adaptive = run(source, output, errors, true);
+                return score(adaptive) > score(standard) ? adaptive : standard;
+            } catch (IOException ex) {
+                if (Thread.currentThread().isInterrupted()) throw ex;
+                // Older Tesseract installations may not support Sauvola; keep the first result.
+                return standard;
             }
-            if (!finished) { process.destroyForcibly(); throw new IOException("OCR timed out"); }
-            if (process.exitValue() != 0) throw new IOException("OCR engine failed");
-            if (Files.size(output) > 100_000) throw new IOException("OCR output is too large");
-            return Files.readString(output, StandardCharsets.UTF_8);
         } finally {
             Files.deleteIfExists(source);
             Files.deleteIfExists(output);
             Files.deleteIfExists(errors);
         }
+    }
+
+    private String run(Path source, Path output, Path errors, boolean adaptive) throws IOException {
+        List<String> arguments = new ArrayList<>(List.of(command, source.toString(), "stdout", "-l", languages, "--psm", "6"));
+        if (!dataDirectory.isBlank()) { arguments.add("--tessdata-dir"); arguments.add(dataDirectory); }
+        if (adaptive) { arguments.add("-c"); arguments.add("thresholding_method=2"); }
+        Process process = new ProcessBuilder(arguments)
+                .redirectOutput(output.toFile()).redirectError(errors.toFile()).start();
+        boolean finished;
+        try { finished = process.waitFor(Duration.ofSeconds(20).toMillis(), TimeUnit.MILLISECONDS); }
+        catch (InterruptedException ex) {
+            process.destroyForcibly(); Thread.currentThread().interrupt();
+            throw new IOException("OCR interrupted", ex);
+        }
+        if (!finished) { process.destroyForcibly(); throw new IOException("OCR timed out"); }
+        if (process.exitValue() != 0) throw new IOException("OCR engine failed");
+        if (Files.size(output) > 100_000) throw new IOException("OCR output is too large");
+        return Files.readString(output, StandardCharsets.UTF_8);
+    }
+
+    private static int score(String text) {
+        ReceiptOcrParser.Result parsed = ReceiptOcrParser.parse(text);
+        return (parsed.amount() == null ? 0 : 2) + (parsed.occurredOn() == null ? 0 : 1);
     }
 }
