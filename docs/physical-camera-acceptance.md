@@ -24,3 +24,9 @@ Use a clearly marked **fake** printed receipt, with a made-up seller, date and s
 4. Capture an unreadable/non-receipt image and check that the app offers **Nhập tay** without creating a transaction. Do not save the fallback form.
 
 Report which step passed or the exact on-screen error. Do not send a password, authentication link or real receipt. The synthetic transaction and photo can then be removed through the app, and FNS-28/FNS-31 can be closed with the observed evidence.
+
+## Result — 2026-11-05
+
+- The owner connected an Android 14 phone by USB, signed in to the installed development build and photographed a synthetic receipt displayed on the computer. The real rear-camera image was clear. OCR suggested `FIN SIGHT SHOP`, 2026-11-05 and 1,000 VND. The owner changed the amount to 2,000 VND, selected the fake Tiền mặt account and Khác category, and explicitly saved one QA transaction. Its detail showed the edited amount and attached camera photo; the cash balance fell from 100,000 to 98,000 VND.
+- A non-receipt camera image initially produced stray words but no total amount and opened the OCR result form. Commit `cfee0c1` requires a recognized total amount before marking OCR output readable. After restarting the real API, the same captured image showed the existing unreadable-receipt message and **Nhập tay** button on the phone. That button opened a blank manual form with Save disabled. No second transaction was created.
+- The QA transaction and attached photo were deleted through Android after checking its exact QA note, amount, date, category and account. Transaction history returned to zero, monthly expense to zero and Tiền mặt to 100,000 VND. The Java 17 backend verification with local Tesseract ran 83 tests with no failures/errors and one optional live-provider skip. Jira FNS-28/FNS-31 and their parent Epics FNS-5/FNS-9 moved to Done.
