@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Image, Pressable, ScrollView, StyleSheet, Text, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
 import { color } from '../theme';
 
 export function Brand({ subtitle }: { subtitle?: string }) {
@@ -9,7 +10,7 @@ export function Brand({ subtitle }: { subtitle?: string }) {
 }
 
 export function Page({ children, style }: { children: ReactNode; style?: ViewStyle }) {
-  return <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.pageContent, style]}>{children}</ScrollView></SafeAreaView>;
+  return <><StatusBar style="dark" /><SafeAreaView style={styles.safe} edges={['top', 'bottom', 'left', 'right']}><ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={[styles.pageContent, style]}>{children}</ScrollView></SafeAreaView></>;
 }
 
 export function PrimaryButton({ children, onPress, disabled = false, icon }: { children: ReactNode; onPress: () => void; disabled?: boolean; icon?: React.ComponentProps<typeof Ionicons>['name'] }) {
