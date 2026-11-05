@@ -24,4 +24,4 @@ No new screen, component style or color was introduced. The nine unrelated local
 
 - Inspected emulator captures after loading, including the three corrected screens. The category and goal forms were scrolled to check their lower actions.
 - `npx tsc --noEmit` and `npm run lint` passed after the UI changes. The native Android SDK 35 build passed after the crop dependency was added.
-- The emulator's virtual camera returns black imagery. The new crop produced a smaller image, but the receipt's alignment and OCR quality inside the cropped frame still need a real-camera check. The authenticated session was preserved, so signed-out authentication screens and ID-dependent detail states were not re-captured in this pass.
+- The emulator's virtual camera returns black imagery. A later real-phone check confirmed that the cropped review image matched the camera guide; receipt OCR accuracy remains a separate limitation, recorded in `docs/physical-camera-acceptance.md`. The authenticated emulator session was preserved, so signed-out authentication screens and ID-dependent detail states were not re-captured in this pass.
