@@ -24,7 +24,7 @@ export default function TransactionEditor({ recognition, receiptUri, receiptMime
   const [merchantId, setMerchantId] = useState('');
   const [amount, setAmount] = useState(recognition?.amount ?? '');
   const [date, setDate] = useState(recognition?.occurredOn ?? today());
-  const [note, setNote] = useState(recognition?.merchant ?? '');
+  const [note, setNote] = useState('');
   const [picker, setPicker] = useState<Picker>(null);
   const [duplicateConfirmed, setDuplicateConfirmed] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -50,13 +50,13 @@ export default function TransactionEditor({ recognition, receiptUri, receiptMime
       setMerchants(found);
       setMerchantId((current) => {
         if (current && found.some((item) => item.id === current)) return current;
-        return found.find((item) => item.name.toLocaleLowerCase() === recognition?.merchant?.trim().toLocaleLowerCase())?.id ?? '';
+        return '';
       });
     }).catch((reason: unknown) => {
       if (!controller.signal.aborted) setError(reason instanceof Error ? reason.message : 'Không tải được nơi giao dịch.');
     });
     return () => controller.abort();
-  }, [session, recognition?.merchant]));
+  }, [session]));
 
   useEffect(() => {
     if (!session || !transactionId) return;
