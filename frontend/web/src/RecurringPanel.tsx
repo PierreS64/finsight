@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { Session } from "@supabase/supabase-js";
 import type { Account } from "./AccountsPanel";
-import { formatVnd } from "./money";
+import { formatVnd, sumBalances } from "./money";
 import { reportDate } from "./reportDate";
 import "./RecurringPanel.css";
 
@@ -28,6 +28,8 @@ export default function RecurringPanel({ session, accounts, onChanged }: { sessi
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"all" | "active" | "paused">("all");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -101,10 +103,14 @@ export default function RecurringPanel({ session, accounts, onChanged }: { sessi
     finally { setBusy(false); }
   }
 
-  return <><div className="recurring-info">Lịch chỉ nhắc khoản định kỳ. Giao dịch thật chỉ được tạo khi bạn bấm “Ghi nhận đến hạn”. Mỗi ngày đến hạn được ghi một lần.</div>
-    <div className="recurring-layout"><section className="surface-card"><div className="section-head"><div><p className="eyebrow">LỊCH CỦA BẠN</p><h2>Khoản định kỳ</h2></div><span className="small-badge">{loaded ? rules.length : "—"} khoản</span></div>
-      {!loaded ? <p className="muted">Đang tải lịch...</p> : rules.length ? <div className="recurring-list">{rules.map((rule) => <article key={rule.id}><div><strong>{rule.name}</strong><span>{rule.active ? "Đang chạy" : "Tạm dừng"}</span></div><p>{formatVnd(rule.amount)} · {rule.kind === "EXPENSE" ? "Chi" : "Thu"} · {rule.cadence === "WEEKLY" ? "Hàng tuần" : "Hàng tháng"}</p><small>{accountName(rule.accountId)} · {categoryName(rule.categoryId)} · đến hạn {rule.nextDueOn}</small><div className="recurring-actions"><button className="link-button" onClick={() => edit(rule)}>Sửa</button><button className="link-button" disabled={busy} onClick={() => changeActive(rule)}>{rule.active ? "Tạm dừng" : "Tiếp tục"}</button>{rule.active && rule.nextDueOn <= reportDate() && <button className="button-primary" disabled={busy} onClick={() => process(rule)}>Ghi nhận đến hạn</button>}</div></article>)}</div> : <div className="empty-state compact"><span>↻</span><h3>Chưa có khoản định kỳ</h3><p>Tạo lịch lương, tiền thuê hoặc dịch vụ thường kỳ.</p></div>}
-    </section><section className="surface-card recurring-form"><p className="eyebrow">THIẾT LẬP</p><h2>{editing ? "Sửa lịch" : "Tạo lịch mới"}</h2><form onSubmit={save}>
+  const visible = rules.filter((rule) => (filter === "all" || (filter === "active" ? rule.active : !rule.active)) && rule.name.toLocaleLowerCase("vi").includes(query.trim().toLocaleLowerCase("vi")));
+  const active = rules.filter((rule) => rule.active);
+  const due = active.filter((rule) => rule.nextDueOn <= reportDate());
+  return <div className="recurring-page"><div className="recurring-metrics"><div className="surface-card"><span>Tổng số tiền quy tắc chi</span><strong>{formatVnd(sumBalances(active.filter((rule) => rule.kind === "EXPENSE").map((rule) => rule.amount)))}</strong><small>Cộng mức tiền từng quy tắc, gồm cả chu kỳ tuần và tháng</small></div><div className="surface-card"><span>Quy tắc đã đến hạn</span><strong>{due.length} quy tắc</strong><small>Cần ghi nhận thủ công</small></div><div className="surface-card"><span>Quy tắc đang chạy</span><strong>{active.length} quy tắc</strong><small>Trên tổng {rules.length} quy tắc</small></div></div>
+    <div className="recurring-info">Giao dịch chỉ được tạo khi bạn bấm “Ghi nhận đến hạn”. Mỗi ngày đến hạn được ghi một lần.</div>
+    <div className="surface-card recurring-toolbar"><label className="recurring-search"><span className="material-symbols-outlined" aria-hidden="true">search</span><input aria-label="Tìm khoản định kỳ" placeholder="Tìm tên khoản định kỳ..." value={query} onChange={(event) => setQuery(event.target.value)} /></label><div className="recurring-filters" role="group" aria-label="Trạng thái quy tắc"><button className={filter === "all" ? "selected" : ""} onClick={() => setFilter("all")}>Tất cả ({rules.length})</button><button className={filter === "active" ? "selected" : ""} onClick={() => setFilter("active")}>Đang chạy ({active.length})</button><button className={filter === "paused" ? "selected" : ""} onClick={() => setFilter("paused")}>Đã tạm dừng ({rules.length - active.length})</button></div><button className="button-primary" onClick={() => { reset(); document.getElementById("recurring-form")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}><span className="material-symbols-outlined" aria-hidden="true">add</span> Thêm quy tắc định kỳ</button></div>
+    <section className="surface-card recurring-table-card"><div className="section-head"><h2>Danh sách quy tắc định kỳ</h2><span className="muted">{visible.length} quy tắc</span></div>{!loaded ? <p className="muted">Đang tải lịch...</p> : rules.length ? <div className="recurring-table-scroll"><table><thead><tr><th>Quy tắc & tài khoản</th><th>Danh mục</th><th>Chu kỳ</th><th>Số tiền</th><th>Kỳ tiếp theo</th><th>Trạng thái</th><th>Hành động</th></tr></thead><tbody>{visible.map((rule) => <tr key={rule.id}><td><strong>{rule.name}</strong><small>{accountName(rule.accountId)}</small></td><td>{categoryName(rule.categoryId)}</td><td>{rule.cadence === "WEEKLY" ? "Hàng tuần" : "Hàng tháng"}</td><td><strong>{formatVnd(rule.amount)}</strong><small>{rule.kind === "EXPENSE" ? "Chi" : "Thu"}</small></td><td>{rule.nextDueOn.split("-").reverse().join("/")}</td><td><span className={`recurring-status ${rule.active ? "active" : ""}`}>{rule.active ? "Đang chạy" : "Tạm dừng"}</span></td><td><div className="recurring-actions"><button className="link-button" onClick={() => { edit(rule); document.getElementById("recurring-form")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}>Sửa</button><button className="link-button" disabled={busy} onClick={() => changeActive(rule)}>{rule.active ? "Tạm dừng" : "Tiếp tục"}</button>{rule.active && rule.nextDueOn <= reportDate() && <button className="button-primary" disabled={busy} onClick={() => process(rule)}>Ghi nhận</button>}</div></td></tr>)}</tbody></table></div> : <div className="empty-state compact"><span>↻</span><h3>Chưa có khoản định kỳ</h3><p>Tạo lịch lương, tiền thuê hoặc dịch vụ thường kỳ.</p></div>}{loaded && rules.length > 0 && visible.length === 0 && <p className="muted">Không tìm thấy quy tắc phù hợp.</p>}</section>
+    <section id="recurring-form" className="surface-card recurring-form"><p className="eyebrow">THIẾT LẬP</p><h2>{editing ? "Sửa lịch" : "Tạo lịch mới"}</h2><form onSubmit={save}>
       <label>Tên khoản<input value={name} onChange={(event) => setName(event.target.value)} maxLength={100} required placeholder="Ví dụ: Internet" /></label>
       <label>Loại<select value={kind} onChange={(event) => { setKind(event.target.value as Kind); setCategoryId(""); }}><option value="EXPENSE">Chi tiêu</option><option value="INCOME">Thu nhập</option></select></label>
       <label>Tài khoản<select value={selectedAccount} onChange={(event) => setAccountId(event.target.value)} required>{!accounts.length && <option value="">Thêm tài khoản trước</option>}{accounts.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>
@@ -114,5 +120,5 @@ export default function RecurringPanel({ session, accounts, onChanged }: { sessi
       <label>Ngày đến hạn tiếp theo<input type="date" value={nextDueOn} onChange={(event) => setNextDueOn(event.target.value)} required /></label>
       <label>Ghi chú (tùy chọn)<textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={500} /></label>
       <button className="button-primary" disabled={busy || !accounts.length || !availableCategories.length}>{busy ? "Đang lưu..." : editing ? "Lưu thay đổi" : "Tạo lịch"}</button>{editing && <button type="button" className="button-outline" onClick={reset}>Hủy sửa</button>}
-    </form>{message && <p className="auth-message" role="status">{message}</p>}</section></div></>;
+    </form>{message && <p className="auth-message" role="status">{message}</p>}</section></div>;
 }
