@@ -4,6 +4,7 @@ import { initialRecoveryRedirect, supabase } from "./supabase";
 import AuthPanel, { PasswordResetPanel, ProfilePanel } from "./AuthPanel";
 import type { Account } from "./AccountsPanel";
 import "./App.css";
+import "./WebDesign.css";
 
 const AccountsPanel = lazy(() => import("./AccountsPanel"));
 const CategoriesPanel = lazy(() => import("./CategoriesPanel"));
@@ -20,14 +21,11 @@ const NetWorthPanel = lazy(() => import("./NetWorthPanel"));
 const AssistantPanel = lazy(() => import("./AssistantPanel"));
 const ReconciliationPanel = lazy(() => import("./ReconciliationPanel"));
 
-type Page = "overview" | "accounts" | "net-worth" | "reconcile" | "transactions" | "statements" | "transfers" | "recurring" | "categories" | "merchants" | "budgets" | "goals" | "assistant" | "profile";
+type Page = "overview" | "accounts" | "net-worth" | "reconcile" | "transactions" | "receipts" | "analytics" | "statements" | "transfers" | "recurring" | "categories" | "merchants" | "budgets" | "goals" | "assistant" | "profile";
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 export function Brand({ light = false }: { light?: boolean }) {
-  return <span className={`brand ${light ? "brand-light" : ""}`}>
-    <span className="brand-mark">F<span>.</span></span>
-    <span>FinSight<small>Tài chính rõ ràng</small></span>
-  </span>;
+  return <span className={`brand ${light ? "brand-light" : ""}`}><img src="/finsight-logo.png" alt="FinSight" /></span>;
 }
 
 function Landing({ openAuth }: { openAuth: (mode: "signin" | "signup") => void }) {
@@ -65,6 +63,8 @@ function Landing({ openAuth }: { openAuth: (mode: "signin" | "signup") => void }
 
 function Workspace({ session, signOut, signOutError }: { session: Session; signOut: () => Promise<void>; signOutError: string }) {
   const [page, setPage] = useState<Page>("overview");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [accountsLoaded, setAccountsLoaded] = useState(false);
   const [accountsError, setAccountsError] = useState("");
@@ -90,13 +90,18 @@ function Workspace({ session, signOut, signOutError }: { session: Session; signO
       .catch(() => { /* The profile page reports errors when opened. */ });
     return () => controller.abort();
   }, [session.access_token]);
-  const nav: { id: Page; label: string; symbol: string }[] = [
-    { id: "overview", label: "Tổng quan", symbol: "◫" }, { id: "transactions", label: "Giao dịch", symbol: "▤" }, { id: "statements", label: "Nhập sao kê", symbol: "▧" }, { id: "merchants", label: "Nơi giao dịch", symbol: "▣" }, { id: "transfers", label: "Chuyển khoản", symbol: "↔" }, { id: "recurring", label: "Định kỳ", symbol: "↻" }, { id: "accounts", label: "Tài khoản", symbol: "▣" }, { id: "net-worth", label: "Tài sản ròng", symbol: "◈" }, { id: "reconcile", label: "Đối soát", symbol: "◎" }, { id: "budgets", label: "Ngân sách", symbol: "◩" }, { id: "goals", label: "Mục tiêu", symbol: "◎" }, { id: "assistant", label: "Trợ lý AI", symbol: "✦" }, { id: "profile", label: "Hồ sơ", symbol: "◉" },
+  const primaryNav: { id: Page; label: string; icon: string }[] = [
+    { id: "overview", label: "Tổng quan", icon: "dashboard" },
+    { id: "transactions", label: "Giao dịch", icon: "receipt_long" },
+    { id: "receipts", label: "Hóa đơn & OCR", icon: "document_scanner" },
+    { id: "budgets", label: "Kế hoạch tài chính", icon: "account_balance_wallet" },
+    { id: "analytics", label: "Phân tích", icon: "monitoring" },
   ];
-  const title = nav.find((item) => item.id === page)?.label ?? "Danh mục";
-  return <div className="workspace">
-    <aside className="workspace-sidebar"><Brand /><p className="sidebar-caption">KHÔNG GIAN CỦA BẠN</p><nav aria-label="Điều hướng ứng dụng">{nav.map((item) => <button key={item.id} className={page === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}</nav><div className="sidebar-bottom"><span className="sidebar-avatar">{(displayName || session.user.email || "F").slice(0, 1).toUpperCase()}</span><span><strong>{displayName || "Tài khoản FinSight"}</strong><small>{session.user.email}</small></span></div></aside>
-    <div className="workspace-main"><header className="workspace-topbar"><div><span className="mobile-brand"><Brand /></span><small>FINSIGHT / {title.toUpperCase()}</small></div><div className="topbar-actions"><span className="data-badge"><span className="live-dot" /> Dữ liệu do bạn nhập</span><button className="button-quiet" onClick={signOut}>Đăng xuất</button></div></header>
+  const activeGroup = (["accounts", "net-worth", "reconcile", "statements", "transfers", "categories", "merchants"].includes(page) ? "transactions" : ["goals", "recurring"].includes(page) ? "budgets" : page === "assistant" ? "analytics" : page);
+  const title = ({ overview: "Tổng quan", transactions: "Danh sách giao dịch", receipts: "Hóa đơn & OCR", analytics: "Phân tích", accounts: "Danh sách tài khoản", "net-worth": "Tài sản ròng", reconcile: "Đối soát số dư", statements: "Nhập sao kê", transfers: "Chuyển nội bộ", recurring: "Giao dịch định kỳ", categories: "Quản lý danh mục", merchants: "Nơi giao dịch", budgets: "Tổng quan ngân sách", goals: "Mục tiêu tài chính", assistant: "Trợ lý AI", profile: "Cài đặt & Hồ sơ" } as Record<Page, string>)[page];
+  return <div className={`workspace ${sidebarCollapsed ? "sidebar-is-collapsed" : ""}`}>
+    <aside className="workspace-sidebar"><div className="sidebar-brand"><Brand /><button type="button" className="sidebar-collapse" aria-label={sidebarCollapsed ? "Mở rộng thanh điều hướng" : "Thu gọn thanh điều hướng"} onClick={() => setSidebarCollapsed((value) => !value)}><span className="material-symbols-outlined" aria-hidden="true">{sidebarCollapsed ? "left_panel_open" : "left_panel_close"}</span></button></div><nav aria-label="Điều hướng ứng dụng">{primaryNav.map((item) => <button key={item.id} title={item.label} className={activeGroup === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span className="material-symbols-outlined" aria-hidden="true">{item.icon}</span><span className="nav-label">{item.label}</span></button>)}</nav><button className={`sidebar-settings ${page === "profile" ? "selected" : ""}`} onClick={() => setPage("profile")}><span className="material-symbols-outlined" aria-hidden="true">settings</span><span className="nav-label">Cài đặt & Hồ sơ</span></button></aside>
+    <div className="workspace-main"><header className="workspace-topbar"><div className="workspace-breadcrumb"><span className="mobile-brand"><Brand /></span><span className="breadcrumb-parent">{activeGroup === "overview" ? "FinSight" : primaryNav.find((item) => item.id === activeGroup)?.label || "FinSight"}</span><span className="material-symbols-outlined" aria-hidden="true">chevron_right</span><strong>{title}</strong></div><div className="topbar-actions"><span className="material-symbols-outlined notification-icon" aria-label="Thông báo">notifications</span><div className="profile-menu-wrap"><button className="topbar-profile" onClick={() => setProfileOpen((value) => !value)} aria-expanded={profileOpen}><span className="sidebar-avatar">{(displayName || session.user.email || "F").slice(0, 2).toUpperCase()}</span><span>{displayName || "Tài khoản FinSight"}</span><span className="material-symbols-outlined" aria-hidden="true">expand_more</span></button>{profileOpen && <div className="profile-menu"><button onClick={() => { setPage("profile"); setProfileOpen(false); }}>Cài đặt & Hồ sơ</button><button onClick={() => { setProfileOpen(false); void signOut(); }}>Đăng xuất</button></div>}</div></div></header>
       <main className="workspace-content"><Suspense fallback={<div className="empty-state compact" role="status"><span>◌</span><h2>Đang mở màn hình...</h2></div>}>
         {signOutError && <p className="inline-error" role="alert">{signOutError}</p>}
         {page === "overview" && <DashboardPanel session={session} displayName={displayName} accounts={accounts} accountsLoaded={accountsLoaded} accountsError={accountsError} onNavigate={setPage} />}
@@ -105,6 +110,8 @@ function Workspace({ session, signOut, signOutError }: { session: Session; signO
         {page === "assistant" && <AssistantPanel session={session} />}
         {page === "reconcile" && <><div className="page-heading"><p className="eyebrow">TÀI KHOẢN CỦA BẠN</p><h1>Đối soát số dư</h1><p>Ghi lại số dư bạn quan sát và so với số dư FinSight.</p></div><ReconciliationPanel session={session} accounts={accounts} /></>}
         {page === "transactions" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Giao dịch</h1><p>Ghi khoản thu, chi và xem lịch sử từ dữ liệu bạn tự nhập.</p><button className="button-outline" onClick={() => setPage("statements")}>Nhập sao kê CSV/Excel →</button><button className="button-outline" onClick={() => setPage("transfers")}>Chuyển khoản giữa tài khoản →</button><button className="button-outline" onClick={() => setPage("recurring")}>Giao dịch định kỳ →</button><button className="button-outline" onClick={() => setPage("merchants")}>Nơi giao dịch →</button></div><TransactionsPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} onCategories={() => setPage("categories")} onMerchants={() => setPage("merchants")} /></>}
+        {page === "receipts" && <div className="receipts-workspace"><div className="page-heading"><h1>Hóa đơn & OCR</h1><p>Chọn ảnh hóa đơn để xem gợi ý ngày và tổng tiền trước khi lưu giao dịch.</p></div><TransactionsPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} onCategories={() => setPage("categories")} onMerchants={() => setPage("merchants")} /></div>}
+        {page === "analytics" && <div className="analytics-workspace"><div className="page-heading"><h1>Phân tích tài chính</h1><p>Các chỉ số được tính từ giao dịch bạn đã lưu.</p><button className="button-outline" onClick={() => setPage("assistant")}>Trợ lý AI →</button></div><DashboardPanel session={session} displayName={displayName} accounts={accounts} accountsLoaded={accountsLoaded} accountsError={accountsError} onNavigate={setPage} /></div>}
         {page === "statements" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN / SAO KÊ</p><h1>Nhập sao kê</h1><p>Xem trước và xác nhận từng dòng trước khi tạo giao dịch.</p></div><StatementImportPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} onCategories={() => setPage("categories")} /></>}
         {page === "transfers" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Chuyển khoản</h1><p>Di chuyển tiền giữa các tài khoản do bạn tự quản lý.</p></div><TransfersPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} /></>}
         {page === "recurring" && <><div className="page-heading"><p className="eyebrow">DÒNG TIỀN</p><h1>Giao dịch định kỳ</h1><p>Lên lịch khoản thu chi thường kỳ và tự chọn khi nào ghi nhận.</p></div><SubscriptionSuggestionsPanel session={session} /><RecurringPanel session={session} accounts={accounts} onChanged={() => { void reloadAccounts(); }} /></>}
@@ -113,7 +120,7 @@ function Workspace({ session, signOut, signOutError }: { session: Session; signO
         {page === "budgets" && <><div className="page-heading"><p className="eyebrow">KẾ HOẠCH TÀI CHÍNH</p><h1>Ngân sách</h1><p>Đặt hạn mức tổng và theo danh mục cho từng tháng.</p><button className="button-outline" onClick={() => setPage("goals")}>Mục tiêu tiết kiệm →</button></div><BudgetPanel session={session} /></>}
         {page === "goals" && <><div className="page-heading"><p className="eyebrow">KẾ HOẠCH TÀI CHÍNH</p><h1>Mục tiêu tiết kiệm</h1><p>Theo dõi khoản tiền bạn dự định dành cho điều quan trọng.</p></div><GoalPanel session={session} /></>}
         {page === "profile" && <><div className="page-heading"><p className="eyebrow">CÀI ĐẶT CÁ NHÂN</p><h1>Hồ sơ của bạn</h1><p>Cập nhật tên hiển thị và kiểm tra thông tin tài khoản.</p></div><ProfilePanel session={session} onDisplayName={setDisplayName} /></>}
-      </Suspense></main><nav className="workspace-mobile-nav" aria-label="Điều hướng ứng dụng trên điện thoại">{nav.filter((item) => item.id !== "transfers" && item.id !== "recurring" && item.id !== "goals" && item.id !== "reconcile" && item.id !== "merchants" && item.id !== "statements").map((item) => <button key={item.id} className={page === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span aria-hidden="true">{item.symbol}</span>{item.label}</button>)}</nav>
+      </Suspense></main><nav className="workspace-mobile-nav" aria-label="Điều hướng ứng dụng trên điện thoại">{primaryNav.map((item) => <button key={item.id} className={activeGroup === item.id ? "selected" : ""} onClick={() => setPage(item.id)}><span className="material-symbols-outlined" aria-hidden="true">{item.icon}</span>{item.label}</button>)}</nav>
     </div>
   </div>;
 }
