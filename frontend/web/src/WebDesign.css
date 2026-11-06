@@ -186,7 +186,8 @@
 .auth-message { font-size: 12px; }
 .auth-email-screen { align-items: center; }
 .auth-email-screen .auth-shell { width: min(620px, 100%); min-height: 0; display: block; }
-.auth-email-screen .auth-form-side { width: 100%; min-height: 0; padding: 46px; border-top: 5px solid #006948; text-align: center; }
+.auth-email-screen .auth-form-side { position: relative; overflow: hidden; width: 100%; min-height: 0; padding: 46px; text-align: center; }
+.auth-email-screen .auth-form-side::before { content: ""; position: absolute; inset: 0 0 auto; height: 5px; background: #006948; }
 .auth-email-screen .auth-story { display: none; }
 .auth-email-screen .auth-confirm { display: grid; justify-items: center; gap: 18px; }
 .auth-email-screen .auth-confirm .confirm-icon { width: 72px; height: 72px; display: grid; place-items: center; border-radius: 50%; background: #dff7ef; color: #006948; font-size: 32px; }

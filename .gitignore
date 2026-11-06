@@ -21,3 +21,5 @@ frontend/web/src/assets/
 frontend/mobile design/
 frontend/mobile/android/
 frontend/mobile/ios/
+.impeccable/config.local.json
+.impeccable/hook.cache.json
