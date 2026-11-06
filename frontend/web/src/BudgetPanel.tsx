@@ -14,6 +14,7 @@ const barWidth = (percent: string) => `${Math.min(100, Math.max(0, Number.parseF
 const alertLabel = (threshold: number) => threshold === 100 ? "Đã đạt hoặc vượt 100% hạn mức" : `Đã đạt ngưỡng ${threshold}% hạn mức`;
 
 export default function BudgetPanel({ session }: { session: Session }) {
+  const [setupOpen, setSetupOpen] = useState(false);
   const [month, setMonth] = useState(reportMonth);
   const [snapshot, setSnapshot] = useState<{ key: string; value: BudgetSummary } | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -62,7 +63,7 @@ export default function BudgetPanel({ session }: { session: Session }) {
     event.preventDefault();
     if (!validAmount(totalLimit) || busy) { setMessage("Hạn mức phải lớn hơn 0 và có tối đa hai chữ số thập phân."); return; }
     setBusy(true); setMessage("");
-    try { const data = await request(`/total/${month}`, "PUT", totalLimit); if (data) setSnapshot({ key, value: data }); setMessage("Đã lưu ngân sách tổng."); }
+    try { const data = await request(`/total/${month}`, "PUT", totalLimit); if (data) setSnapshot({ key, value: data }); setMessage("Đã lưu ngân sách tổng."); setSetupOpen(false); }
     catch (reason) { setMessage(reason instanceof Error ? reason.message : "Không lưu được ngân sách."); }
     finally { setBusy(false); }
   }
@@ -70,7 +71,7 @@ export default function BudgetPanel({ session }: { session: Session }) {
     event.preventDefault();
     if (!categoryId || !validAmount(categoryLimit) || busy) { setMessage("Chọn danh mục chi và nhập hạn mức hợp lệ."); return; }
     setBusy(true); setMessage("");
-    try { const data = await request(`/categories/${month}/${categoryId}`, "PUT", categoryLimit); if (data) setSnapshot({ key, value: data }); setCategoryLimit(""); setMessage("Đã lưu ngân sách danh mục."); }
+    try { const data = await request(`/categories/${month}/${categoryId}`, "PUT", categoryLimit); if (data) setSnapshot({ key, value: data }); setCategoryLimit(""); setMessage("Đã lưu ngân sách danh mục."); setSetupOpen(false); }
     catch (reason) { setMessage(reason instanceof Error ? reason.message : "Không lưu được ngân sách."); }
     finally { setBusy(false); }
   }
@@ -82,11 +83,11 @@ export default function BudgetPanel({ session }: { session: Session }) {
     finally { setBusy(false); }
   }
 
-  return <div className="budget-layout">
+  return <div className={`budget-layout${setupOpen ? " budget-setup" : ""}`}><div className="budget-toolbar"><label><span className="material-symbols-outlined" aria-hidden="true">calendar_month</span><input aria-label="Tháng ngân sách" type="month" value={month} onChange={(event) => { setMonth(event.target.value); setCategoryId(""); setCategoryLimit(""); }} /></label>{setupOpen ? <button className="button-outline" onClick={() => setSetupOpen(false)}>← Quay lại tổng quan</button> : <button className="button-primary" onClick={() => setSetupOpen(true)}><span className="material-symbols-outlined" aria-hidden="true">add</span>Thiết lập ngân sách</button>}</div>
     <section className="surface-card budget-overview"><div className="section-head"><div><p className="eyebrow">KẾ HOẠCH CHI TIÊU</p><h2>Ngân sách tháng</h2></div><input aria-label="Tháng ngân sách" type="month" value={month} onChange={(event) => { setMonth(event.target.value); setCategoryId(""); setCategoryLimit(""); }} /></div>
       {error && <p className="inline-error" role="alert">{error}</p>}
       {!budget && !error && <p className="muted">Đang tải ngân sách...</p>}
-      {budget && <><div className="budget-total"><small>CHI TIÊU TRONG THÁNG</small><strong>{formatVnd(budget.totalSpent)}</strong><span>{budget.total ? `Hạn mức ${formatVnd(budget.total.limitAmount)}` : "Bạn chưa đặt hạn mức tổng cho tháng này"}</span></div>
+      {budget && <><div className="budget-summary-strip"><div><small>TỔNG ĐỊNH MỨC</small><strong>{budget.total ? formatVnd(budget.total.limitAmount) : "—"}</strong></div><div><small>ĐÃ CHI</small><strong className="money-in">{formatVnd(budget.totalSpent)}</strong></div><div><small>CÒN LẠI</small><strong>{budget.total ? formatVnd(budget.total.remaining) : "—"}</strong></div></div><div className="budget-total"><small>CHI TIÊU TRONG THÁNG</small><strong>{formatVnd(budget.totalSpent)}</strong><span>{budget.total ? `Hạn mức ${formatVnd(budget.total.limitAmount)}` : "Bạn chưa đặt hạn mức tổng cho tháng này"}</span></div>
         {budget.total && <div className="budget-progress"><div><span>Đã dùng {budget.total.usedPercent}%</span><strong className={budget.total.remaining.startsWith("-") ? "over-budget" : ""}>Còn lại {formatVnd(budget.total.remaining)}</strong></div><span className="budget-track"><i style={{ width: barWidth(budget.total.usedPercent) }} /></span>{budget.total.alertThresholdPercent > 0 && <p className={`budget-alert ${budget.total.alertThresholdPercent === 100 ? "critical" : ""}`} role="status">{alertLabel(budget.total.alertThresholdPercent)}</p>}<button className="link-button danger" disabled={busy} onClick={() => remove(`/total/${month}`)}>Xóa hạn mức tổng</button></div>}
         <h3>Danh mục đã đặt ngân sách</h3>{budget.categories.length ? <div className="budget-category-list">{budget.categories.map((item) => <article key={item.categoryId}><div><strong>{item.categoryName}</strong><small>{formatVnd(item.values.spent)} / {formatVnd(item.values.limitAmount)}</small></div><span className="budget-track"><i style={{ width: barWidth(item.values.usedPercent) }} /></span>{item.values.alertThresholdPercent > 0 && <p className={`budget-alert ${item.values.alertThresholdPercent === 100 ? "critical" : ""}`} role="status">{alertLabel(item.values.alertThresholdPercent)}</p>}<div><span>{item.values.usedPercent}% · Còn lại <b className={item.values.remaining.startsWith("-") ? "over-budget" : ""}>{formatVnd(item.values.remaining)}</b></span><span><button className="link-button" onClick={() => { setCategoryId(item.categoryId); setCategoryLimit(item.values.limitAmount); }}>Sửa</button><button className="link-button danger" disabled={busy} onClick={() => remove(`/categories/${month}/${item.categoryId}`)}>Xóa</button></span></div></article>)}</div> : <p className="muted">Chưa có ngân sách danh mục trong tháng này.</p>}</>}
     </section>
