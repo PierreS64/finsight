@@ -115,6 +115,23 @@
 .workspace tbody tr:hover { background: #f8fafc; }
 .workspace .money-in { color: #006948; }
 .workspace .money-out { color: #dc2626 !important; }
+.workspace .profile-layout { display: grid; grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr); align-items: start; gap: 18px; }
+.workspace .profile-card { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 28px 22px; border-top: 5px solid #006948; }
+.workspace .profile-avatar { width: 75px; height: 75px; border-radius: 50%; background: #dff7ef; color: #006948; font-size: 29px; }
+.workspace .profile-card h2 { margin: 17px 0 3px; font-size: 18px; }
+.workspace .profile-card > .muted { margin: 0 0 25px; overflow-wrap: anywhere; }
+.workspace .profile-summary-row { display: flex; justify-content: space-between; width: 100%; border-top: 1px solid #e2e8f0; padding: 16px 0; font-size: 12px; }
+.workspace .profile-summary-row span { color: #64748b; }
+.workspace .profile-summary-note { width: 100%; margin: 0; padding-top: 15px; border-top: 1px solid #e2e8f0; text-align: left; color: #64748b; font-size: 12px; line-height: 1.6; }
+.workspace .profile-detail-stack { display: grid; gap: 18px; }
+.workspace .profile-detail-stack .section-head { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 13px; }
+.workspace .profile-detail-stack .section-head .material-symbols-outlined { color: #006948; }
+.workspace .profile-detail-stack .section-head h2 { margin: 0; }
+.workspace .profile-edit-form, .workspace .profile-password-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+.workspace .profile-edit-form label, .workspace .profile-password-form label { display: grid; gap: 7px; font-size: 12px; font-weight: 600; }
+.workspace .profile-edit-form input, .workspace .profile-password-form input { min-height: 42px; width: 100%; padding: 9px 11px; border: 1px solid #e2e8f0; border-radius: 8px; font: inherit; }
+.workspace .profile-edit-form input[readonly] { background: #f8fafc; color: #64748b; }
+.workspace .profile-edit-form button, .workspace .profile-password-form button { grid-column: 1 / -1; justify-self: end; }
 .planning-tabs { display: flex; align-items: center; gap: 28px; margin: -20px -24px 20px; padding: 0 24px; background: #fff; border-bottom: 1px solid #e2e8f0; overflow-x: auto; }
 .planning-tabs button { min-height: 45px; padding: 0 1px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #64748b; font: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; }
 .planning-tabs button.selected { border-color: #059669; color: #006948; }
@@ -202,6 +219,7 @@
   .auth-story { padding: 28px; }
   .auth-story-copy h2 { font-size: 22px; }
   .auth-form-side { padding: 32px; }
+  .workspace .profile-layout { grid-template-columns: 1fr; }
 }
 @media (max-width: 700px) {
   .workspace, .workspace.sidebar-is-collapsed { display: block; }
@@ -231,4 +249,5 @@
   .reset-header img { width: 108px; }
   .reset-header > span { font-size: 0; gap: 0; }
   .reset-card { margin-top: 36px; padding: 28px 22px 34px; }
+  .workspace .profile-edit-form, .workspace .profile-password-form { grid-template-columns: 1fr; }
 }
