@@ -1,3 +1,33 @@
 .account-stats{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:18px}.account-stats>div{background:#0b2d3b;border:1px solid #0b2d3b;color:#fff;padding:23px;border-radius:16px;display:grid;gap:10px}.account-stats>div:nth-child(2){background:#fff;border-color:#e2e8f0;color:#0f172a}.account-stats small{font-size:11px;color:#bad6dc;font-weight:800;letter-spacing:.1em}.account-stats>div:nth-child(2) small{color:#64748b}.account-stats strong{font-size:clamp(27px,3vw,38px);letter-spacing:-.05em;font-variant-numeric:tabular-nums}.account-stats>div:first-child strong{color:#72edb9}.account-stats span{font-size:12px;color:#bad6dc}.account-stats>div:nth-child(2) span{color:#64748b}.accounts-layout{display:grid;grid-template-columns:1.35fr 1fr;gap:18px;align-items:start}.small-badge{padding:6px 10px;background:#ecfdf5;color:#047857;border-radius:99px;font-size:11px;font-weight:800;white-space:nowrap}.financial-account-list{list-style:none;margin:0;padding:0}.financial-account-list li{display:flex;align-items:center;gap:13px;border-top:1px solid #e2e8f0;padding:16px 0;min-width:0}.account-list-name{display:grid;gap:4px;min-width:0}.account-list-name strong{font-size:14px;overflow-wrap:anywhere}.account-list-name small,.account-list-amount small{color:#64748b;font-size:11px}.account-list-amount{margin-left:auto;display:grid;gap:4px;text-align:right;white-space:nowrap}.account-list-amount strong{font-size:14px;font-variant-numeric:tabular-nums}.account-create-card h2{margin:5px 0 7px}.account-create-form{display:grid;gap:17px;margin-top:23px}.account-create-form .button-primary{margin-top:4px;padding-block:14px}
 @media(max-width:900px){.accounts-layout{grid-template-columns:1fr}}
 @media(max-width:700px){.account-stats{grid-template-columns:1fr}.account-list-amount strong{font-size:12px}.financial-account-list li{gap:8px}.accounts-list-card,.account-create-card{padding:18px}}
+
+.account-toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;padding:12px 14px;border:1px solid #e2e8f0;border-radius:10px;background:#fff}
+.account-search{display:flex;align-items:center;gap:7px;min-width:180px;flex:1;color:#94a3b8}
+.account-search .material-symbols-outlined{font-size:19px}
+.account-search input{min-width:0;width:100%;min-height:38px;border:0;background:transparent;font:inherit;font-size:13px;outline:0}
+.account-type-tabs{display:flex;gap:3px;padding:3px;border:1px solid #e2e8f0;border-radius:9px;background:#f8fafc}
+.account-type-tabs button{border:0;border-radius:6px;background:transparent;padding:7px 9px;color:#475569;font-size:12px;white-space:nowrap}
+.account-type-tabs button.active{background:#dff7ef;color:#006948;font-weight:700}
+.account-toolbar-actions{display:flex;gap:7px;margin-left:auto}
+.account-toolbar-actions button{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.account-toolbar-actions .material-symbols-outlined{font-size:17px}
+.account-stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:16px}
+.account-stats .metric-card{display:flex;flex-direction:column;gap:13px;min-height:145px;padding:16px}
+.account-stats .metric-card small{color:#64748b;font-size:12px;font-weight:600;letter-spacing:0}
+.account-stats .metric-card strong{color:#0f172a;font-size:clamp(19px,1.9vw,26px);letter-spacing:-.02em}
+.account-stats .metric-card span{margin-top:auto;color:#64748b;font-size:11px}
+.account-table-scroll{width:100%;overflow-x:auto}
+.account-table{width:100%;border-collapse:collapse;font-size:12px}
+.account-table th{text-align:left;background:#f8fafc;color:#64748b;font-size:10px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+.account-table td,.account-table th{padding:13px 11px;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+.account-table td:nth-child(3){font-variant-numeric:tabular-nums}
+.account-table-name{display:flex;align-items:center;gap:10px}
+.account-table-name .material-symbols-outlined{display:grid;place-items:center;width:34px;height:34px;border-radius:8px;background:#dff7ef;color:#006948;font-size:19px}
+.account-create-card{max-width:760px;margin-inline:auto}
+.account-create-card .section-head{display:flex;align-items:center;justify-content:space-between}
+.account-create-card .account-create-form{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 14px}
+.account-create-card .account-create-form>label:first-child,.account-create-card .account-create-form>.button-primary{grid-column:1/-1}
+.account-create-card .account-create-form>.button-primary{justify-self:end;margin-top:4px}
+@media(max-width:1250px){.account-toolbar-actions{width:100%;margin-left:0}.account-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.account-type-tabs{width:100%;overflow-x:auto}.account-toolbar-actions{flex-wrap:wrap}.account-toolbar-actions button{flex:1;justify-content:center}.account-stats{grid-template-columns:1fr}.account-create-card .account-create-form{grid-template-columns:1fr}.account-create-card .account-create-form>label:first-child,.account-create-card .account-create-form>.button-primary{grid-column:1}}
