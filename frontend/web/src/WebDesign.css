@@ -115,6 +115,9 @@
 .workspace tbody tr:hover { background: #f8fafc; }
 .workspace .money-in { color: #006948; }
 .workspace .money-out { color: #dc2626; }
+.planning-tabs { display: flex; align-items: center; gap: 28px; margin: -20px -24px 20px; padding: 0 24px; background: #fff; border-bottom: 1px solid #e2e8f0; overflow-x: auto; }
+.planning-tabs button { min-height: 45px; padding: 0 1px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #64748b; font: inherit; font-size: 13px; font-weight: 600; white-space: nowrap; }
+.planning-tabs button.selected { border-color: #059669; color: #006948; }
 
 .auth-screen { min-height: 100vh; display: flex; align-items: stretch; padding: 24px 40px; background: #f8fafc; }
 .auth-back { display: none; }
@@ -212,6 +215,7 @@
   .topbar-actions { gap: 9px; }
   .topbar-profile > span:not(.sidebar-avatar) { display: none; }
   .workspace-content { padding: 20px 16px 90px; }
+  .planning-tabs { margin: -20px -16px 20px; padding: 0 16px; gap: 18px; }
   .workspace-mobile-nav { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .workspace-mobile-nav button { font-size: 9px; }
   .workspace-mobile-nav button .material-symbols-outlined { font-size: 21px; }
