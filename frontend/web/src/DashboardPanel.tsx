@@ -17,11 +17,13 @@ type Dashboard = { month: string; accountCount: number; transactionCount: number
 type InsightCard = { type: string; title: string; content: string; severity: "WARNING" | "CRITICAL"; period: string; currentAmount: string; referenceAmount: string; thresholdPercent: string };
 type Insights = { month: string; cards: InsightCard[] };
 type Explanation = { month: string; previousMonth: string; currentTotal: string; previousTotal: string; changeAmount: string; categories: { categoryId: string; categoryName: string; currentAmount: string; previousAmount: string; changeAmount: string; contributionPercent: string | null }[]; calculationRule: string };
+type RecentTransaction = { id: string; accountId: string; categoryId: string; kind: "INCOME" | "EXPENSE"; amount: string; occurredOn: string; note: string | null };
+type Category = { id: string; name: string };
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
-export default function DashboardPanel({ session, displayName, accounts, accountsLoaded, accountsError, onNavigate }: {
-  session: Session; displayName: string | null; accounts: Account[]; accountsLoaded: boolean; accountsError: string;
-  onNavigate: (page: "accounts" | "transactions" | "budgets") => void;
+export default function DashboardPanel({ session, accounts, accountsLoaded, accountsError, onNavigate }: {
+  session: Session; accounts: Account[]; accountsLoaded: boolean; accountsError: string;
+  onNavigate: (page: "accounts" | "transactions" | "budgets" | "receipts") => void;
 }) {
   const [month, setMonth] = useState(reportMonth);
   const [snapshot, setSnapshot] = useState<{ key: string; value: Dashboard } | null>(null);
@@ -30,6 +32,7 @@ export default function DashboardPanel({ session, displayName, accounts, account
   const [insightFailure, setInsightFailure] = useState<{ key: string; message: string } | null>(null);
   const [explanationSnapshot, setExplanationSnapshot] = useState<{ key: string; value: Explanation } | null>(null);
   const [explanationFailure, setExplanationFailure] = useState<{ key: string; message: string } | null>(null);
+  const [recentSnapshot, setRecentSnapshot] = useState<{ key: string; transactions: RecentTransaction[]; categories: Category[] } | null>(null);
   const key = `${session.access_token}/${month}`;
   const dashboard = snapshot?.key === key ? snapshot.value : null;
   const error = failure?.key === key ? failure.message : "";
@@ -77,10 +80,29 @@ export default function DashboardPanel({ session, displayName, accounts, account
     return () => controller.abort();
   }, [session.access_token, month, key]);
 
-  return <><div className="page-heading dashboard-heading"><div><p className="eyebrow">TỔNG QUAN CỦA BẠN</p><h1>Chào {displayName || "bạn"}!</h1><p>Đây là những thông tin đã được lưu trong FinSight.</p></div><label>Tháng xem báo cáo<input type="month" value={month} onChange={(event) => setMonth(event.target.value)} /></label></div>
+  useEffect(() => {
+    const controller = new AbortController();
+    const headers = { Authorization: `Bearer ${session.access_token}` };
+    Promise.all([
+      fetch(`${apiBase}/api/v1/transactions`, { headers, signal: controller.signal }),
+      fetch(`${apiBase}/api/v1/categories`, { headers, signal: controller.signal }),
+    ]).then(async ([transactionsResponse, categoriesResponse]) => {
+      if (!transactionsResponse.ok || !categoriesResponse.ok) return;
+      setRecentSnapshot({ key, transactions: await transactionsResponse.json() as RecentTransaction[], categories: await categoriesResponse.json() as Category[] });
+    }).catch(() => { /* The dashboard remains usable when recent rows cannot load. */ });
+    return () => controller.abort();
+  }, [session.access_token, key]);
+
+  const recent = recentSnapshot?.key === key ? recentSnapshot.transactions.filter((item) => item.occurredOn.startsWith(month)).sort((a, b) => b.occurredOn.localeCompare(a.occurredOn)).slice(0, 5) : [];
+  const categoryNames = new Map((recentSnapshot?.key === key ? recentSnapshot.categories : []).map((item) => [item.id, item.name]));
+  const accountNames = new Map(accounts.map((item) => [item.id, item.name]));
+
+  return <><div className="dashboard-toolbar"><label><span className="material-symbols-outlined" aria-hidden="true">calendar_month</span>Kỳ thống kê: <input type="month" aria-label="Tháng xem báo cáo" value={month} onChange={(event) => setMonth(event.target.value)} /></label><span className="dashboard-toolbar-note">Số liệu từ dữ liệu đã lưu của bạn</span><div><button className="button-outline" onClick={() => onNavigate("receipts")}><span className="material-symbols-outlined" aria-hidden="true">document_scanner</span>Quét hóa đơn</button><button className="button-primary" onClick={() => onNavigate("transactions")}><span className="material-symbols-outlined" aria-hidden="true">add</span>Thêm giao dịch</button></div></div>
     {error && <p className="inline-error" role="alert">{error}</p>}
     {!dashboard && !error && <p className="muted">Đang tải tổng quan...</p>}
-    <div className="metric-grid dashboard-metrics"><article className="metric-card featured"><small>TỔNG SỐ DƯ HIỆN TẠI</small><strong>{dashboard ? formatVnd(dashboard.totalBalance) : "—"}</strong><span>Từ {dashboard?.accountCount ?? "—"} tài khoản do bạn quản lý</span></article><article className="metric-card"><small>THU NHẬP THÁNG</small><strong className="money-in">{dashboard ? formatVnd(dashboard.income) : "—"}</strong><span>Giao dịch trong {month}</span></article><article className="metric-card"><small>CHI TIÊU THÁNG</small><strong className="money-out">{dashboard ? formatVnd(dashboard.expense) : "—"}</strong><span>Giao dịch trong {month}</span></article><article className="metric-card"><small>NGÂN SÁCH CÒN LẠI</small><strong className={dashboard?.budget?.remaining.startsWith("-") ? "dashboard-over" : ""}>{dashboard?.budget ? formatVnd(dashboard.budget.remaining) : "—"}</strong><span>{dashboard?.budget ? `Hạn mức ${formatVnd(dashboard.budget.limitAmount)}` : "Chưa đặt ngân sách tổng"}</span></article></div>
+    <div className="metric-grid dashboard-metrics"><article className="metric-card featured"><small>Tổng số dư hiện tại</small><strong>{dashboard ? formatVnd(dashboard.totalBalance) : "—"}</strong><span>Từ {dashboard?.accountCount ?? "—"} tài khoản do bạn quản lý</span></article><article className="metric-card"><small>Thu trong tháng</small><strong className="money-in">{dashboard ? formatVnd(dashboard.income) : "—"}</strong><span>Giao dịch trong {month}</span></article><article className="metric-card"><small>Chi trong tháng</small><strong className="money-out">{dashboard ? formatVnd(dashboard.expense) : "—"}</strong><span>Chênh lệch ròng: {dashboard ? formatVnd(dashboard.netFlow) : "—"}</span></article></div>
+    <div className="dashboard-main-grid"><SafeToSpendPanel session={session} /><section className="surface-card dashboard-budget-card"><div className="section-head"><h2>Tình hình ngân sách tháng {month}</h2></div>{dashboard?.budget ? <><div className="dashboard-budget-total"><span>Định mức tối đa toàn bộ hạng mục chi tiêu</span><strong>{formatVnd(dashboard.expense)} / {formatVnd(dashboard.budget.limitAmount)}</strong></div><div className="dashboard-budget-track"><i style={{ width: `${Math.min(100, Math.max(0, Number.parseFloat(dashboard.budget.usedPercent) || 0))}%` }} /></div><div className="dashboard-budget-total"><span>Đã giải ngân: {dashboard.budget.usedPercent}%</span><span>Còn lại: {formatVnd(dashboard.budget.remaining)}</span></div></> : <p className="muted">Chưa đặt ngân sách tổng cho tháng này.</p>}<button className="link-button" onClick={() => onNavigate("budgets")}>Xem chi tiết toàn bộ hạn mức →</button></section></div>
+    <div className="dashboard-lower-grid"><section className="surface-card dashboard-recent"><div className="section-head"><h2>Giao dịch gần đây</h2><button className="link-button" onClick={() => onNavigate("transactions")}>Tất cả giao dịch</button></div>{recent.length ? <div className="dashboard-recent-table"><table><thead><tr><th>Ngày</th><th>Tên giao dịch</th><th>Danh mục</th><th>Tài khoản</th><th>Số tiền</th></tr></thead><tbody>{recent.map((item) => <tr key={item.id}><td>{item.occurredOn.slice(8)}/{item.occurredOn.slice(5, 7)}</td><td>{item.note || (item.kind === "INCOME" ? "Khoản thu" : "Khoản chi")}</td><td>{categoryNames.get(item.categoryId) || "—"}</td><td>{accountNames.get(item.accountId) || "—"}</td><td className={item.kind === "INCOME" ? "money-in" : "money-out"}>{item.kind === "INCOME" ? "+" : "−"}{formatVnd(item.amount)}</td></tr>)}</tbody></table></div> : <p className="muted">Chưa có giao dịch nào trong tháng đang xem.</p>}<p className="dashboard-recent-foot">Hiển thị {recent.length} / {dashboard?.transactionCount ?? 0} giao dịch tháng {month}</p></section><div className="dashboard-trend"><ChartsPanel session={session} month={month} /></div></div>
     <section className="surface-card insights-section"><div className="section-head"><div><p className="eyebrow">GÓC NHÌN TỰ ĐỘNG</p><h2>Insight trong {month}</h2></div><span className="small-badge">{insights?.cards.length ?? 0} thẻ</span></div>
       {insightError ? <p className="inline-error" role="alert">{insightError}</p> : !insights ? <p className="muted">Đang tính insight...</p> : insights.cards.length ? <div className="insight-card-grid">{insights.cards.map((card, index) => <article key={`${card.type}-${index}`} className={`insight-card ${card.severity.toLowerCase()}`}><span>{card.severity === "CRITICAL" ? "CẦN CHÚ Ý" : "CẢNH BÁO"}</span><h3>{card.title}</h3><p>{card.content}</p><small>Kỳ {card.period} · Ngưỡng {card.thresholdPercent}%</small></article>)}</div> : <div className="empty-state compact"><span>✦</span><h3>Chưa có insight cho tháng này</h3><p>Thẻ sẽ xuất hiện khi chi tiêu tăng rõ rệt hoặc ngân sách tiến gần hạn mức.</p></div>}
     </section>
@@ -89,11 +111,9 @@ export default function DashboardPanel({ session, displayName, accounts, account
     </section>
     <SpendingProfilePanel session={session} month={month} />
     {month === reportMonth() && <FinancialHealthPanel session={session} />}
-    <ChartsPanel session={session} month={month} />
     <SpendingTrendsPanel session={session} month={month} />
     {month === reportMonth() && <ExpenseForecastPanel session={session} />}
     <UpcomingExpensesPanel session={session} />
-    <SafeToSpendPanel session={session} />
     <WhatIfPanel session={session} month={month} />
     {dashboard && dashboard.accountCount === 0 && dashboard.transactionCount === 0 && <div className="surface-card dashboard-empty"><h2>Chưa có dữ liệu tài chính</h2><p>Hãy thêm tài khoản và giao dịch đầu tiên để xem tổng quan tháng.</p><button className="button-primary" onClick={() => onNavigate("accounts")}>Thêm tài khoản</button></div>}
     {accountsError && <p className="inline-error" role="alert">{accountsError}</p>}
