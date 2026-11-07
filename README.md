@@ -1,8 +1,6 @@
-<p align="center">
-  <img src="frontend/web/public/finsight-mark.svg" alt="FinSight" width="72" />
-</p>
-
-<h1 align="center">FinSight</h1>
+<h1 align="center">
+  <img src="frontend/mobile/assets/full-logo.png" alt="FinSight" width="340" />
+</h1>
 
 <p align="center"><strong>Hiểu rõ dòng tiền. Chủ động với kế hoạch tài chính.</strong></p>
 
