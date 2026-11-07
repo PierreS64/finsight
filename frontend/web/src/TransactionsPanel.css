@@ -59,7 +59,7 @@
 .transaction-form-card form>.button-outline{order:10;justify-self:start}
 .transaction-form-card form>.button-primary{order:11;grid-column:2}
 .transaction-form-card .ocr-panel{border-radius:10px;background:#f8fafc}
-.transactions-list-card .section-head{display:none}
+.transactions-list-card > .section-head{display:none}
 .history-filters{grid-template-columns:minmax(180px,2fr) repeat(3,minmax(130px,1fr));align-items:end;background:#fff;border:0;border-bottom:1px solid #e2e8f0;border-radius:0;padding:0 0 14px;margin:0 0 10px}
 .history-filters label{font-size:11px}
 .history-filters label:nth-of-type(3),.history-filters label:nth-of-type(4),.history-filters label:nth-of-type(5),.history-filters label:nth-of-type(7){display:none}
