@@ -7,7 +7,7 @@ type Profile = { userId: string; displayName: string | null; currencyCode: strin
 const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
 
 export default function AuthPanel({ initialMode, close }: { initialMode: "signin" | "signup"; close: () => void }) {
-  const [mode, setMode] = useState(initialMode);
+  const [mode, setMode] = useState<"signin" | "signup" | "recover">(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -17,13 +17,15 @@ export default function AuthPanel({ initialMode, close }: { initialMode: "signin
   const [sentEmail, setSentEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [messageError, setMessageError] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!supabase || busy) return;
-    if (mode === "signup" && password !== confirmPassword) { setMessage("Hai mật khẩu chưa khớp."); return; }
+    if (mode === "signup" && password !== confirmPassword) { setMessage("Hai mật khẩu chưa khớp."); setMessageError(true); return; }
     setBusy(true);
     setMessage("");
+    setMessageError(false);
     try {
       const result = mode === "signin"
         ? await supabase.auth.signInWithPassword({ email: email.trim(), password })
@@ -32,38 +34,49 @@ export default function AuthPanel({ initialMode, close }: { initialMode: "signin
       setPassword("");
       setConfirmPassword("");
       if (mode === "signup" && !result.data.session) setSentEmail(email.trim());
-    } catch (error) { setMessage(error instanceof Error ? error.message : "Không thể xác thực tài khoản."); }
+    } catch (error) { setMessage(error instanceof Error ? error.message : "Không thể xác thực tài khoản."); setMessageError(true); }
     finally { setBusy(false); }
   }
 
   async function resendEmail() {
     if (!supabase || !sentEmail || busy) return;
     setBusy(true);
-    const { error } = await supabase.auth.resend({ type: "signup", email: sentEmail });
-    setMessage(error?.message ?? "Đã gửi lại email xác nhận.");
-    setBusy(false);
+    try {
+      const { error } = await supabase.auth.resend({ type: "signup", email: sentEmail });
+      setMessage(error?.message ?? "Đã gửi lại email xác nhận.");
+      setMessageError(!!error);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không thể gửi lại email xác nhận.");
+      setMessageError(true);
+    } finally { setBusy(false); }
   }
 
-  async function resetPassword() {
-    if (!supabase || !email.trim() || busy) { setMessage("Nhập email trước khi yêu cầu đặt lại mật khẩu."); return; }
+  async function resetPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!supabase || !email.trim() || busy) { setMessage("Nhập email trước khi yêu cầu đặt lại mật khẩu."); setMessageError(true); return; }
     setBusy(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/` });
-    setMessage(error?.message ?? "Nếu email đã đăng ký, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.");
-    setBusy(false);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/` });
+      setMessage(error?.message ?? "Nếu email đã đăng ký, bạn sẽ nhận được hướng dẫn đặt lại mật khẩu.");
+      setMessageError(!!error);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Không thể gửi liên kết khôi phục.");
+      setMessageError(true);
+    } finally { setBusy(false); }
   }
 
   return <div className={`auth-screen${sentEmail ? " auth-email-screen" : ""}`}><button className="auth-back" onClick={close}>← Về trang chủ</button><div className="auth-shell">
     <section className="auth-form-side"><div className="auth-brand"><img src="/finsight-logo.png" alt="FinSight" /></div>
-      {sentEmail ? <div className="auth-confirm"><span className="confirm-icon material-symbols-outlined" aria-hidden="true">mark_email_read</span><h1>Kiểm tra hộp thư của bạn</h1><p>Chúng tôi đã gửi liên kết xác nhận đến <strong>{sentEmail}</strong>. Hãy mở email và làm theo hướng dẫn, sau đó đăng nhập.</p><button className="button-primary" onClick={() => { setSentEmail(""); setMode("signin"); }}>Đến trang đăng nhập →</button><button className="link-button" onClick={resendEmail} disabled={busy}>Gửi lại email xác nhận</button></div> : <><span className="eyebrow">{mode === "signin" ? "CHÀO MỪNG BẠN TRỞ LẠI" : "BẮT ĐẦU CÙNG FINSIGHT"}</span><h1>{mode === "signin" ? "Đăng nhập vào FinSight" : "Tạo tài khoản mới"}</h1><p className="auth-description">{mode === "signin" ? "Tiếp tục quản lý dữ liệu tài chính của chính bạn." : "Thiết lập không gian tài chính cá nhân của bạn trong vài bước."}</p>
+      {sentEmail ? <div className="auth-confirm"><span className="confirm-icon material-symbols-outlined" aria-hidden="true">mark_email_read</span><h1>Kiểm tra hộp thư của bạn</h1><p>Chúng tôi đã gửi liên kết xác nhận đến <strong>{sentEmail}</strong>. Hãy mở email và làm theo hướng dẫn, sau đó đăng nhập.</p><button className="button-primary" onClick={() => { setSentEmail(""); setMode("signin"); }}>Đến trang đăng nhập →</button><button className="link-button" onClick={resendEmail} disabled={busy}>Gửi lại email xác nhận</button></div> : <><span className="eyebrow">{mode === "signin" ? "CHÀO MỪNG BẠN TRỞ LẠI" : mode === "signup" ? "BẮT ĐẦU CÙNG FINSIGHT" : "KHÔI PHỤC TÀI KHOẢN"}</span><h1>{mode === "signin" ? "Đăng nhập vào FinSight" : mode === "signup" ? "Tạo tài khoản mới" : "Lấy lại mật khẩu"}</h1><p className="auth-description">{mode === "signin" ? "Tiếp tục quản lý dữ liệu tài chính của chính bạn." : mode === "signup" ? "Thiết lập không gian tài chính cá nhân của bạn trong vài bước." : "Nhập email tài khoản để nhận liên kết đặt lại mật khẩu."}</p>
         {!supabase && <p className="inline-error" role="alert">Chưa cấu hình Supabase cho web. Xem frontend/web/.env.example.</p>}
-        <form className="auth-form" onSubmit={submit}>{mode === "signup" && <label>Họ và tên<div className="auth-input-wrap"><span className="material-symbols-outlined" aria-hidden="true">person</span><input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" maxLength={80} required placeholder="Tên hiển thị của bạn" /></div></label>}
+        <form className="auth-form" onSubmit={mode === "recover" ? resetPassword : submit}>{mode === "signup" && <label>Họ và tên<div className="auth-input-wrap"><span className="material-symbols-outlined" aria-hidden="true">person</span><input value={name} onChange={(event) => setName(event.target.value)} autoComplete="name" maxLength={80} required placeholder="Tên hiển thị của bạn" /></div></label>}
           <label>Email đăng nhập <span className="required-mark">*</span><div className="auth-input-wrap"><span className="material-symbols-outlined" aria-hidden="true">alternate_email</span><input type="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" required placeholder="ban@example.com" /></div></label>
-          <label>Mật khẩu <span className="required-mark">*</span><div className="auth-input-wrap"><span className="material-symbols-outlined" aria-hidden="true">lock</span><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "signin" ? "current-password" : "new-password"} minLength={6} required placeholder="Nhập mật khẩu" /><button type="button" className="password-toggle" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}><span className="material-symbols-outlined" aria-hidden="true">{showPassword ? "visibility_off" : "visibility"}</span></button></div></label>
+          {mode !== "recover" && <label>Mật khẩu <span className="required-mark">*</span><div className="auth-input-wrap"><span className="material-symbols-outlined" aria-hidden="true">lock</span><input type={showPassword ? "text" : "password"} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete={mode === "signin" ? "current-password" : "new-password"} minLength={6} required placeholder="Nhập mật khẩu" /><button type="button" className="password-toggle" onClick={() => setShowPassword((value) => !value)} aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}><span className="material-symbols-outlined" aria-hidden="true">{showPassword ? "visibility_off" : "visibility"}</span></button></div></label>}
           {mode === "signup" && <label>Xác nhận mật khẩu <span className="required-mark">*</span><div className="auth-input-wrap"><span className="material-symbols-outlined" aria-hidden="true">lock</span><input type={showConfirmation ? "text" : "password"} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} autoComplete="new-password" minLength={6} required placeholder="Nhập lại mật khẩu" /><button type="button" className="password-toggle" onClick={() => setShowConfirmation((value) => !value)} aria-label={showConfirmation ? "Ẩn mật khẩu xác nhận" : "Hiện mật khẩu xác nhận"}><span className="material-symbols-outlined" aria-hidden="true">{showConfirmation ? "visibility_off" : "visibility"}</span></button></div></label>}
-          {mode === "signin" && <button type="button" className="link-button forgot-button" onClick={resetPassword} disabled={busy}>Quên mật khẩu?</button>}
-          <button className="button-primary auth-submit" type="submit" disabled={busy || !supabase}>{busy ? "Đang xử lý..." : mode === "signin" ? "Đăng nhập →" : "Tạo tài khoản →"}</button>
-        </form><p className="auth-switch">{mode === "signin" ? "Chưa có tài khoản?" : "Đã có tài khoản?"} <button className="link-button" onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setMessage(""); }}>{mode === "signin" ? "Đăng ký ngay" : "Đăng nhập"}</button></p></>}
-      {message && <p className="auth-message" role="status">{message}</p>}
+          {mode === "signin" && <button type="button" className="link-button forgot-button" onClick={() => { setMode("recover"); setMessage(""); setMessageError(false); }}>Quên mật khẩu?</button>}
+          <button className="button-primary auth-submit" type="submit" disabled={busy || !supabase}>{busy ? "Đang xử lý..." : mode === "signin" ? "Đăng nhập →" : mode === "signup" ? "Tạo tài khoản →" : "Gửi liên kết khôi phục →"}</button>
+        </form><p className="auth-switch">{mode === "signin" ? "Chưa có tài khoản?" : mode === "signup" ? "Đã có tài khoản?" : "Đã nhớ mật khẩu?"} <button className="link-button" onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setMessage(""); setMessageError(false); }}>{mode === "signin" ? "Đăng ký ngay" : "Đăng nhập"}</button></p></>}
+      {message && <p className={messageError ? "inline-error" : "auth-message"} role={messageError ? "alert" : "status"}>{message}</p>}
       <p className="auth-fineprint">FinSight không yêu cầu thông tin đăng nhập ngân hàng của bạn.</p>
     </section>
     <aside className="auth-story"><img className="auth-story-logo" src="/finsight-logo.png" alt="FinSight" /><div className="auth-story-copy"><h2>Nền tảng Quản trị Tài chính Cá nhân<br />Thông minh & Chủ động</h2><p>Sổ cái số thông minh giúp bạn kiểm soát dòng tiền, tối ưu chi tiêu và thiết lập kế hoạch tài chính an toàn, minh bạch theo cách của riêng bạn.</p><div className="auth-feature-list"><article><span className="material-symbols-outlined" aria-hidden="true">data_usage</span><div><strong>Quản trị ngân sách & Safe-to-Spend</strong><p>Thiết lập hạn mức chi tiêu linh hoạt, theo dõi số dư an toàn chỉ tiêu tức thời.</p></div></article><article><span className="material-symbols-outlined" aria-hidden="true">document_scanner</span><div><strong>Nhận diện hóa đơn thông minh OCR</strong><p>Gợi ý ngày và tổng tiền từ ảnh hóa đơn để bạn kiểm tra trước khi lưu.</p></div></article><article><span className="material-symbols-outlined" aria-hidden="true">shield</span><div><strong>Bảo mật & quyền riêng tư người dùng</strong><p>Dữ liệu tài chính chỉ hiển thị trong phiên đăng nhập của bạn.</p></div></article></div></div><span className="auth-story-dot" aria-hidden="true" /></aside>

@@ -1,5 +1,5 @@
-/* The signed-in workspace uses a quiet surface and a single ink/accent system. */
-.workspace {
+/* Shared product tokens for the workspace and public experience. */
+:root {
   --fs-ink: #172c38;
   --fs-muted: #526472;
   --fs-border: #dce6e5;
@@ -11,6 +11,8 @@
   --fs-expense: #b44e43;
   --fs-warning: #9b630d;
   --fs-radius: 12px;
+}
+.workspace {
   color: var(--fs-ink);
   background: var(--fs-canvas);
   grid-template-columns: 248px minmax(0, 1fr);

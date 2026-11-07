@@ -7,6 +7,7 @@ import "./App.css";
 import "./WebDesign.css";
 import "./ShellDesign.css";
 import "./FinanceWorkflow.css";
+import "./PublicExperience.css";
 
 const AccountsPanel = lazy(() => import("./AccountsPanel"));
 const CategoriesPanel = lazy(() => import("./CategoriesPanel"));
@@ -42,11 +43,11 @@ function Landing({ openAuth }: { openAuth: (mode: "signin" | "signup") => void }
     <main id="top">
       <section className="landing-hero shell-width">
         <span className="eyebrow pill"><span className="live-dot" /> Không gian tài chính của riêng bạn</span>
-        <h1>Hiểu tài chính, làm chủ<br /><em>tương lai.</em></h1>
+        <h1>Hiểu tài chính,<br />làm chủ <em>tương lai.</em></h1>
         <p>Ghi lại tài khoản do bạn tự quản lý, theo dõi dữ liệu rõ ràng và từng bước xây dựng kế hoạch tài chính cá nhân.</p>
         <div className="hero-actions"><button className="button-primary button-large" onClick={() => openAuth("signup")}>Bắt đầu với FinSight <span aria-hidden="true">→</span></button><button className="button-outline button-large" onClick={() => openAuth("signin")}>Tôi đã có tài khoản</button></div>
         <span className="landing-note">Bạn tự nhập và kiểm soát dữ liệu của mình · Không kết nối tài khoản ngân hàng</span>
-        <div className="preview-window" aria-label="Minh họa giao diện FinSight, chưa phải dữ liệu tài chính thật">
+        <div className="preview-window" role="img" aria-label="Minh họa giao diện FinSight với các chỉ số trống, chưa phải dữ liệu tài chính thật">
           <div className="preview-top"><span className="preview-dots">● ● ●</span><Brand /><span className="preview-tag">BẢN XEM TRƯỚC</span></div>
           <div className="preview-body"><div className="preview-title"><span>Tổng quan tài chính</span><small>Thông tin sẽ xuất hiện khi bạn thêm dữ liệu</small></div>
             <div className="preview-metrics"><div><small>Tài khoản của bạn</small><strong>—</strong><span>Chưa có dữ liệu</span></div><div><small>Thu nhập</small><strong>—</strong><span>Đang phát triển</span></div><div><small>Chi tiêu</small><strong>—</strong><span>Đang phát triển</span></div></div>
