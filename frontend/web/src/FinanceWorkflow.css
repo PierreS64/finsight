@@ -91,3 +91,64 @@
   .workspace .category-form-card form { gap: 13px; }
   .workspace .category-icon-picker button { width: 44px; height: 44px; }
 }
+
+/* Accounts, transfers, net worth and reconciliation. */
+.workspace .account-toolbar { border-color: var(--fs-border); box-shadow: none; }
+.workspace .account-search { color: var(--fs-muted); }
+.workspace .account-type-tabs { background: #edf4f0; border-color: var(--fs-border); }
+.workspace .account-type-tabs button { color: var(--fs-muted); min-height: 38px; }
+.workspace .account-type-tabs button.active { background: #fff; color: #075d47; }
+.workspace .account-stats { grid-template-columns: minmax(0, 1.35fr) repeat(3, minmax(0, 1fr)); gap: 12px; }
+.workspace .account-stats .metric-card { min-height: 138px; }
+.workspace .account-stats .metric-card:first-child { background: #173e3e; border-color: #173e3e; }
+.workspace .account-stats .metric-card:first-child :is(small, strong, span) { color: #fff; }
+.workspace .account-stats .metric-card strong { overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.workspace .account-table th { background: #f1f6f4; color: var(--fs-muted); text-transform: none; letter-spacing: 0; font-size: 11px; }
+.workspace .account-table :is(td, th) { border-color: var(--fs-border); }
+.workspace .account-table-name { min-width: 0; }
+.workspace .account-table-name strong { overflow-wrap: anywhere; }
+.workspace .account-table-name .material-symbols-outlined { background: var(--fs-accent-soft); color: var(--fs-accent); flex: none; }
+.workspace .account-create-card { max-width: 760px; }
+.workspace .account-create-form label { display: grid; gap: 7px; color: var(--fs-ink); font-size: 12px; font-weight: 600; }
+.workspace .account-create-form :is(input, select) { min-height: 44px; padding: 10px 12px; }
+.workspace .transfer-info { display: flex; align-items: flex-start; gap: 9px; background: #edf7f2; border-color: #c6e3d3; color: #225946; }
+.workspace .transfer-info .material-symbols-outlined { flex: none; font-size: 20px; }
+.workspace .transfer-icon { background: var(--fs-accent-soft); color: var(--fs-accent); font-size: 20px; }
+.workspace .transfer-list li { border-color: var(--fs-border); }
+.workspace .transfer-form-card form label { color: var(--fs-ink); }
+.workspace .transfer-form-card form :is(input, select, textarea) { min-height: 44px; }
+.workspace .net-worth-metrics { grid-template-columns: minmax(0, 1.3fr) repeat(2, minmax(0, 1fr)); gap: 12px; }
+.workspace .net-worth-metrics .featured { background: #173e3e; border-color: #173e3e; }
+.workspace .net-worth-metrics .featured :is(small, strong, span) { color: #fff; }
+.workspace .goals-layout .goal-row strong { color: var(--fs-ink); overflow-wrap: anywhere; }
+.workspace .goals-layout .goal-items article { border-color: var(--fs-border); }
+.workspace .reconcile-expected { background: #edf7f2; border-color: #c6e3d3; }
+.workspace .reconcile-expected small { color: #075d47; }
+.workspace .reconcile-items article { border-color: var(--fs-border); }
+.workspace .reconcile-items b.shortfall { color: var(--fs-expense); }
+.workspace .reconcile-actions .link-button { min-height: 36px; }
+@media (max-width: 1250px) {
+  .workspace .account-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 700px) {
+  .workspace .account-toolbar-actions { width: 100%; }
+  .workspace .account-toolbar-actions button { min-height: 42px; }
+  .workspace .account-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workspace .account-stats .metric-card:first-child { grid-column: 1 / -1; }
+  .workspace .account-stats .metric-card { min-height: 125px; }
+  .workspace .account-table-scroll { overflow: visible; }
+  .workspace .account-table, .workspace .account-table tbody, .workspace .account-table tr, .workspace .account-table td { display: block; width: 100%; }
+  .workspace .account-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .workspace .account-table tr { margin-bottom: 12px; padding: 12px 14px; border: 1px solid var(--fs-border); border-radius: var(--fs-radius); }
+  .workspace .account-table td { padding: 5px 0; border: 0; white-space: normal; overflow-wrap: anywhere; }
+  .workspace .account-table td:nth-child(2)::before { content: 'Loại: '; font-weight: 600; }
+  .workspace .account-table td:nth-child(3) { font-size: 18px; padding-top: 11px; }
+  .workspace .account-table td:nth-child(4) { color: var(--fs-muted); font-size: 11px; }
+  .workspace .account-table td:nth-child(4)::before { content: 'Số dư đầu kỳ: '; font-weight: 600; }
+  .workspace .account-table td:nth-child(5) { padding-top: 8px; }
+  .workspace .transfer-list li { flex-wrap: wrap; }
+  .workspace .transfer-side { width: 100%; margin-left: 52px; text-align: left; }
+  .workspace .transfer-side span { flex-wrap: wrap; }
+  .workspace .net-worth-metrics { grid-template-columns: 1fr; }
+  .workspace .reconcile-items article { gap: 7px; }
+}
