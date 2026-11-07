@@ -152,3 +152,72 @@
   .workspace .net-worth-metrics { grid-template-columns: 1fr; }
   .workspace .reconcile-items article { gap: 7px; }
 }
+
+/* Planning: limits, goals, recurring rules and upcoming expenses. */
+.workspace .budget-toolbar label { border-color: var(--fs-border); color: var(--fs-accent); }
+.workspace .budget-overview .eyebrow, .workspace .budget-form .eyebrow, .workspace .goals-form .eyebrow, .workspace .recurring-form .eyebrow { display: none; }
+.workspace .budget-summary-strip { border-color: var(--fs-border); }
+.workspace .budget-summary-strip small { color: var(--fs-muted); text-transform: none; letter-spacing: 0; }
+.workspace .budget-summary-strip strong { color: var(--fs-ink); overflow-wrap: anywhere; }
+.workspace .budget-summary-strip > div:first-child strong { color: var(--fs-accent); }
+.workspace .budget-track { background: #e4ece9; }
+.workspace .budget-track i { background: var(--fs-accent); }
+.workspace .budget-category-list article { border-color: var(--fs-border); box-shadow: none; }
+.workspace .budget-alert { background: #fff6e8; color: #805008; }
+.workspace .budget-alert.critical { background: #fff0ed; color: #9e352c; }
+.workspace .budget-form form { border-color: var(--fs-border); }
+.workspace .budget-form label :is(input, select) { min-height: 44px; border-color: var(--fs-border); }
+.workspace .goals-toolbar, .workspace .recurring-toolbar, .workspace .upcoming-toolbar { border-color: var(--fs-border); }
+.workspace .goal-search, .workspace .recurring-search, .workspace .upcoming-search { border-color: var(--fs-border); color: var(--fs-muted); }
+.workspace .goal-filters, .workspace .recurring-filters, .workspace .upcoming-quick { background: #edf4f0; border-color: var(--fs-border); }
+.workspace .goal-filters button, .workspace .recurring-filters button, .workspace .upcoming-quick button { color: var(--fs-muted); min-height: 38px; }
+.workspace .goal-filters button.selected, .workspace .recurring-filters button.selected { color: #075d47; box-shadow: none; }
+.workspace .goals-metrics > .surface-card, .workspace .recurring-metrics > .surface-card, .workspace .upcoming-metrics > .surface-card { box-shadow: none; }
+.workspace .goals-metrics > .surface-card:first-child, .workspace .recurring-metrics > .surface-card:first-child { background: #edf7f2; border-color: #d2e8dc; }
+.workspace .goals-metrics strong, .workspace .recurring-metrics strong, .workspace .upcoming-metrics strong { overflow-wrap: anywhere; color: var(--fs-ink); }
+.workspace .goal-items article { border-color: var(--fs-border); box-shadow: none; }
+.workspace .goal-items h3 { color: var(--fs-ink); }
+.workspace .goal-track { background: #e4ece9; }
+.workspace .goal-track i { background: var(--fs-accent); }
+.workspace .goal-detail, .workspace .goal-actions { border-color: var(--fs-border); }
+.workspace .goal-actions .button-primary { flex: none; }
+.workspace .goal-confirm { background: #fff4f1; }
+.workspace .recurring-info { background: #edf7f2; border-color: #c6e3d3; color: #225946; }
+.workspace .recurring-table-scroll th { background: #f1f6f4; color: var(--fs-muted); text-transform: none; letter-spacing: 0; font-size: 11px; }
+.workspace .recurring-table-scroll :is(td, th) { border-color: var(--fs-border); }
+.workspace .recurring-status.active { background: var(--fs-accent-soft); color: #075d47; }
+.workspace .recurring-actions { flex-wrap: wrap; white-space: normal; }
+.workspace .recurring-actions :is(.button-primary, .button-outline) { min-height: 34px; }
+.workspace .recurring-confirm { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; padding: 9px; border: 1px solid #e9d3a9; border-radius: 8px; background: #fff8ec; color: #694708; font-size: 11px; }
+.workspace .recurring-form { scroll-margin-top: 86px; }
+.workspace .recurring-form label :is(input, select, textarea) { min-height: 44px; }
+.workspace .upcoming-list li { border-color: var(--fs-border); box-shadow: none; }
+.workspace .upcoming-list li.overdue { border-color: #d7a85c; background: #fffaf0; }
+.workspace .upcoming-icon { background: var(--fs-accent-soft); color: var(--fs-accent); }
+@media (max-width: 700px) {
+  .workspace .budget-summary-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workspace .budget-summary-strip > div:first-child { grid-column: 1 / -1; }
+  .workspace .budget-progress > div, .workspace .budget-category-list article > div { flex-wrap: wrap; }
+  .workspace .goals-toolbar > .button-primary, .workspace .recurring-toolbar > .button-primary { width: 100%; justify-content: center; min-height: 44px; }
+  .workspace .goals-metrics, .workspace .recurring-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workspace .goals-metrics > .surface-card:first-child, .workspace .recurring-metrics > .surface-card:first-child { grid-column: 1 / -1; }
+  .workspace .goal-items { grid-template-columns: 1fr; }
+  .workspace .goal-amount { align-items: flex-start; flex-wrap: wrap; }
+  .workspace .goal-amount strong { text-align: left; }
+  .workspace .recurring-table-scroll { overflow: visible; }
+  .workspace .recurring-table-scroll table, .workspace .recurring-table-scroll tbody, .workspace .recurring-table-scroll tr, .workspace .recurring-table-scroll td { display: block; width: 100%; min-width: 0; }
+  .workspace .recurring-table-scroll thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .workspace .recurring-table-scroll tr { margin-bottom: 12px; padding: 12px 14px; border: 1px solid var(--fs-border); border-radius: var(--fs-radius); }
+  .workspace .recurring-table-scroll td { padding: 5px 0; border: 0; white-space: normal; overflow-wrap: anywhere; }
+  .workspace .recurring-table-scroll td strong { white-space: normal; }
+  .workspace .recurring-table-scroll td:nth-child(2)::before { content: 'Danh mục: '; font-weight: 600; }
+  .workspace .recurring-table-scroll td:nth-child(3)::before { content: 'Chu kỳ: '; font-weight: 600; }
+  .workspace .recurring-table-scroll td:nth-child(4) { font-size: 16px; padding-top: 10px; }
+  .workspace .recurring-table-scroll td:nth-child(5)::before { content: 'Kỳ tiếp theo: '; font-weight: 600; }
+  .workspace .recurring-table-scroll td:last-child { border-top: 1px solid var(--fs-border); margin-top: 8px; padding-top: 8px; }
+  .workspace .recurring-actions { justify-content: flex-start; }
+  .workspace .upcoming-toolbar > :is(.upcoming-search, .upcoming-range) { width: 100%; }
+  .workspace .upcoming-range input { max-width: none; width: 100%; }
+  .workspace .upcoming-range label { flex: 1; min-width: 125px; }
+  .workspace .upcoming-list b { margin-left: 0; }
+}
