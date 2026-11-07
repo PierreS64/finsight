@@ -1,6 +1,7 @@
 package com.finsight.transaction;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -26,6 +27,7 @@ import org.springframework.test.web.servlet.MockMvc;
 class StatementImportControllerTests {
     private static final String ALICE = "e8e8e8e8-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
     private static final String BOB = "f8f8f8f8-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    private static final String CAROL = "c8c8c8c8-cccc-4ccc-8ccc-cccccccccccc";
     private static final String FOOD = "00000000-0000-4000-8000-000000000201";
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
@@ -49,10 +51,15 @@ class StatementImportControllerTests {
     }
 
     private String row(int number, String description, String amount) {
+        return row(number, description, amount, false);
+    }
+
+    private String row(int number, String description, String amount, boolean allowPossibleDuplicate) {
         return "{\"rowNumber\":" + number + ",\"categoryId\":\"" + FOOD
                 + "\",\"kind\":\"EXPENSE\",\"amount\":\"" + amount
                 + "\",\"occurredOn\":\"2026-10-" + (number == 2 ? "22" : "23")
-                + "\",\"description\":\"" + description + "\"}";
+                + "\",\"description\":\"" + description + "\",\"allowPossibleDuplicate\":"
+                + allowPossibleDuplicate + "}";
     }
 
     @Test
@@ -102,6 +109,42 @@ class StatementImportControllerTests {
         mvc.perform(multipart("/api/v1/statements/preview").file(invalid).param("accountId", account)
                         .with(jwt().jwt(token -> token.subject(BOB))))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value("Row 2: invalid positive amount"));
+    }
+
+    @Test
+    void modifiedFileRequiresExplicitConfirmationForSameTransaction() throws Exception {
+        String account = account(CAROL);
+        var first = new MockMultipartFile("file", "first.csv", "text/csv",
+                "date,description,amount,type\n2026-10-22,Siêu thị A,12.25,expense\n"
+                        .getBytes(StandardCharsets.UTF_8));
+        var modified = new MockMultipartFile("file", "modified.csv", "text/csv",
+                "date,description,amount,type\r\n2026-10-22,Siêu thị A,12.25,expense\r\n"
+                        .getBytes(StandardCharsets.UTF_8));
+        String firstPreview = mvc.perform(multipart("/api/v1/statements/preview").file(first)
+                        .param("accountId", account).with(jwt().jwt(token -> token.subject(CAROL))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        String firstHash = json.readTree(firstPreview).get("sourceHash").asText();
+        mvc.perform(post("/api/v1/statements/import").with(jwt().jwt(token -> token.subject(CAROL)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(batch(account, firstHash, row(2, "Siêu thị A", "12.25"))))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.importedCount").value(1));
+
+        String modifiedPreview = mvc.perform(multipart("/api/v1/statements/preview").file(modified)
+                        .param("accountId", account).with(jwt().jwt(token -> token.subject(CAROL))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows[0].alreadyImported").value(false))
+                .andExpect(jsonPath("$.rows[0].possibleDuplicate").value(true))
+                .andReturn().getResponse().getContentAsString();
+        String modifiedHash = json.readTree(modifiedPreview).get("sourceHash").asText();
+        assertNotEquals(firstHash, modifiedHash);
+        mvc.perform(post("/api/v1/statements/import").with(jwt().jwt(token -> token.subject(CAROL)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(batch(account, modifiedHash, row(2, "Siêu thị A", "12.25"))))
+                .andExpect(status().isConflict());
+        mvc.perform(post("/api/v1/statements/import").with(jwt().jwt(token -> token.subject(CAROL)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(batch(account, modifiedHash, row(2, "Siêu thị A", "12.25", true))))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.importedCount").value(1));
     }
 
     @Test
