@@ -16,10 +16,13 @@ docs/reports/
 .DS_Store
 frontend/mobile/.git.scaffold-backup/
 frontend/mobile/.expo-export-check/
-frontend/web/public/
-frontend/web/src/assets/
+# Local design references and agent/tool state are not application source.
+frontend/web design/
 frontend/mobile design/
+design/
+designs/
+.codex/
+.agents/
+.impeccable/
 frontend/mobile/android/
 frontend/mobile/ios/
-.impeccable/config.local.json
-.impeccable/hook.cache.json
