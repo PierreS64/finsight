@@ -235,6 +235,11 @@
 .workspace .statement-intro code { color: #075d47; background: #edf7f2; padding: 2px 4px; border-radius: 4px; overflow-wrap: anywhere; }
 .workspace .statement-intro form label { display: grid; gap: 7px; color: var(--fs-ink); font-size: 12px; font-weight: 600; }
 .workspace .statement-intro form :is(input, select) { min-height: 44px; width: 100%; }
+.workspace .statement-file-control { position: relative; display: flex; align-items: center; gap: 10px; min-height: 44px; width: 100%; padding: 4px; border: 1px solid var(--fs-border); border-radius: 8px; background: #fff; cursor: pointer; }
+.workspace .statement-file-control:focus-within { outline: 3px solid #3dbb90; outline-offset: 2px; }
+.workspace .statement-file-action { display: inline-flex; align-items: center; flex: none; min-height: 34px; padding: 0 11px; border-radius: 5px; background: var(--fs-accent-soft); color: #075d47; font-weight: 700; }
+.workspace .statement-file-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--fs-muted); font-weight: 400; }
+.workspace .statement-file-control input[type="file"] { position: absolute; inset: 0; width: 100%; height: 100%; min-height: 0; opacity: 0; cursor: pointer; }
 .workspace .statement-row { background: #fff; border-color: var(--fs-border); align-items: start; }
 .workspace .statement-row > div { min-width: 0; }
 .workspace .statement-row small { color: var(--fs-muted); line-height: 1.5; }
