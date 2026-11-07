@@ -1,59 +1,158 @@
 # FinSight
 
-FinSight is a personal finance intelligence platform under development. The repository contains a Java 17 Spring Boot API, React web app, and Expo Android app. Financial accounts will be user-maintained records; there is no live bank connection.
+FinSight là ứng dụng quản lý tài chính cá nhân trên web và Android. Người dùng tự ghi nhận tài khoản, giao dịch và kế hoạch chi tiêu; ứng dụng tổng hợp số liệu để theo dõi dòng tiền và hỗ trợ ra quyết định. FinSight **không kết nối ngân hàng và không thu thập thông tin đăng nhập ngân hàng**.
 
-## Current milestone
+## Chức năng
 
-The Phase 0–6 implementation and Phase 7 demo acceptance are complete on `main`; the reviewed integration PR preserved the feature commits. The API connects to the real Supabase PostgreSQL project. Web and Android have Supabase Auth with email password recovery and signed-in password change, profiles, virtual accounts and balance reconciliation snapshots, owner-scoped income/expense categories and merchants, transaction CRUD, CSV/XLSX statement preview and confirmed import, private receipt image attachments and OCR assisted entry, searchable transaction history with reviewable category suggestions, account transfers, weekly/monthly recurring transactions, read-only subscription suggestions and an upcoming expense view, monthly budgets and savings goals, current net-worth tracking with manual assets and liabilities, an explainable current-month financial health score, 80%/90%/100% budget alerts and a safe daily spending amount, a monthly financial dashboard with weekly/monthly charts and spending trends, an expense forecast, rule-based insight cards, category-level spending explanations, a monthly spending behavior profile, a temporary What-if Simulator, and an optional AI assistant that explains backend-calculated monthly facts. OCR only suggests fields; users review and save the transaction themselves. Savings goals track planned amounts without moving account funds. Reconciliation records discrepancies without changing balances. Recurring rules are processed explicitly from the UI when due; no background scheduler runs yet. AI chat requires a separate server-side API key; the backend has been tested with synthetic facts against a live provider, and a signed-in web check confirmed the verified facts; the corrected balance wording was rechecked in a signed-in web session. A real user signed in and accessed their profile on both platforms, saved it on web, and added an account that persisted after reload and appeared on Android. The local Jenkins `finsight-develop` pipeline passed backend tests, web and mobile checks, and Docker image build on its Windows agent. See [progress](docs/progress.md) and [roadmap](docs/development-workflow.md).
+- Tài khoản ảo, chuyển khoản nội bộ, đối soát số dư và tài sản ròng.
+- Giao dịch thu/chi, danh mục, nơi giao dịch, tìm kiếm và lọc lịch sử.
+- Nhập sao kê CSV/XLSX theo bước xem trước và xác nhận; ảnh hóa đơn và OCR chỉ gợi ý dữ liệu để người dùng kiểm tra trước khi lưu.
+- Ngân sách tháng, mục tiêu tích lũy, giao dịch định kỳ và khoản chi sắp tới.
+- Dashboard, biểu đồ, dự báo, điểm sức khỏe tài chính, mức chi an toàn và mô phỏng *What-if*.
+- Trợ lý AI tùy chọn giải thích số liệu tổng hợp do backend tính; các số liệu đã xác minh luôn hiển thị riêng. Khi lời giải thích không qua kiểm tra an toàn, ứng dụng chỉ hiển thị các dữ kiện đã xác minh.
 
-## Quick start on Windows PowerShell
+Quy tắc định kỳ được ghi nhận khi người dùng chủ động xác nhận, chưa có lịch chạy nền. Mục tiêu tích lũy không tự chuyển tiền; đối soát không tự sửa số dư.
 
-Use JDK 17 for the backend. Maven is supplied by the wrapper.
+## Công nghệ và cấu trúc
+
+| Thư mục | Thành phần |
+| --- | --- |
+| `backend/` | Java 17, Spring Boot 3, Maven Wrapper, Flyway, PostgreSQL/Supabase |
+| `frontend/web/` | React, TypeScript, Vite |
+| `frontend/mobile/` | React Native, Expo SDK 53, TypeScript, Android SDK 35 |
+| `scripts/` | Lệnh khởi động và kiểm tra môi trường local |
+| `docs/` | Hướng dẫn chi tiết, API, quyết định kỹ thuật và tiến độ |
+
+Supabase Auth cấp JWT; API xác thực JWT và giới hạn dữ liệu theo chủ tài khoản. Flyway quản lý schema. Giá trị tiền được xử lý chính xác ở backend; chuyển khoản nội bộ không tính vào thu/chi.
+
+## Yêu cầu trước khi chạy
+
+- JDK 17 cho API; Maven đã có Wrapper trong `backend/`.
+- Node.js 22 hoặc mới hơn và npm cho web/mobile.
+- Một dự án Supabase với Auth và PostgreSQL để dùng các chức năng có đăng nhập.
+- Android Studio, Android SDK 35 và emulator/thiết bị Android nếu chạy app mobile.
+- Tesseract OCR nếu muốn đọc hóa đơn ở máy local; Docker image đã cài gói OCR tiếng Anh và tiếng Việt.
+
+Các lệnh dưới đây dùng **PowerShell trên Windows**. Mở từng tiến trình chạy lâu trong một cửa sổ terminal riêng.
+
+## Chạy web với Supabase
+
+### 1. Tạo cấu hình local
+
+Sao chép các tệp mẫu; các tệp đích được Git bỏ qua:
 
 ```powershell
-$env:JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot' # adjust if needed
-cd backend
-.\mvnw.cmd test
-$env:SPRING_PROFILES_ACTIVE = 'local'
-.\mvnw.cmd spring-boot:run
+Copy-Item .env.example .env
+Copy-Item frontend/web/.env.example frontend/web/.env.local
 ```
 
-The local profile uses in-memory H2 and a nonfunctional JWKS URL. `GET http://localhost:8080/actuator/health` works; authenticated requests need a real Supabase environment.
+Điền vào `.env` ở gốc repository:
 
-For the real Supabase project, fill the ignored root `.env` and run `powershell -ExecutionPolicy Bypass -File .\scripts\start-supabase-api.ps1` from the repository root. The API listens on `localhost:8086`. See [setup](docs/setup.md) for web configuration and sign-in.
+- `DATABASE_URL`, `DATABASE_USERNAME`, `DATABASE_PASSWORD`: thông tin **Session pooler** của Supabase PostgreSQL.
+- `SUPABASE_ISSUER_URI`, `SUPABASE_JWKS_URI`: Auth issuer và JWKS của cùng dự án Supabase.
+- `SUPABASE_PUBLISHABLE_KEY`: public/publishable key, không phải service role key.
+- `OPENAI_API_KEY`: tùy chọn, chỉ lưu ở backend nếu bật trợ lý AI.
 
-With the API running, `powershell -ExecutionPolicy Bypass -File .\scripts\smoke-supabase-api.ps1` performs read-only health and authentication checks against the real profile.
+Điền vào `frontend/web/.env.local`:
+
+- `VITE_SUPABASE_URL` và `VITE_SUPABASE_PUBLISHABLE_KEY`: URL và publishable key của **cùng** dự án.
+- `VITE_API_BASE_URL=http://127.0.0.1:8086` khi chạy API bằng script dưới đây.
+
+Không đưa mật khẩu database, API key, access token hoặc dữ liệu tài chính thật vào Git. Tuyệt đối không dùng service role key trong biến `VITE_` hay `EXPO_PUBLIC_`.
+
+### 2. Cấu hình đường dẫn xác thực
+
+Trong Supabase **Authentication → URL Configuration**, đặt Site URL và redirect URL cho web là `http://127.0.0.1:5173/`. Dùng cùng hostname này khi mở web; `localhost` và `127.0.0.1` là hai origin khác nhau. Nếu chạy trên host/port khác, cập nhật allowlist tương ứng. Xem [hướng dẫn setup](docs/setup.md) để cấu hình thêm liên kết xác nhận và khôi phục mật khẩu trên Android.
+
+### 3. Khởi động API
+
+Từ thư mục gốc repository:
 
 ```powershell
-cd frontend/web
+powershell -ExecutionPolicy Bypass -File .\scripts\start-supabase-api.ps1
+```
+
+Script đọc `.env`, chọn profile `supabase` và chạy API trên cổng `8086`. Trên máy khác, sửa đường dẫn JDK 17 trong script cho phù hợp. Kiểm tra `http://127.0.0.1:8086/actuator/health`; trạng thái mong đợi là `UP`. Flyway sẽ áp dụng migration khi API khởi động; không bật Hibernate tạo/cập nhật schema trên dữ liệu thật.
+
+### 4. Khởi động web
+
+Trong terminal khác:
+
+```powershell
+Set-Location frontend/web
 npm ci
-npm run dev
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
+Mở `http://127.0.0.1:5173/`, đăng ký hoặc đăng nhập bằng tài khoản Supabase của bạn. Nếu web báo chưa cấu hình Supabase, kiểm tra `frontend/web/.env.local`, tên biến `VITE_` và khởi động lại Vite. Nếu đăng nhập được nhưng gọi API thất bại, kiểm tra API trên cổng `8086`, `VITE_API_BASE_URL` và URL/JWKS của cùng dự án.
+
+Có thể chạy kiểm tra API chỉ đọc trong terminal khác:
+
 ```powershell
-cd frontend/mobile
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-supabase-api.ps1
+```
+
+Không đặt `FINSIGHT_SMOKE_BEARER_TOKEN` thì script chỉ kiểm tra health và các route được bảo vệ từ chối token thiếu hoặc sai.
+
+## Chạy Android
+
+Từ thư mục gốc, sao chép `frontend/mobile/.env.example` thành `frontend/mobile/.env.local`, điền URL và publishable key Supabase. Với Android emulator, giữ `EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:8086` để truy cập API trên máy host. Sau khi mở emulator Android SDK 35:
+
+```powershell
+Set-Location frontend/mobile
 npm ci
 npx expo-doctor
 npm run android
 ```
 
-`npm run android` compiles and installs the FinSight Android debug app on the running emulator. Use this installed app to test email confirmation and password recovery: it receives the stable `finsight://` links. Expo Go uses an `exp://` URL that can change between development sessions.
+`npm run android` tạo và cài development build. Liên kết email trên app đã cài dùng scheme `finsight://`; thêm `finsight://reset-password` và `finsight://verify-email` vào Supabase redirect allowlist. Xem [hướng dẫn setup](docs/setup.md) nếu dùng Expo Go hoặc thiết bị thật.
 
-For the Docker API demo: `docker compose up --build`. Docker Desktop must be running. See [setup](docs/setup.md) for real database and auth configuration.
+## Chạy API mẫu không cần Supabase
 
-API and integration rules are in [API conventions](docs/api-conventions.md).
-
-Jenkins is available on demand without starting Docker Desktop at Windows sign-in:
+Profile `local` dùng H2 trong bộ nhớ. Nó phù hợp để kiểm tra health/API build, **không phải** thử nghiệm xác thực Supabase hoặc dữ liệu PostgreSQL thật.
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\start-jenkins-local.ps1
-powershell -ExecutionPolicy Bypass -File .\scripts\stop-jenkins-local.ps1
+$env:JAVA_HOME = 'C:\duong-dan-den-jdk-17' # thay bằng đường dẫn JDK 17 thật
+$env:SPRING_PROFILES_ACTIVE = 'local'
+Set-Location backend
+.\mvnw.cmd spring-boot:run
 ```
 
-## Verification
+Health ở `http://127.0.0.1:8080/actuator/health`. Có thể chạy Docker Desktop và `docker compose up --build` từ thư mục gốc để khởi động cùng profile local trên cổng `8080`.
 
-- Backend: `backend\mvnw.cmd -B -ntp verify`
-- Web: `npm run lint` and `npm run build` in `frontend/web`
-- Mobile: `npx tsc --noEmit` and `npx expo-doctor` in `frontend/mobile`
+## Kiểm tra trước khi đóng góp
 
-Do not commit `.env`, credentials, financial data, or generated build output.
+Chạy các nhóm lệnh sau từ thư mục gốc repository:
+
+```powershell
+Push-Location backend
+.\mvnw.cmd -B -ntp verify
+Pop-Location
+```
+
+```powershell
+Push-Location frontend/web
+npm ci
+npm run lint
+npm run build
+Pop-Location
+```
+
+```powershell
+Push-Location frontend/mobile
+npm ci
+npx tsc --noEmit
+npm run lint
+npx expo-doctor
+Pop-Location
+```
+
+CI thực hiện các kiểm tra tương ứng trên PR vào `main`. Thư mục design tham chiếu, `.codex/`, `.impeccable/`, tệp `.env`, báo cáo cá nhân và sản phẩm build là dữ liệu local, không đưa lên Git. Chỉ commit trên nhánh tính năng; không push trực tiếp vào `main`.
+
+## Tài liệu thêm
+
+- [Thiết lập Supabase, OCR, AI, Docker và Jenkins](docs/setup.md)
+- [Quy ước API](docs/api-conventions.md)
+- [Quy trình phát triển](docs/development-workflow.md)
+- [Tiến độ và bằng chứng kiểm tra](docs/progress.md)
+- [Các quyết định kiến trúc](docs/decisions/0001-initial-architecture.md)
