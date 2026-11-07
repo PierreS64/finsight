@@ -1,15 +1,24 @@
-# FinSight
+<p align="center">
+  <img src="frontend/web/public/finsight-mark.svg" alt="FinSight" width="72" />
+</p>
 
-FinSight là ứng dụng quản lý tài chính cá nhân trên web và Android. Người dùng tự ghi nhận tài khoản, giao dịch và kế hoạch chi tiêu; ứng dụng tổng hợp số liệu để theo dõi dòng tiền và hỗ trợ ra quyết định. FinSight **không kết nối ngân hàng và không thu thập thông tin đăng nhập ngân hàng**.
+<h1 align="center">FinSight</h1>
 
-## Chức năng
+<p align="center"><strong>Hiểu rõ dòng tiền. Chủ động với kế hoạch tài chính.</strong></p>
 
-- Tài khoản ảo, chuyển khoản nội bộ, đối soát số dư và tài sản ròng.
-- Giao dịch thu/chi, danh mục, nơi giao dịch, tìm kiếm và lọc lịch sử.
-- Nhập sao kê CSV/XLSX theo bước xem trước và xác nhận; ảnh hóa đơn và OCR chỉ gợi ý dữ liệu để người dùng kiểm tra trước khi lưu.
-- Ngân sách tháng, mục tiêu tích lũy, giao dịch định kỳ và khoản chi sắp tới.
-- Dashboard, biểu đồ, dự báo, điểm sức khỏe tài chính, mức chi an toàn và mô phỏng *What-if*.
-- Trợ lý AI tùy chọn giải thích số liệu tổng hợp do backend tính; các số liệu đã xác minh luôn hiển thị riêng. Khi lời giải thích không qua kiểm tra an toàn, ứng dụng chỉ hiển thị các dữ kiện đã xác minh.
+<p align="center">Theo dõi tài khoản, quản lý chi tiêu và nhìn thấy bức tranh tài chính của bạn<br />trong một không gian thống nhất trên web và Android.</p>
+
+## Tổng quan
+
+FinSight giúp bạn kết nối những ghi chép tài chính hằng ngày với kế hoạch dài hạn. Từ dữ liệu bạn tự quản lý, ứng dụng tính số dư, dòng tiền và tiến độ mục tiêu để bạn thấy điều gì đã xảy ra, khoản nào sắp đến và mức chi nào phù hợp với kế hoạch hiện tại.
+
+## Trải nghiệm chính
+
+- **Ghi nhận rõ ràng.** Quản lý tài khoản, chuyển khoản, giao dịch thu/chi, danh mục và nơi giao dịch; tìm lại dữ liệu qua lịch sử và bộ lọc. Nhập sao kê CSV/XLSX hoặc dùng OCR để lấy gợi ý từ hóa đơn trước khi xác nhận lưu.
+- **Lập kế hoạch có cơ sở.** Theo dõi ngân sách tháng, mục tiêu tích lũy, giao dịch định kỳ, khoản chi sắp tới, đối soát số dư và tài sản ròng trên cùng dữ liệu tài chính.
+- **Hiểu xu hướng, điều chỉnh kịp thời.** Dashboard, biểu đồ, dự báo chi tiêu, điểm sức khỏe tài chính, mức chi an toàn và mô phỏng *What-if* giúp bạn xem lại tháng hiện tại từ nhiều góc độ.
+
+Số liệu được backend tính từ dữ liệu đã lưu; OCR và nhập sao kê đều có bước người dùng xem lại. Trợ lý AI là tính năng tùy chọn: lời giải thích được hiển thị cùng các số liệu đã xác minh, và phản hồi không qua kiểm tra an toàn được thay bằng thông báo chỉ dẫn xem các số liệu đó. FinSight không kết nối ngân hàng hoặc thu thập thông tin đăng nhập ngân hàng.
 
 Quy tắc định kỳ được ghi nhận khi người dùng chủ động xác nhận, chưa có lịch chạy nền. Mục tiêu tích lũy không tự chuyển tiền; đối soát không tự sửa số dư.
 
@@ -39,7 +48,7 @@ Các lệnh dưới đây dùng **PowerShell trên Windows**. Mở từng tiến
 
 ### 1. Tạo cấu hình local
 
-Sao chép các tệp mẫu; các tệp đích được Git bỏ qua:
+Sao chép các tệp mẫu để tạo cấu hình riêng trên máy:
 
 ```powershell
 Copy-Item .env.example .env
@@ -58,7 +67,7 @@ Copy-Item frontend/web/.env.example frontend/web/.env.local
 - `VITE_SUPABASE_URL` và `VITE_SUPABASE_PUBLISHABLE_KEY`: URL và publishable key của **cùng** dự án.
 - `VITE_API_BASE_URL=http://127.0.0.1:8086` khi chạy API bằng script dưới đây.
 
-Không đưa mật khẩu database, API key, access token hoặc dữ liệu tài chính thật vào Git. Tuyệt đối không dùng service role key trong biến `VITE_` hay `EXPO_PUBLIC_`.
+Giữ mật khẩu database, API key và access token trong cấu hình local. Chỉ dùng publishable key cho các biến `VITE_` và `EXPO_PUBLIC_`; không đặt service role key trong ứng dụng client.
 
 ### 2. Cấu hình đường dẫn xác thực
 
@@ -120,7 +129,7 @@ Set-Location backend
 
 Health ở `http://127.0.0.1:8080/actuator/health`. Có thể chạy Docker Desktop và `docker compose up --build` từ thư mục gốc để khởi động cùng profile local trên cổng `8080`.
 
-## Kiểm tra trước khi đóng góp
+## Kiểm tra dự án
 
 Chạy các nhóm lệnh sau từ thư mục gốc repository:
 
@@ -146,8 +155,6 @@ npm run lint
 npx expo-doctor
 Pop-Location
 ```
-
-CI thực hiện các kiểm tra tương ứng trên PR vào `main`. Thư mục design tham chiếu, `.codex/`, `.impeccable/`, tệp `.env`, báo cáo cá nhân và sản phẩm build là dữ liệu local, không đưa lên Git. Chỉ commit trên nhánh tính năng; không push trực tiếp vào `main`.
 
 ## Tài liệu thêm
 
