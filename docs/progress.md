@@ -267,6 +267,7 @@
 ## Web UI system continuation, 2026-11-07
 
 - Shell and Dashboard: Introduced signed-in semantic tokens, grouped all existing routes in desktop and mobile navigation, removed the inactive notification icon, and added a keyboard skip link and Escape handling for the mobile menu. Dashboard now leads with current account balance, month-specific income and expense, net flow, budget, and the backend's current-month safe-to-spend figure. Historical months no longer display the current-month safe amount. Existing backend requests, lazy panels and owner-scoped data remain unchanged. Web lint, build and `git diff --check` passed. Browser visual review was unavailable because Computer Use could not establish the Chrome URL; no financial records were written.
+- Transactions, categories and merchants: Added a shared workflow style layer based on signed-in tokens, a clearer transaction heading, a mobile card presentation of history rows, readable empty/error states, filter pressed state and consistent Material icons for category choices. Existing history pagination, filtering, CRUD, OCR and receipt actions remain wired to the same endpoints. Web lint/build and scoped diff check passed; no API write was used for testing. The in-app browser could not reach the Windows localhost server (`ERR_CONNECTION_REFUSED`), so render verification remains open.
 
 ## Decisions
 

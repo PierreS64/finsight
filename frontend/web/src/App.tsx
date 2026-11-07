@@ -6,6 +6,7 @@ import type { Account } from "./AccountsPanel";
 import "./App.css";
 import "./WebDesign.css";
 import "./ShellDesign.css";
+import "./FinanceWorkflow.css";
 
 const AccountsPanel = lazy(() => import("./AccountsPanel"));
 const CategoriesPanel = lazy(() => import("./CategoriesPanel"));

@@ -1,0 +1,93 @@
+/* Shared workflow surfaces: every feature inherits the workspace tokens. */
+.workspace .surface-card { min-width: 0; }
+.workspace .surface-card h2 { color: var(--fs-ink); }
+.workspace .muted { color: var(--fs-muted); line-height: 1.6; }
+.workspace .small-badge { color: #075d47; background: var(--fs-accent-soft); }
+.workspace .button-outline { border-color: var(--fs-border); }
+.workspace .button-outline:hover { border-color: #8dbdab; background: #f1f8f4; }
+.workspace .link-button { min-height: 32px; }
+.workspace :is(input, select, textarea) { min-width: 0; }
+.workspace :is(button, a) { touch-action: manipulation; }
+.workspace .inline-error, .workspace [role="alert"] { overflow-wrap: anywhere; }
+.workspace .empty-state.compact { padding: 28px 18px; }
+.workspace .empty-state.compact > span { font-size: 25px; }
+
+/* Transactions and history */
+.workspace .transaction-toolbar { padding: 0 0 20px; border: 0; border-bottom: 1px solid var(--fs-border); border-radius: 0; background: transparent; align-items: end; }
+.transaction-toolbar-title { min-width: 0; }
+.transaction-toolbar-title h1 { font-size: clamp(23px, 2.3vw, 31px); letter-spacing: -.035em; line-height: 1.2; margin: 0 0 5px; color: var(--fs-ink); }
+.transaction-toolbar-title p { font-size: 12px; font-weight: 400; color: var(--fs-muted); margin: 0; }
+.workspace .transaction-toolbar > div:last-child { flex-wrap: wrap; justify-content: flex-end; }
+.workspace .transaction-workspace > .history-filters { background: var(--fs-surface); border-color: var(--fs-border); box-shadow: none; }
+.workspace .history-filters label { color: var(--fs-muted); }
+.workspace .history-filters :is(input, select) { border-color: var(--fs-border); color: var(--fs-ink); }
+.workspace .transaction-totals { gap: 12px; }
+.workspace .transaction-totals .metric-card { min-height: 133px; padding: 17px 18px; }
+.workspace .transaction-totals small { color: var(--fs-muted); }
+.workspace .transaction-totals strong { font-variant-numeric: tabular-nums; letter-spacing: -.025em; }
+.workspace .transaction-table th { background: #f1f6f4; color: var(--fs-muted); text-transform: none; letter-spacing: 0; font-size: 11px; }
+.workspace .transaction-table td { border-color: var(--fs-border); color: var(--fs-ink); }
+.workspace .transaction-table tbody tr:hover { background: #f6faf8; }
+.workspace .transaction-table td:nth-child(2) strong { overflow-wrap: anywhere; }
+.workspace .transaction-row-actions .link-button { min-width: 36px; min-height: 36px; display: grid; place-items: center; }
+.workspace .transaction-delete-actions { flex-wrap: wrap; }
+.workspace .transaction-form-card .eyebrow { display: none; }
+.workspace .transaction-form-card form > label { color: var(--fs-ink); }
+.workspace .transaction-form-card form > label :is(input, select, textarea) { border-color: var(--fs-border); min-height: 44px; }
+.workspace .transaction-kind-tabs { padding: 3px; background: #edf4f0; border-radius: 9px; width: max-content; max-width: 100%; }
+.workspace .transaction-kind-tabs button { border: 0; background: transparent; color: var(--fs-muted); min-height: 40px; }
+.workspace .transaction-kind-tabs button.active { background: #fff; color: #075d47; box-shadow: 0 1px 3px #172c381a; }
+.workspace .ocr-dropzone { border-color: #b9ccc6; background: #fff; }
+.workspace .ocr-drop-advice { background: #f3f8f5; border-color: var(--fs-border); }
+.workspace .ocr-queue-item { background: #f6faf8; border-color: var(--fs-border); }
+.workspace .ocr-warning { background: #fff6e8; color: #805008; border: 1px solid #ebd3a4; }
+.workspace .category-suggestion { background: #eef7f2; border-color: #c6e3d3; }
+.workspace .receipt-panel { border-color: var(--fs-border); }
+
+/* Categories and merchants share the same list and form pattern. */
+.workspace .category-toolbar { border-color: var(--fs-border); box-shadow: none; }
+.workspace .category-tabs { background: #edf4f0; border-color: var(--fs-border); }
+.workspace .category-tabs button { color: var(--fs-muted); min-height: 38px; }
+.workspace .category-tabs button.active { color: #075d47; box-shadow: none; }
+.workspace .category-search { border-color: var(--fs-border); color: var(--fs-muted); }
+.workspace .categories-list .section-head, .workspace .category-list li { border-color: var(--fs-border); }
+.workspace .category-icon { background: var(--fs-accent-soft); color: var(--fs-accent); font-size: 20px; }
+.workspace .category-icon-picker button { background: #f5f8f7; border-color: var(--fs-border); display: grid; place-items: center; }
+.workspace .category-icon-picker button.active { background: var(--fs-accent-soft); border-color: var(--fs-accent); color: var(--fs-accent); }
+.workspace .category-icon-picker button .material-symbols-outlined { font-size: 21px; }
+.workspace .category-actions .link-button { min-height: 36px; }
+.workspace .category-form-card { scroll-margin-top: 86px; }
+.workspace .category-rule { color: var(--fs-muted); }
+
+@media (max-width: 700px) {
+  .workspace .transaction-toolbar { align-items: stretch; }
+  .workspace .transaction-toolbar > div:last-child { justify-content: stretch; }
+  .workspace .transaction-toolbar button { min-height: 42px; }
+  .workspace .transaction-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workspace .transaction-totals .metric-card { min-height: 122px; padding: 14px; }
+  .workspace .transaction-totals strong { font-size: clamp(18px, 5vw, 23px); overflow-wrap: anywhere; }
+  .workspace .history-filters, .workspace .show-filters .history-filters { grid-template-columns: 1fr; }
+  .workspace .transaction-table-scroll { overflow: visible; }
+  .workspace .transaction-table, .workspace .transaction-table tbody, .workspace .transaction-table tr, .workspace .transaction-table td { display: block; width: 100%; }
+  .workspace .transaction-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .workspace .transaction-table tr { margin: 0 0 12px; padding: 12px 14px; border: 1px solid var(--fs-border); border-radius: var(--fs-radius); background: #fff; }
+  .workspace .transaction-table td, .workspace .transaction-table td:nth-child(2) { min-width: 0; padding: 5px 0; border: 0; white-space: normal; text-align: left; overflow-wrap: anywhere; }
+  .workspace .transaction-table td:nth-child(2) strong { font-size: 14px; }
+  .workspace .transaction-table td:first-child { font-size: 11px; color: var(--fs-muted); }
+  .workspace .transaction-table td:nth-child(3), .workspace .transaction-table td:nth-child(4) { font-size: 11px; color: var(--fs-muted); }
+  .workspace .transaction-table td:nth-child(3)::before { content: 'Danh mục: '; font-weight: 600; }
+  .workspace .transaction-table td:nth-child(4)::before { content: 'Tài khoản: '; font-weight: 600; }
+  .workspace .transaction-table td:nth-child(5) { font-size: 17px; padding-top: 10px; }
+  .workspace .transaction-table td:last-child { border-top: 1px solid var(--fs-border); margin-top: 9px; padding-top: 8px; }
+  .workspace .transaction-row-actions, .workspace .transaction-delete-actions { justify-content: flex-start; }
+  .workspace .ocr-dropzone { min-height: 300px; padding: 22px; }
+  .workspace .ocr-queue { min-height: 0; }
+  .workspace .ocr-queue-item { align-items: flex-start; flex-wrap: wrap; }
+  .workspace .ocr-queue-item button { width: 100%; justify-content: center; }
+  .workspace .category-toolbar > .button-primary, .workspace .category-search, .workspace .category-tabs { width: 100%; }
+  .workspace .category-toolbar > .button-primary { justify-content: center; }
+  .workspace .category-list li { align-items: flex-start; flex-wrap: wrap; }
+  .workspace .category-actions { width: 100%; margin-left: 51px; justify-content: flex-start; }
+  .workspace .category-form-card form { gap: 13px; }
+  .workspace .category-icon-picker button { width: 44px; height: 44px; }
+}
