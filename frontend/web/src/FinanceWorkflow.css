@@ -221,3 +221,33 @@
   .workspace .upcoming-range label { flex: 1; min-width: 125px; }
   .workspace .upcoming-list b { margin-left: 0; }
 }
+
+/* Import and OCR keep review and explicit save visually separate. */
+.workspace .statement-intro, .workspace .statement-preview { border-color: var(--fs-border); }
+.workspace .statement-intro h2, .workspace .statement-preview h2 { font-size: 18px; margin-bottom: 10px; }
+.workspace .statement-intro code { color: #075d47; background: #edf7f2; padding: 2px 4px; border-radius: 4px; overflow-wrap: anywhere; }
+.workspace .statement-intro form label { display: grid; gap: 7px; color: var(--fs-ink); font-size: 12px; font-weight: 600; }
+.workspace .statement-intro form :is(input, select) { min-height: 44px; width: 100%; }
+.workspace .statement-row { background: #fff; border-color: var(--fs-border); align-items: start; }
+.workspace .statement-row > div { min-width: 0; }
+.workspace .statement-row small { color: var(--fs-muted); line-height: 1.5; }
+.workspace .statement-row label { color: var(--fs-ink); font-size: 12px; font-weight: 600; }
+.workspace .statement-row .statement-select { min-height: 36px; }
+.workspace .statement-row .statement-warning { color: #805008; background: #fff8ea; border-radius: 7px; padding: 8px; line-height: 1.5; }
+.workspace .statement-row select { min-height: 40px; }
+.workspace .statement-confirm { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px; border: 1px solid #c6e3d3; border-radius: var(--fs-radius); background: #edf7f2; }
+.workspace .statement-confirm strong { color: var(--fs-ink); font-size: 14px; }
+.workspace .statement-confirm p { margin: 5px 0 0; color: var(--fs-muted); font-size: 12px; }
+.workspace .statement-confirm .button-primary { flex: none; }
+.workspace .ocr-file-button:focus-within { outline: 3px solid #3dbb90; outline-offset: 3px; }
+.workspace .ocr-drop-content h2 { color: var(--fs-ink); }
+.workspace .ocr-drop-content p, .workspace .ocr-drop-content small { color: var(--fs-muted); }
+.workspace .ocr-queue-item small { color: var(--fs-muted); line-height: 1.5; overflow-wrap: anywhere; }
+.workspace .receipt-preview { background: #f5f8f7; border-color: var(--fs-border); }
+@media (max-width: 760px) {
+  .workspace .statement-intro form { display: grid; grid-template-columns: 1fr; }
+  .workspace .statement-intro form label { min-width: 0; }
+  .workspace .statement-row { grid-template-columns: 1fr; }
+  .workspace .statement-confirm { display: grid; }
+  .workspace .statement-confirm .button-primary { width: 100%; }
+}
