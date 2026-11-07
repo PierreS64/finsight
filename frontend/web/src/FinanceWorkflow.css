@@ -14,7 +14,7 @@
 
 /* Transactions and history */
 .workspace .transaction-toolbar { padding: 0 0 20px; border: 0; border-bottom: 1px solid var(--fs-border); border-radius: 0; background: transparent; align-items: end; }
-.transaction-toolbar-title { min-width: 0; }
+.workspace .transaction-toolbar > .transaction-toolbar-title { display: block; flex: 1 1 220px; min-width: 0; }
 .transaction-toolbar-title h1 { font-size: clamp(23px, 2.3vw, 31px); letter-spacing: -.035em; line-height: 1.2; margin: 0 0 5px; color: var(--fs-ink); }
 .transaction-toolbar-title p { font-size: 12px; font-weight: 400; color: var(--fs-muted); margin: 0; }
 .workspace .transaction-toolbar > div:last-child { flex-wrap: wrap; justify-content: flex-end; }
@@ -58,9 +58,16 @@
 .workspace .category-actions .link-button { min-height: 36px; }
 .workspace .category-form-card { scroll-margin-top: 86px; }
 .workspace .category-rule { color: var(--fs-muted); }
+.workspace .merchant-form-card form { grid-template-columns: minmax(0, 1fr); }
+.workspace .merchant-form-card form input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--fs-border); border-radius: 8px; }
+.workspace .merchant-form-card form button { min-height: 42px; }
+.workspace :is(.planning-tabs, .analytics-tabs, .account-type-tabs, .category-tabs, .goal-filters, .recurring-filters) { scrollbar-width: none; }
+.workspace :is(.planning-tabs, .analytics-tabs, .account-type-tabs, .category-tabs, .goal-filters, .recurring-filters)::-webkit-scrollbar { display: none; }
 
 @media (max-width: 700px) {
   .workspace .transaction-toolbar { align-items: stretch; }
+  .workspace .transaction-toolbar > .transaction-toolbar-title { flex-basis: auto; }
+  .workspace .merchant-form-card form button { width: 100%; }
   .workspace .transaction-toolbar > div:last-child { justify-content: stretch; }
   .workspace .transaction-toolbar button { min-height: 42px; }
   .workspace .transaction-totals { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -258,7 +265,7 @@
 .workspace .analytics-toolbar input { border-color: var(--fs-border); }
 .workspace .analytics-balance { background: var(--fs-accent-soft); color: #075d47; }
 .workspace .analytics-balance strong { font-variant-numeric: tabular-nums; }
-.workspace .analytics-tabs { border-color: var(--fs-border); scrollbar-width: thin; }
+.workspace .analytics-tabs { border-color: var(--fs-border); scrollbar-width: none; }
 .workspace .analytics-tabs button { min-height: 44px; color: var(--fs-muted); }
 .workspace .analytics-tabs button.selected { border-color: var(--fs-accent); color: #075d47; }
 .workspace .analytics-metrics { gap: 12px; }

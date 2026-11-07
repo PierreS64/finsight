@@ -63,6 +63,7 @@
   .workspace, .workspace.sidebar-is-collapsed { display: block; }
   .workspace-sidebar { display: none; }
   .workspace-sidebar.mobile-menu-open { display: flex; position: fixed; z-index: 60; inset: 0 auto 0 0; width: min(310px, 88vw); height: 100dvh; box-shadow: 0 0 0 100vmax #13252d99; }
+  .workspace-sidebar.mobile-menu-open .sidebar-brand { position: sticky; top: 0; z-index: 2; background: var(--fs-surface); }
   .workspace-sidebar.mobile-menu-open .nav-label { display: inline; }
   .workspace-sidebar.mobile-menu-open .sidebar-group-label { display: block; }
   .workspace-sidebar.mobile-menu-open .sidebar-collapse { display: none; }
