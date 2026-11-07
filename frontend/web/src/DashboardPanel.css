@@ -41,3 +41,49 @@
 .dashboard-trend .charts-section h2{font-size:16px}
 @media(max-width:1100px){.dashboard-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.dashboard-main-grid,.dashboard-lower-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.dashboard-toolbar{flex-wrap:wrap}.dashboard-toolbar-note{display:none}.dashboard-toolbar>div{width:100%;margin-left:0}.dashboard-toolbar>div button{flex:1}.dashboard-metrics{grid-template-columns:1fr}}
+
+/* Dashboard hierarchy: current position, monthly movement, then decisions. */
+.dashboard-intro{display:flex;align-items:end;justify-content:space-between;gap:18px;margin:0 0 20px}
+.dashboard-intro h1{font-size:clamp(24px,2.5vw,34px);line-height:1.2;letter-spacing:-.035em;margin:0 0 7px;color:#172c38}
+.dashboard-intro p{font-size:13px;line-height:1.5;color:#526472;margin:0}
+.dashboard-source{font-size:11px;color:#526472;white-space:nowrap}
+.dashboard-toolbar{border-color:#dce6e5;box-shadow:none;padding:9px 12px;margin-bottom:20px}
+.dashboard-toolbar label{gap:9px;color:#3b505d}
+.dashboard-toolbar input{border:1px solid #dce6e5;border-radius:7px;background:#fff;min-height:34px}
+.dashboard-loading{height:8px;border-radius:99px;background:linear-gradient(90deg,#dceee6,#edf3f0,#dceee6);background-size:200% 100%;font-size:0;animation:dashboard-pulse 1.5s ease-in-out infinite}
+@keyframes dashboard-pulse{to{background-position:-200% 0}}
+.dashboard-metrics{grid-template-columns:minmax(0,1.3fr) repeat(2,minmax(0,1fr));gap:14px;margin-bottom:12px}
+.dashboard-metrics .metric-card{min-height:170px;padding:21px 22px;gap:16px}
+.dashboard-metrics .metric-card.featured{background:#173e3e;border-color:#173e3e}
+.dashboard-metrics .metric-card.featured strong{color:#fff}
+.dashboard-metrics small{font-size:12px;color:#526472}
+.dashboard-metrics strong{font-size:clamp(22px,2.15vw,30px);letter-spacing:-.03em;font-variant-numeric:tabular-nums;white-space:normal;line-height:1.25}
+.dashboard-metrics .metric-card>span{border-color:#e5ecea;color:#526472}
+.dashboard-net-flow{display:flex;align-items:baseline;gap:12px;margin:0 0 22px;padding:12px 2px 14px;border-bottom:1px solid #dce6e5;color:#526472;font-size:12px}
+.dashboard-net-flow strong{font-size:17px;color:#172c38;font-variant-numeric:tabular-nums}
+.dashboard-net-flow span:last-child{margin-left:auto}
+.dashboard-main-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:22px}
+.dashboard-main-grid.historical-month{grid-template-columns:1fr}
+.dashboard-main-grid>.surface-card{min-height:0}
+.dashboard-budget-card{gap:18px}
+.dashboard-budget-card .muted{margin-bottom:12px}
+.dashboard-budget-total{flex-wrap:wrap;line-height:1.5;color:#526472}
+.dashboard-budget-total strong{white-space:normal;color:#172c38;font-variant-numeric:tabular-nums}
+.dashboard-budget-track{height:8px;background:#e4ece9}
+.dashboard-budget-track i{background:#067658}
+.dashboard-lower-grid{grid-template-columns:minmax(0,1fr);gap:18px;margin-bottom:24px}
+.dashboard-trend .charts-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}
+.dashboard-trend .charts-grid>div:first-child{display:block}
+.dashboard-trend .charts-section{border-color:#dce6e5}
+.dashboard-recent{min-width:0}
+.dashboard-recent-table{scrollbar-width:thin}
+.insights-section,.explanation-section{margin-bottom:20px}
+.insight-card{background:#f4f8f6;border-color:#d5e7de}
+.insight-card.critical{background:#fff5f1;border-color:#efc5bc}
+.insight-card>span{color:#075d47}
+.insight-card.critical>span{color:#a0392f}
+.insight-card p,.explanation-note{color:#3b505d}
+@media(max-width:1100px){.dashboard-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.dashboard-main-grid{grid-template-columns:1fr}.dashboard-trend .charts-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:800px){.dashboard-metrics{grid-template-columns:1fr 1fr}.dashboard-metrics .featured{grid-column:1/-1}.dashboard-trend .charts-grid{grid-template-columns:1fr}}
+@media(max-width:700px){.dashboard-intro{display:block}.dashboard-source{display:block;margin-top:9px}.dashboard-toolbar{gap:10px}.dashboard-toolbar>div button{font-size:11px;padding-inline:7px}.dashboard-metrics{grid-template-columns:1fr}.dashboard-metrics .featured{grid-column:auto}.dashboard-metrics .metric-card{min-height:132px}.dashboard-net-flow{display:grid;grid-template-columns:1fr auto;gap:4px}.dashboard-net-flow span:last-child{grid-column:1/-1;margin-left:0}.dashboard-budget-total{display:grid;gap:4px}.dashboard-budget-card>.link-button{align-self:start}}
+@media(prefers-reduced-motion:reduce){.dashboard-loading{animation:none}}

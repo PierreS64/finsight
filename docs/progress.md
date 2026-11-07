@@ -264,6 +264,10 @@
 
 - Web design hook follow-up (2026-11-06): Replaced the stale `Inter` root declaration with the reference's Be Vietnam Pro. The email-confirmation card now clips its green top stripe inside the rounded edge; the stripe is present in the supplied `web_03_xac_nhan_email` frame, so the file-scoped `side-tab` detector exception is recorded in `.impeccable/config.json`. The hook's local consent and cache stay ignored. Web lint/build and the two-file design detector check passed; the confirmation-email screen was not reopened with a real sign-up link during this CSS-only pass.
 
+## Web UI system continuation, 2026-11-07
+
+- Shell and Dashboard: Introduced signed-in semantic tokens, grouped all existing routes in desktop and mobile navigation, removed the inactive notification icon, and added a keyboard skip link and Escape handling for the mobile menu. Dashboard now leads with current account balance, month-specific income and expense, net flow, budget, and the backend's current-month safe-to-spend figure. Historical months no longer display the current-month safe amount. Existing backend requests, lazy panels and owner-scoped data remain unchanged. Web lint, build and `git diff --check` passed. Browser visual review was unavailable because Computer Use could not establish the Chrome URL; no financial records were written.
+
 ## Decisions
 
 See `docs/decisions/0001-initial-architecture.md`. Spring Initializr currently rejects Spring Boot 3.x generation, so backend POM and Maven Wrapper were created directly.
