@@ -16,7 +16,7 @@ const percent = (part: bigint, total: bigint) => total > 0n ? Math.min(100, Numb
 
 function SpendingPath({ forecast, charts, limit }: { forecast: ExpenseForecast; charts: Charts; limit: string | null }) {
   const monthDays = forecast.elapsedDays + forecast.remainingDays;
-  const max = [minor(forecast.projectedMonthEnd ?? forecast.spent), minor(limit ?? '0'), minor(forecast.spent), 1n].reduce((a, b) => a > b ? a : b);
+  const max = [minor(forecast.projectedMonthEnd ?? forecast.spent), minor(limit ?? '0'), minor(forecast.spent)].reduce((a, b) => a > b ? a : b, 1n);
   const x = (day: number) => 8 + 304 * day / monthDays;
   const y = (amount: bigint) => 158 - Number(amount * 143n / max);
   let running = 0n;
