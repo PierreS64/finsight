@@ -31,6 +31,13 @@ test('ends loading when restoring a mobile session fails', async () => {
   expect(await screen.findByText('signed-out')).toBeTruthy();
 });
 
+test('restores the existing mobile session when Supabase responds successfully', async () => {
+  auth.getSession.mockResolvedValue({ data: { session: { access_token: 'restored-session' } } });
+  render(<SessionProvider><SessionStatus /></SessionProvider>);
+
+  expect(await screen.findByText('signed-in')).toBeTruthy();
+});
+
 test('keeps a newer auth event when a stale restoration fails', async () => {
   let authListener: (_event: string, session: object | null) => void = () => {};
   auth.onAuthStateChange.mockImplementation((listener) => {
