@@ -74,6 +74,6 @@ export default function TransfersPanel({ session, accounts, onChanged }: { sessi
       <label>Số tiền (VND)<input type="text" inputMode="decimal" required value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="Ví dụ: 50000" /></label>
       <label>Ngày chuyển<input type="date" required value={occurredOn} onChange={(event) => setOccurredOn(event.target.value)} /></label>
       <label>Ghi chú (tùy chọn)<textarea rows={3} maxLength={500} value={note} onChange={(event) => setNote(event.target.value)} placeholder="Ghi chú chuyển khoản" /></label>
-      <button className="button-primary" disabled={busy || !source || !destination || !amount.trim()}>{busy ? "Đang lưu..." : "Lưu chuyển khoản"}</button>
+      <button type="submit" className="button-primary" disabled={busy || !source || !destination || !amount.trim()}>{busy ? "Đang lưu..." : "Lưu chuyển khoản"}</button>
     </form>{message && <p className="auth-message" role="alert">{message}</p>}</section></div></>;
 }
