@@ -16,7 +16,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = client.auth.onAuthStateChange((_event, next) => {
       if (active) { authEventSeen = true; setSession(next); setLoading(false); }
     });
-    client.auth.getSession().then(({ data }) => { if (active && !authEventSeen) { setSession(data.session); setLoading(false); } });
+    client.auth.getSession()
+      .then(({ data }) => { if (active && !authEventSeen) { setSession(data.session); setLoading(false); } })
+      .catch(() => { if (active && !authEventSeen) { setSession(null); setLoading(false); } });
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
   return <SessionContext.Provider value={{ session, loading }}>{children}</SessionContext.Provider>;

@@ -53,6 +53,11 @@ export default function AnalyticsPanel({ session, onAssistant }: { session: Sess
       if (dashboardResult.status === "fulfilled") setDashboardSnapshot({ key, value: dashboardResult.value }); else setFailure({ key, message: "Không tải được chỉ số phân tích." });
       if (insightResult.status === "fulfilled") setInsightSnapshot({ key, value: insightResult.value }); else setInsightFailure({ key, message: "Không tải được nhận xét chi tiêu. Hãy chọn lại kỳ báo cáo hoặc tải lại trang." });
       if (explanationResult.status === "fulfilled") setExplanationSnapshot({ key, value: explanationResult.value }); else setExplanationFailure({ key, message: "Không tải được biến động chi tiêu. Hãy chọn lại kỳ báo cáo hoặc tải lại trang." });
+    }).catch(() => {
+      if (controller.signal.aborted) return;
+      setFailure({ key, message: "Không tải được chỉ số phân tích." });
+      setInsightFailure({ key, message: "Không tải được nhận xét chi tiêu. Hãy chọn lại kỳ báo cáo hoặc tải lại trang." });
+      setExplanationFailure({ key, message: "Không tải được biến động chi tiêu. Hãy chọn lại kỳ báo cáo hoặc tải lại trang." });
     });
     return () => controller.abort();
   }, [session.access_token, month, key]);
