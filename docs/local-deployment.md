@@ -57,4 +57,4 @@ Jenkinsfile chạy Maven verify/JUnit và báo cáo JaCoCo, web lint/build, mobi
 powershell -ExecutionPolicy Bypass -File .\scripts\stop-local-deployment.ps1
 ```
 
-Script dừng agent, các container FinSight, Docker Desktop rồi gọi `wsl --shutdown`. Named volumes giữ lại dashboard và lịch sử phân tích. Nếu còn container của dự án khác, script dừng các thành phần FinSight rồi báo lỗi và **không** tắt Docker/WSL để tránh làm gián đoạn dự án đó; hãy kiểm tra `docker ps` trước khi quyết định dừng các container khác.
+Script dừng agent, các container FinSight, Docker Desktop rồi gọi `wsl --shutdown`. Named volumes giữ lại dashboard và lịch sử phân tích. Nếu còn container của dự án khác, mặc định script dừng các thành phần FinSight rồi báo lỗi để tránh làm gián đoạn dự án đó. Khi muốn dừng **mọi** container trên máy trước khi tắt WSL, chạy cùng lệnh trên với tham số `-StopOtherContainers`.

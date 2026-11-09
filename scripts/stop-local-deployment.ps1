@@ -1,3 +1,5 @@
+param([switch]$StopOtherContainers)
+
 $ErrorActionPreference = 'Stop'
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $task = Get-ScheduledTask -TaskName 'FinSight Jenkins Agent' -ErrorAction SilentlyContinue
@@ -22,7 +24,11 @@ if (Test-DockerEngine) {
         Pop-Location
     }
     $remaining = @(& docker ps -q | Where-Object { $_ })
-    if ($remaining.Count -gt 0) { throw 'Other Docker containers are still running. Stop them before shutting down Docker Desktop and WSL.' }
+    if ($remaining.Count -gt 0) {
+        if (-not $StopOtherContainers) { throw 'Other Docker containers are still running. Pass -StopOtherContainers to stop them before shutting down Docker Desktop and WSL.' }
+        & docker stop $remaining | Out-Null
+        if ($LASTEXITCODE -ne 0) { throw 'At least one other Docker container could not stop.' }
+    }
     & docker desktop stop --timeout 60
     if ($LASTEXITCODE -ne 0) { throw 'Docker Desktop did not stop cleanly; WSL was left running.' }
 }
