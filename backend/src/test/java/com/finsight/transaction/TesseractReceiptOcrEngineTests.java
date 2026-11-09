@@ -1,5 +1,7 @@
 package com.finsight.transaction;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.Color;
@@ -9,11 +11,31 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 class TesseractReceiptOcrEngineTests {
+    @Test
+    void removesPrivateWorkDirectoryWhenEngineFails() throws Exception {
+        Set<Path> before = ocrWorkDirectories();
+        TesseractReceiptOcrEngine engine = new TesseractReceiptOcrEngine(
+                "missing-finsight-tesseract-command", "eng", "");
+
+        assertThrows(java.io.IOException.class, () -> engine.recognize(new byte[] { 1, 2, 3 }, ".png"));
+        assertEquals(before, ocrWorkDirectories());
+    }
+
+    private static Set<Path> ocrWorkDirectories() throws Exception {
+        try (Stream<Path> files = Files.list(Path.of(System.getProperty("java.io.tmpdir")))) {
+            return files.filter(path -> path.getFileName().toString().startsWith("finsight-ocr-"))
+                    .collect(Collectors.toSet());
+        }
+    }
+
     @Test
     void recognizesSyntheticReceiptWhenLocalEngineIsConfigured() throws Exception {
         String command = System.getenv("FINSIGHT_TESSERACT_COMMAND");
