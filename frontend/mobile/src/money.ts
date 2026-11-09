@@ -17,7 +17,10 @@ export function formatVnd(value: string): string {
   if (amount === null) return `${value} VND`;
   const sign = amount < 0n ? '-' : '';
   const absolute = amount < 0n ? -amount : amount;
-  const integer = String(absolute / 100n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  const digits = String(absolute / 100n);
+  const groups: string[] = [];
+  for (let end = digits.length; end > 0; end -= 3) groups.push(digits.slice(Math.max(0, end - 3), end));
+  const integer = groups.reverse().join('.');
   const cents = absolute % 100n;
   return `${sign}${integer}${cents ? `,${String(cents).padStart(2, '0').replace(/0$/, '')}` : ''} ₫`;
 }
