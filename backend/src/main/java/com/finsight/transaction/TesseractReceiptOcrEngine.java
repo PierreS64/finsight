@@ -62,7 +62,8 @@ public class TesseractReceiptOcrEngine implements ReceiptOcrEngine {
             return Files.createTempDirectory("finsight-ocr-",
                     PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------")));
         }
-        return Files.createTempDirectory("finsight-ocr-");
+        // Windows temp roots are scoped to the current user; a unique directory avoids shared file names.
+        return Files.createTempDirectory(Path.of(System.getProperty("java.io.tmpdir")), "finsight-ocr-");
     }
 
     private String run(Path source, Path output, Path errors, boolean adaptive) throws IOException {
