@@ -307,8 +307,8 @@
 ## SonarQube review (2026-11-09)
 
 - Local SonarQube scan on `fix/sonarqube-findings` reduced open issues from 30 (24 bugs, 4 vulnerabilities, 2 code smells) to 0; the Security Hotspots API also reported 0. The changes cover private OCR temp files and cleanup, receipt byte-array value semantics, explicit web submit buttons, handled async failures, deterministic money grouping, a safe forecast reducer seed, a configured mobile API endpoint, and a CSS font fallback. Each concern was committed separately.
-- Verification: Java 17 `mvnw verify -Pcoverage` passed 85 tests with 0 failures/errors and 1 optional skip; the two OCR engine tests ran with local Tesseract. Web lint/build, mobile TypeScript/lint, and four money-formatting cases on each frontend passed. The final Sonar analysis found 0 new violations.
-- The Sonar Quality Gate remains **failed** on new-code coverage (47.5% versus 80%) and new duplicated lines (7.4% versus 3%). Frontend coverage is not reported to Sonar and the web/mobile money formatters share implementation lines. Keep the PR open until these measures have a real test and reuse solution; do not lower the gate or claim a green scan.
+- Verification: Java 17 `mvnw verify -Pcoverage` passed 85 tests with 0 failures/errors and 2 environment-dependent skips. Web lint/build and 21 browser behavior tests passed; mobile TypeScript/lint and 6 session, configuration, and forecast tests passed. Node's exact-money checks passed for both clients. The Jenkins pipeline now merges web, mobile, and money LCOV reports before Sonar analysis, and GitHub CI runs the new frontend tests.
+- The local Sonar Quality Gate **passed** on commit `36f2f3b`: new-code coverage 80.9% (required 80%), new duplicated lines 0.0% (maximum 3%), 0 new violations, and 0 open issues. Browser locale formatting removes the duplicated web/mobile money grouping logic without using floating point. The gate threshold and coverage scope were not relaxed. Overall frontend coverage remains lower than new-code coverage, especially on mobile; the current gate result is not a claim that every legacy screen has automated tests.
 
 ## Decisions
 
