@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.FileSystems;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,10 +30,14 @@ public class TesseractReceiptOcrEngine implements ReceiptOcrEngine {
 
     @Override
     public String recognize(byte[] image, String extension) throws IOException {
-        Path source = Files.createTempFile("finsight-ocr-", extension);
-        Path output = Files.createTempFile("finsight-ocr-output-", ".txt");
-        Path errors = Files.createTempFile("finsight-ocr-errors-", ".txt");
+        Path workDirectory = createPrivateWorkDirectory();
+        Path source = null;
+        Path output = null;
+        Path errors = null;
         try {
+            source = Files.createTempFile(workDirectory, "source-", extension);
+            output = Files.createTempFile(workDirectory, "output-", ".txt");
+            errors = Files.createTempFile(workDirectory, "errors-", ".txt");
             Files.write(source, image);
             String standard = run(source, output, errors, false);
             if (score(standard) == 3) return standard;
@@ -44,10 +50,19 @@ public class TesseractReceiptOcrEngine implements ReceiptOcrEngine {
                 return standard;
             }
         } finally {
-            Files.deleteIfExists(source);
-            Files.deleteIfExists(output);
-            Files.deleteIfExists(errors);
+            if (source != null) Files.deleteIfExists(source);
+            if (output != null) Files.deleteIfExists(output);
+            if (errors != null) Files.deleteIfExists(errors);
+            Files.deleteIfExists(workDirectory);
         }
+    }
+
+    private static Path createPrivateWorkDirectory() throws IOException {
+        if (FileSystems.getDefault().supportedFileAttributeViews().contains("posix")) {
+            return Files.createTempDirectory("finsight-ocr-",
+                    PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwx------")));
+        }
+        return Files.createTempDirectory("finsight-ocr-");
     }
 
     private String run(Path source, Path output, Path errors, boolean adaptive) throws IOException {

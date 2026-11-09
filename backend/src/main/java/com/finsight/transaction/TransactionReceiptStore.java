@@ -41,6 +41,29 @@ public class TransactionReceiptStore {
                 .map(StoredImage::transactionId).findFirst();
     }
 
-    public record Receipt(String contentType, byte[] bytes) {}
-    private record StoredImage(UUID transactionId, byte[] bytes) {}
+    public static final class Receipt {
+        private final String contentType;
+        private final byte[] bytes;
+
+        public Receipt(String contentType, byte[] bytes) {
+            this.contentType = contentType;
+            this.bytes = bytes;
+        }
+
+        public String contentType() { return contentType; }
+        public byte[] bytes() { return bytes; }
+    }
+
+    private static final class StoredImage {
+        private final UUID transactionId;
+        private final byte[] bytes;
+
+        private StoredImage(UUID transactionId, byte[] bytes) {
+            this.transactionId = transactionId;
+            this.bytes = bytes;
+        }
+
+        private UUID transactionId() { return transactionId; }
+        private byte[] bytes() { return bytes; }
+    }
 }
