@@ -160,4 +160,5 @@ Pop-Location
 - [Quy ước API](docs/api-conventions.md)
 - [Quy trình phát triển](docs/development-workflow.md)
 - [Tiến độ và bằng chứng kiểm tra](docs/progress.md)
+- [Đóng gói bản demo LAN](docs/release-lan-preview.md)
 - [Các quyết định kiến trúc](docs/decisions/0001-initial-architecture.md)
