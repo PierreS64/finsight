@@ -1,0 +1,13 @@
+{
+  "uid": "finsight-api",
+  "title": "FinSight API",
+  "schemaVersion": 41,
+  "version": 1,
+  "refresh": "15s",
+  "time": {"from": "now-1h", "to": "now"},
+  "panels": [
+    {"id": 1, "type": "stat", "title": "API available", "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "up{job=\"finsight-api\"}"}], "gridPos": {"h": 7, "w": 6, "x": 0, "y": 0}},
+    {"id": 2, "type": "timeseries", "title": "HTTP requests per second", "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(rate(http_server_requests_seconds_count{job=\"finsight-api\"}[5m]))"}], "gridPos": {"h": 8, "w": 12, "x": 6, "y": 0}},
+    {"id": 3, "type": "timeseries", "title": "JVM heap used", "datasource": {"type": "prometheus", "uid": "prometheus"}, "targets": [{"expr": "sum(jvm_memory_used_bytes{job=\"finsight-api\",area=\"heap\"})"}], "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}}
+  ]
+}

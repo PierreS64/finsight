@@ -1,0 +1,72 @@
+name: finsight-demo
+services:
+  api:
+    build: ./backend
+    image: finsight-api:demo
+    restart: unless-stopped
+    ports:
+      - "8086:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: supabase
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in the untracked .env}
+      DATABASE_USERNAME: ${DATABASE_USERNAME:?Set DATABASE_USERNAME in the untracked .env}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in the untracked .env}
+      SUPABASE_ISSUER_URI: ${SUPABASE_ISSUER_URI:?Set SUPABASE_ISSUER_URI in the untracked .env}
+      SUPABASE_JWKS_URI: ${SUPABASE_JWKS_URI:?Set SUPABASE_JWKS_URI in the untracked .env}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-6-luna}
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+  web:
+    build:
+      context: ./frontend/web
+      args:
+        VITE_SUPABASE_URL: ${SUPABASE_URL:?Set SUPABASE_URL in the untracked .env}
+        VITE_SUPABASE_PUBLISHABLE_KEY: ${SUPABASE_PUBLISHABLE_KEY:?Set SUPABASE_PUBLISHABLE_KEY in the untracked .env}
+        VITE_API_BASE_URL: http://127.0.0.1:8086
+    image: finsight-web:demo
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5173:80"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus:v3.7.3
+    restart: unless-stopped
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.path=/prometheus", "--storage.tsdb.retention.time=7d"]
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    depends_on:
+      api:
+        condition: service_healthy
+
+  grafana:
+    image: grafana/grafana:12.2.1
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in the untracked .env}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/monitoring/grafana:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus_data:
+  grafana_data:
