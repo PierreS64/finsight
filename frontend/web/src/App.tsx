@@ -189,7 +189,9 @@ export default function App() {
       if (event === "SIGNED_OUT") { sessionStorage.removeItem("finsight-password-recovery"); setRecovering(false); }
       setSession(next); setLoading(false);
     });
-    client.auth.getSession().then(({ data }) => { if (active && !authEventSeen) { setSession(data.session); setLoading(false); } });
+    client.auth.getSession()
+      .then(({ data }) => { if (active && !authEventSeen) { setSession(data.session); setLoading(false); } })
+      .catch(() => { if (active && !authEventSeen) { setSession(null); setLoading(false); } });
     return () => { active = false; subscription.unsubscribe(); };
   }, []);
   function openAuth(mode: "signin" | "signup") { setAuthMode(mode); window.location.hash = mode === "signin" ? "account" : "register"; window.scrollTo(0, 0); }

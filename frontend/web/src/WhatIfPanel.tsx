@@ -42,7 +42,7 @@ export default function WhatIfPanel({ session, month }: { session: Session; mont
     <p className="muted">Nhập mức tăng hoặc giảm chi tiêu của tháng đang xem. Bỏ trống hạn mức để dùng ngân sách đã lưu. Tải lại trang sẽ xóa kịch bản.</p>
     <form className="what-if-form" onSubmit={simulate}><label>Điều chỉnh chi tiêu (VND)<input value={adjustment} onChange={(event) => { setAdjustment(event.target.value); setResult(null); }} inputMode="decimal" placeholder="Ví dụ: 500000 hoặc -100000" /></label>
       <label>Hạn mức giả định (VND, không bắt buộc)<input value={budget} onChange={(event) => { setBudget(event.target.value); setResult(null); }} inputMode="decimal" placeholder="Dùng hạn mức đã lưu" /></label>
-      <button className="button-primary" disabled={busy}>{busy ? "Đang tính..." : "Xem kịch bản"}</button></form>
+      <button type="submit" className="button-primary" disabled={busy}>{busy ? "Đang tính..." : "Xem kịch bản"}</button></form>
     {!!error && <p className="inline-error" role="alert">{error}</p>}
     {scenario && <><div className="what-if-results"><article><small>CHI TIÊU DỰ KIẾN</small><strong>{formatVnd(scenario.projectedExpense)}</strong><span>Đã ghi {formatVnd(scenario.actualExpense)} · điều chỉnh {formatVnd(scenario.expenseAdjustment)}</span></article>
       <article><small>SỐ DƯ DỰ KIẾN</small><strong>{formatVnd(scenario.projectedBalance)}</strong><span>Số dư hiện tại {formatVnd(scenario.actualBalance)}</span></article>

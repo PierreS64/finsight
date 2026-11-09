@@ -1,7 +1,8 @@
 import type { Session } from '@supabase/supabase-js';
 import * as FileSystem from 'expo-file-system';
 
-const apiBase = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://10.0.2.2:8086';
+const apiBase = process.env.EXPO_PUBLIC_API_BASE_URL;
+if (!apiBase) throw new Error('Cần cấu hình EXPO_PUBLIC_API_BASE_URL trước khi mở ứng dụng.');
 export type AccountType = 'CASH' | 'BANK' | 'E_WALLET' | 'OTHER';
 export type Account = { id: string; name: string; accountType: AccountType; openingBalance: string; currentBalance: string; currencyCode: string };
 export type Profile = { userId: string; displayName: string | null; currencyCode: string };

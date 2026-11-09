@@ -1,3 +1,5 @@
+const vndIntegerFormat = new Intl.NumberFormat("vi-VN", { maximumFractionDigits: 0 });
+
 function minorUnits(value: string): bigint | null {
   const match = /^(-?)(\d+)(?:\.(\d{1,2}))?$/.exec(value);
   if (!match) return null;
@@ -17,7 +19,7 @@ export function formatVnd(value: string): string {
   if (amount === null) return `${value} VND`;
   const sign = amount < 0n ? "-" : "";
   const absolute = amount < 0n ? -amount : amount;
-  const integer = String(absolute / 100n).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  const integer = vndIntegerFormat.format(absolute / 100n);
   const cents = absolute % 100n;
   return `${sign}${integer}${cents ? `,${String(cents).padStart(2, "0").replace(/0$/, "")}` : ""} ₫`;
 }

@@ -18,10 +18,17 @@ pipeline {
             post { always { junit 'backend/target/surefire-reports/*.xml' } }
         }
         stage('Web Lint and Build') {
-            steps { bat 'cd frontend\\web && npm ci && npm run lint && npm run build' }
+            steps { bat 'cd frontend\\web && npm ci && npm run lint && npm run build && npm run test:coverage' }
         }
         stage('Mobile TypeScript and Expo') {
-            steps { bat 'cd frontend\\mobile && npm ci && npx tsc --noEmit && npx expo-doctor' }
+            steps { bat 'cd frontend\\mobile && npm ci && npx tsc --noEmit && npx expo-doctor && npm run test:coverage' }
+        }
+        stage('Frontend Coverage Report') {
+            steps {
+                bat 'if not exist coverage mkdir coverage'
+                bat 'node --experimental-strip-types --experimental-test-coverage --test-reporter=spec --test-reporter=lcov --test-reporter-destination=stdout --test-reporter-destination=coverage/frontend.lcov --test scripts/check-money.mjs'
+                bat 'node scripts/merge-frontend-lcov.mjs'
+            }
         }
         stage('Docker Image Build') {
             steps {

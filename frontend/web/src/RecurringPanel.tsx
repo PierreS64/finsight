@@ -120,6 +120,6 @@ export default function RecurringPanel({ session, accounts, onChanged }: { sessi
       <label>Chu kỳ<select value={cadence} onChange={(event) => setCadence(event.target.value as Cadence)}><option value="WEEKLY">Hàng tuần</option><option value="MONTHLY">Hàng tháng</option></select></label>
       <label>Ngày đến hạn tiếp theo<input type="date" value={nextDueOn} onChange={(event) => setNextDueOn(event.target.value)} required /></label>
       <label>Ghi chú (tùy chọn)<textarea value={note} onChange={(event) => setNote(event.target.value)} rows={3} maxLength={500} /></label>
-      <button className="button-primary" disabled={busy || !accounts.length || !availableCategories.length}>{busy ? "Đang lưu..." : editing ? "Lưu thay đổi" : "Tạo lịch"}</button>{editing && <button type="button" className="button-outline" onClick={reset}>Hủy sửa</button>}
+      <button type="submit" className="button-primary" disabled={busy || !accounts.length || !availableCategories.length}>{busy ? "Đang lưu..." : editing ? "Lưu thay đổi" : "Tạo lịch"}</button>{editing && <button type="button" className="button-outline" onClick={reset}>Hủy sửa</button>}
     </form>{message && <p className="auth-message" role="status">{message}</p>}</section></div>;
 }

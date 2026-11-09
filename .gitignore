@@ -10,6 +10,7 @@ docs/reports/
 **/target/
 **/.expo/
 **/build/
+coverage/
 *.log
 .idea/
 .vscode/

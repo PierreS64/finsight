@@ -36,7 +36,9 @@ jobs:
         run: npm ci
       - name: Lint and build
         working-directory: frontend/web
-        run: npm run lint && npm run build
+        run: npm run lint && npm run build && npm run test:coverage
+      - name: Exact-money checks
+        run: node --experimental-strip-types --test scripts/check-money.mjs
       - name: Report calendar boundaries
         run: node --experimental-strip-types --test scripts/check-report-date.mjs
 
@@ -53,6 +55,6 @@ jobs:
         run: npm ci
       - name: Typecheck, lint and Expo Doctor
         working-directory: frontend/mobile
-        run: npx tsc --noEmit && npm run lint && npx expo-doctor
+        run: npx tsc --noEmit && npm run lint && npx expo-doctor && npm run test:coverage
       - name: Recovery link parsing
         run: node --experimental-strip-types --test scripts/check-recovery-link.mjs

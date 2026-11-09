@@ -304,6 +304,12 @@
 - Started the local Jenkins controller and `windows-finsight` agent manually. [Jenkins build #6](http://127.0.0.1:8085/job/finsight-develop/6/) checked out `4fee6a1` and finished `SUCCESS`: 84 backend tests, 0 failures, 2 skips; Web, Mobile and Docker image stages completed. The Jenkins controller, Docker Desktop and WSL were then stopped at the owner's request; the agent task returned to Ready.
 - Jira search returned 53 FNS issues, all Done. Board 4 still has one future, unstarted `FNS Sprint 1`; no sprint burndown or completed sprint is claimed. The current Android installation remains a development build requiring local Metro/API and USB reverse for a phone demo, not a standalone deployed release. See [demo checklist](demo-checklist-2026-11-10.md).
 
+## SonarQube review (2026-11-09)
+
+- Local SonarQube scan on `fix/sonarqube-findings` reduced open issues from 30 (24 bugs, 4 vulnerabilities, 2 code smells) to 0; the Security Hotspots API also reported 0. The changes cover private OCR temp files and cleanup, receipt byte-array value semantics, explicit web submit buttons, handled async failures, deterministic money grouping, a safe forecast reducer seed, a configured mobile API endpoint, and a CSS font fallback. Each concern was committed separately.
+- Verification: Java 17 `mvnw verify -Pcoverage` passed 85 tests with 0 failures/errors and 2 environment-dependent skips. Web lint/build and 21 browser behavior tests passed; mobile TypeScript/lint and 6 session, configuration, and forecast tests passed. Node's exact-money checks passed for both clients. The Jenkins pipeline now merges web, mobile, and money LCOV reports before Sonar analysis, and GitHub CI runs the new frontend tests.
+- The local Sonar Quality Gate **passed** on commit `36f2f3b`: new-code coverage 80.9% (required 80%), new duplicated lines 0.0% (maximum 3%), 0 new violations, and 0 open issues. Browser locale formatting removes the duplicated web/mobile money grouping logic without using floating point. The gate threshold and coverage scope were not relaxed. Overall frontend coverage remains lower than new-code coverage, especially on mobile; the current gate result is not a claim that every legacy screen has automated tests.
+
 ## Decisions
 
 See `docs/decisions/0001-initial-architecture.md`. Spring Initializr currently rejects Spring Boot 3.x generation, so backend POM and Maven Wrapper were created directly.
