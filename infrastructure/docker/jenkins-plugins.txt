@@ -2,3 +2,5 @@ workflow-aggregator
 git
 junit
 timestamper
+credentials-binding
+plain-credentials
