@@ -9,8 +9,8 @@ flowchart LR
   GitHub[GitHub develop] --> Jenkins[Jenkins trên Docker]
   Agent[Windows Jenkins agent] --> Jenkins
   Jenkins --> Tests[Backend Web Mobile tests]
-  Tests --> Sonar[SonarQube quality gate]
-  Sonar --> Images[Docker images API và Web]
+  Tests --> Images[Docker images API và Web]
+  Images --> Sonar[SonarQube quality gate]
   Images --> Compose[Docker Compose local]
   Browser[Trình duyệt] --> Web[Web 127.0.0.1:5173]
   Phone[Android cùng mạng] --> API[API LAN:8086]
