@@ -304,6 +304,12 @@
 - Started the local Jenkins controller and `windows-finsight` agent manually. [Jenkins build #6](http://127.0.0.1:8085/job/finsight-develop/6/) checked out `4fee6a1` and finished `SUCCESS`: 84 backend tests, 0 failures, 2 skips; Web, Mobile and Docker image stages completed. The Jenkins controller, Docker Desktop and WSL were then stopped at the owner's request; the agent task returned to Ready.
 - Jira search returned 53 FNS issues, all Done. Board 4 still has one future, unstarted `FNS Sprint 1`; no sprint burndown or completed sprint is claimed. The current Android installation remains a development build requiring local Metro/API and USB reverse for a phone demo, not a standalone deployed release. See [demo checklist](demo-checklist-2026-11-10.md).
 
+## SonarQube review (2026-11-09)
+
+- Local SonarQube scan on `fix/sonarqube-findings` reduced open issues from 30 (24 bugs, 4 vulnerabilities, 2 code smells) to 0; the Security Hotspots API also reported 0. The changes cover private OCR temp files and cleanup, receipt byte-array value semantics, explicit web submit buttons, handled async failures, deterministic money grouping, a safe forecast reducer seed, a configured mobile API endpoint, and a CSS font fallback. Each concern was committed separately.
+- Verification: Java 17 `mvnw verify -Pcoverage` passed 85 tests with 0 failures/errors and 1 optional skip; the two OCR engine tests ran with local Tesseract. Web lint/build, mobile TypeScript/lint, and four money-formatting cases on each frontend passed. The final Sonar analysis found 0 new violations.
+- The Sonar Quality Gate remains **failed** on new-code coverage (47.5% versus 80%) and new duplicated lines (7.4% versus 3%). Frontend coverage is not reported to Sonar and the web/mobile money formatters share implementation lines. Keep the PR open until these measures have a real test and reuse solution; do not lower the gate or claim a green scan.
+
 ## Decisions
 
 See `docs/decisions/0001-initial-architecture.md`. Spring Initializr currently rejects Spring Boot 3.x generation, so backend POM and Maven Wrapper were created directly.
