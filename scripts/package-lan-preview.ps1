@@ -11,7 +11,7 @@ $bundle = Join-Path $root 'frontend/mobile/android/app/build/generated/assets/cr
 foreach ($path in @($apk, $jar, $bundle, (Join-Path $web 'index.html'))) {
     if (-not (Test-Path -LiteralPath $path)) { throw "Missing build output: $path" }
 }
-$bundleText = [Text.Encoding]::Latin1.GetString([IO.File]::ReadAllBytes($bundle))
+$bundleText = [Text.Encoding]::GetEncoding('ISO-8859-1').GetString([IO.File]::ReadAllBytes($bundle))
 if (-not $bundleText.Contains("${ApiHost}:8086")) {
     throw "Android bundle does not contain the requested LAN API host $ApiHost. Rebuild it first."
 }
@@ -54,7 +54,7 @@ This package contains a signed Android APK, a Spring Boot API JAR and a static w
 This is a private LAN preview, not a public Internet deployment or Google Play release. Keep the local release signing key backed up separately; future APK updates for package `com.finsight.app` must use the same key.
 "@ | Set-Content -LiteralPath (Join-Path $stage 'README.md') -Encoding UTF8
 $manifest = Get-ChildItem -LiteralPath $stage -File -Recurse | ForEach-Object {
-    $relative = [IO.Path]::GetRelativePath($stage, $_.FullName)
+    $relative = $_.FullName.Substring($stage.Length + 1)
     "$(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256 | Select-Object -ExpandProperty Hash)  $relative"
 }
 $manifest | Set-Content -LiteralPath (Join-Path $stage 'SHA256SUMS.txt') -Encoding ASCII
