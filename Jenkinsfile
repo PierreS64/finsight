@@ -7,6 +7,10 @@ pipeline {
     }
     tools { jdk 'jdk17' }
     options { timestamps(); disableConcurrentBuilds() }
+    parameters {
+        booleanParam(name: 'DEPLOY_LOCAL', defaultValue: false, description: 'Deploy the validated build on this Windows demo host')
+        string(name: 'LOCAL_ENV_FILE', defaultValue: 'D:\\Codes\\finsight\\.env', description: 'Path to the ignored local environment file on the Windows agent')
+    }
     stages {
         stage('Checkout Source') { steps { checkout scm } }
         stage('Backend Build and Tests') {
@@ -30,6 +34,13 @@ pipeline {
                 withCredentials([string(credentialsId: 'finsight-sonar-token', variable: 'SONAR_TOKEN')]) {
                     bat 'docker run --rm -e SONAR_HOST_URL=http://host.docker.internal:9000 -e SONAR_TOKEN -v finsight_sonar_cache:/opt/sonar-scanner/.sonar/cache -v "%CD%:/usr/src" sonarsource/sonar-scanner-cli:latest "-Dsonar.qualitygate.wait=true"'
                 }
+            }
+        }
+        stage('Deploy Local Demo') {
+            when { expression { params.DEPLOY_LOCAL } }
+            steps {
+                bat 'docker compose --env-file "%LOCAL_ENV_FILE%" -f compose.demo.yaml up -d --build'
+                bat 'powershell -ExecutionPolicy Bypass -File scripts\\check-local-deployment.ps1'
             }
         }
     }

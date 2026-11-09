@@ -38,6 +38,8 @@ Copy `frontend/mobile/.env.example` to `frontend/mobile/.env.local` and set `EXP
 
 Start Docker Desktop, then run `docker compose up --build` for the local API demo. This uses H2 and does not connect to Supabase. For optional local PostgreSQL: set `LOCAL_POSTGRES_PASSWORD` in an untracked root `.env` and run `docker compose -f infrastructure/docker/compose.postgres.yaml up -d`. The API is not wired to that local database by default.
 
+For the real Supabase-backed web/API Docker demo with local Prometheus and Grafana, use `compose.demo.yaml` and the [local deployment guide](local-deployment.md). It is separate from the H2-only scaffold above.
+
 ## Jenkins and external accounts
 
 `Jenkinsfile` targets a Windows agent labeled `windows-finsight`. Jenkins controller and agent processes run on Java 21, while the job selects the configured Jenkins JDK tool named `jdk17` for the FinSight build. On this machine its path is `C:\Program Files\Eclipse Adoptium\jdk-17.0.20.101-hotspot`. Git, Node/npm and Docker CLI must also be available to the agent.

@@ -127,6 +127,8 @@ Set-Location backend
 
 Health ở `http://127.0.0.1:8080/actuator/health`. Có thể chạy Docker Desktop và `docker compose up --build` từ thư mục gốc để khởi động cùng profile local trên cổng `8080`.
 
+Để triển khai **đầy đủ web/API và giám sát trên máy cá nhân** với Supabase thật, xem [triển khai local](docs/local-deployment.md). Cấu hình này dùng `compose.demo.yaml` và không tự khởi động cùng Windows.
+
 ## Kiểm tra dự án
 
 Chạy các nhóm lệnh sau từ thư mục gốc repository:
