@@ -1,5 +1,5 @@
 param(
-    [string]$Version = '1.0.0-rc.3',
+    [string]$Version = '1.0.0-rc.3.1',
     [Parameter(Mandatory)][string]$ApiHost,
     [string]$FallbackApiHost
 )

@@ -25,7 +25,7 @@ powershell -ExecutionPolicy Bypass -File .\scripts\package-lan-preview.ps1 -ApiH
 
 ## Run the package
 
-Unzip `FinSight-1.0.0-rc.3-LAN.zip`. Keep the private `.env` outside the ZIP and start the API in one terminal:
+Unzip `FinSight-1.0.0-rc.3.1-LAN.zip`. Keep the private `.env` outside the ZIP and start the API in one terminal:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\start-api.ps1 -EnvFile D:\Codes\finsight\.env
