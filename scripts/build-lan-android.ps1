@@ -1,9 +1,13 @@
-param([Parameter(Mandatory)][string]$ApiHost)
+param([Parameter(Mandatory)][string]$ApiHost, [string]$FallbackApiHost)
 $ErrorActionPreference = 'Stop'
 $address = $null
 if (-not [Net.IPAddress]::TryParse($ApiHost, [ref]$address) -or
     $address.AddressFamily -ne [Net.Sockets.AddressFamily]::InterNetwork) {
     throw 'ApiHost must be an IPv4 address reachable from the Android phone.'
+}
+if ($FallbackApiHost -and (-not [Net.IPAddress]::TryParse($FallbackApiHost, [ref]$address) -or
+    $address.AddressFamily -ne [Net.Sockets.AddressFamily]::InterNetwork)) {
+    throw 'FallbackApiHost must be an IPv4 address reachable from the Android phone.'
 }
 $root = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $mobile = Join-Path $root 'frontend/mobile'
@@ -25,6 +29,8 @@ $env:FINSIGHT_LAN_PREVIEW = '1'
 $env:FINSIGHT_RELEASE_KEYSTORE_PATH = $key
 $env:FINSIGHT_RELEASE_KEYSTORE_PASSWORD = Get-Content -LiteralPath $passwordFile -Raw
 $env:EXPO_PUBLIC_API_BASE_URL = "http://${ApiHost}:8086"
+if ($FallbackApiHost) { $env:EXPO_PUBLIC_API_FALLBACK_URL = "http://${FallbackApiHost}:8086" }
+else { Remove-Item Env:EXPO_PUBLIC_API_FALLBACK_URL -ErrorAction SilentlyContinue }
 $env:CI = '1'
 Push-Location $mobile
 try {
@@ -41,3 +47,4 @@ $apk = Join-Path $native 'app/build/outputs/apk/release/app-release.apk'
 if ($LASTEXITCODE -ne 0) { throw 'APK signature verification failed.' }
 Write-Output "Signed LAN APK: $apk"
 Write-Output "Embedded API URL: $env:EXPO_PUBLIC_API_BASE_URL"
+if ($FallbackApiHost) { Write-Output "Embedded fallback API URL: $env:EXPO_PUBLIC_API_FALLBACK_URL" }
