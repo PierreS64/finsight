@@ -41,7 +41,7 @@ Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'release/start-web.ps1') -Destin
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'release/serve-web.mjs') -Destination $stage
 $head = (git -C $root rev-parse --short HEAD).Trim()
 @"
-# FinSight $Version — LAN preview
+# FinSight $Version - LAN preview
 
 Source commit: $head
 Android API URL baked into APK: http://${ApiHost}:8086
@@ -50,13 +50,13 @@ Fallback API URL: $(if ($FallbackApiHost) { "http://${FallbackApiHost}:8086" } e
 This package contains a signed Android APK, a Spring Boot API JAR and a static web build. It contains no .env, database password, OpenAI key, signing key or user data.
 
 1. Connect the PC and Android phone to the same Wi-Fi network. The app checks the two configured API addresses and uses the reachable one. If both addresses change, rebuild the APK.
-2. Place a private `.env` beside `start-api.ps1`, or pass its existing path with `-EnvFile`. Never share that file with the release ZIP.
-3. In one PowerShell terminal run `powershell -ExecutionPolicy Bypass -File .\start-api.ps1 -EnvFile D:\Codes\finsight\.env`. Check `http://${ApiHost}:8086/actuator/health` on the phone, or the fallback address when using that network. Windows Firewall must allow inbound TCP 8086 for the connected network.
-4. In a second terminal run `powershell -ExecutionPolicy Bypass -File .\start-web.ps1`. Open `http://127.0.0.1:5173/` on the PC. Node.js is required for this static server.
-5. Install `FinSight-Android.apk` on Android. The release build embeds its JavaScript; Metro, Expo Go, USB reverse, Docker and WSL are not required.
+2. Place a private ``.env`` beside ``start-api.ps1``, or pass its existing path with ``-EnvFile``. Never share that file with the release ZIP.
+3. In one PowerShell terminal run ``powershell -ExecutionPolicy Bypass -File .\start-api.ps1 -EnvFile D:\Codes\finsight\.env``. Check ``http://${ApiHost}:8086/actuator/health`` on the phone, or the fallback address when using that network. Windows Firewall must allow inbound TCP 8086 for the connected network.
+4. In a second terminal run ``powershell -ExecutionPolicy Bypass -File .\start-web.ps1``. Open ``http://127.0.0.1:5173/`` on the PC. Node.js is required for this static server.
+5. Install ``FinSight-Android.apk`` on Android. The release build embeds its JavaScript; Metro, Expo Go, USB reverse, Docker and WSL are not required.
 6. Stop both foreground processes with Ctrl+C. No WSL service is started by these scripts.
 
-This is a private LAN preview, not a public Internet deployment or Google Play release. Keep the local release signing key backed up separately; future APK updates for package `com.finsight.app` must use the same key.
+This is a private LAN preview, not a public Internet deployment or Google Play release. Keep the local release signing key backed up separately; future APK updates for package ``com.finsight.app`` must use the same key.
 "@ | Set-Content -LiteralPath (Join-Path $stage 'README.md') -Encoding UTF8
 $manifest = Get-ChildItem -LiteralPath $stage -File -Recurse | ForEach-Object {
     $relative = $_.FullName.Substring($stage.Length + 1)

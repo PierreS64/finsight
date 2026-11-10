@@ -313,7 +313,7 @@
 ## Two-network LAN preview (2026-11-10)
 
 - RC3 embeds the home PC address `192.168.1.67` and the current school Wi-Fi address `172.17.160.151`. Android probes the public API health endpoint and uses the reachable address for authenticated API requests, OCR uploads and receipt downloads. A failed read can reselect the address; failed writes are not automatically retried. Android versionCode is 2 so it can update the signed RC2 installation.
-- Mobile TypeScript, lint and nine tests passed; web lint/build passed; backend Maven verify passed 85 tests with 0 failures/errors and 2 skips. The signed Android release build completed and installed as `com.finsight.app` version 1.0.1 on the owner's physical phone. From that phone's school Wi-Fi, `172.17.160.151:8086/actuator/health` returned HTTP 200 with `UP`. Signed-in application acceptance on that network is pending the owner's on-device check. School Wi-Fi currently uses a Windows Public profile; no firewall rule was changed. If DHCP changes either address, the APK must be rebuilt.
+- Mobile TypeScript, lint and nine tests passed; web lint/build passed; backend Maven verify passed 85 tests with 0 failures/errors and 2 skips. The signed Android release build completed and installed as `com.finsight.app` version 1.0.1 on the owner's physical phone. From that phone's school Wi-Fi, `172.17.160.151:8086/actuator/health` returned HTTP 200 with `UP`; the owner confirmed the installed app loaded its dashboard over that network. The RC3 ZIP manifest matched all packaged files and contained no credential paths. School Wi-Fi currently uses a Windows Public profile; no firewall rule was changed. If DHCP changes either address, the APK must be rebuilt.
 
 ## Decisions
 
