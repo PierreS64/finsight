@@ -1,10 +1,10 @@
 # FinSight LAN preview release
 
-This package is for a private demo on one Windows PC and an Android phone on the same Wi-Fi network. The phone runs an embedded JavaScript bundle without Metro, Expo Go, USB reverse, Docker or WSL. The PC runs the packaged Spring Boot JAR and serves the static web build. It is not an Internet or Google Play deployment.
+This package is for a private demo on one Windows PC and an Android phone on the same Wi-Fi network. RC3 embeds the home address `192.168.1.67` and current school address `172.17.160.151`; the app selects the reachable API. The phone runs an embedded JavaScript bundle without Metro, Expo Go, USB reverse, Docker or WSL. The PC runs the packaged Spring Boot JAR and serves the static web build. It is not an Internet or Google Play deployment.
 
 ## Build on the release PC
 
-From the repository root in PowerShell, verify the normal backend, web and mobile checks in `README.md`. Keep the existing private `.env`, `frontend/web/.env.local` and `frontend/mobile/.env.local` on this PC. The web build uses `http://127.0.0.1:8086`; the Android build uses the PC's current Wi-Fi IPv4 address. The example below uses `192.168.1.67` and must be changed if the address changes.
+From the repository root in PowerShell, verify the normal backend, web and mobile checks in `README.md`. Keep the existing private `.env`, `frontend/web/.env.local` and `frontend/mobile/.env.local` on this PC. The web build uses `http://127.0.0.1:8086`; the Android build embeds both LAN addresses. Check the PC's IPv4 address on each network before a demo and rebuild if either one changes.
 
 ```powershell
 Set-Location backend
@@ -17,15 +17,15 @@ npx tsc --noEmit
 npm run lint
 npx expo-doctor
 Set-Location ..\..
-powershell -ExecutionPolicy Bypass -File .\scripts\build-lan-android.ps1 -ApiHost 192.168.1.67
-powershell -ExecutionPolicy Bypass -File .\scripts\package-lan-preview.ps1 -ApiHost 192.168.1.67
+powershell -ExecutionPolicy Bypass -File .\scripts\build-lan-android.ps1 -ApiHost 192.168.1.67 -FallbackApiHost 172.17.160.151
+powershell -ExecutionPolicy Bypass -File .\scripts\package-lan-preview.ps1 -ApiHost 192.168.1.67 -FallbackApiHost 172.17.160.151
 ```
 
 `build-lan-android.ps1` uses the locally backed-up signing material in `.secrets/release-signing/`. It regenerates the ignored Android project through Expo Prebuild and signs the release APK with that key. The first signing key was generated on 2026-11-09; its password and keystore are excluded from Git and the ZIP. Back up both securely. An Android update for `com.finsight.app` needs the same key. The package script refuses to overwrite an existing release directory or ZIP.
 
 ## Run the package
 
-Unzip `FinSight-1.0.0-rc.2-LAN.zip`. Keep the private `.env` outside the ZIP and start the API in one terminal:
+Unzip `FinSight-1.0.0-rc.3-LAN.zip`. Keep the private `.env` outside the ZIP and start the API in one terminal:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\start-api.ps1 -EnvFile D:\Codes\finsight\.env
@@ -37,9 +37,9 @@ Start the web server in another terminal:
 powershell -ExecutionPolicy Bypass -File .\start-web.ps1
 ```
 
-Open `http://127.0.0.1:5173/` on the PC. Install `FinSight-Android.apk` on the phone, join the same Wi-Fi and verify `http://192.168.1.67:8086/actuator/health` is reachable in the phone browser. If the phone cannot reach the API, allow inbound TCP 8086 only on the Windows **Private** network profile. The API requires Supabase JWTs for financial endpoints. Stop both foreground processes with Ctrl+C; the package does not start WSL.
+Open `http://127.0.0.1:5173/` on the PC. Install `FinSight-Android.apk` on the phone and join the same Wi-Fi. Verify the matching health URL in the phone browser: `http://192.168.1.67:8086/actuator/health` at home or `http://172.17.160.151:8086/actuator/health` at school. The school connection currently has a Windows **Public** network profile; if the phone cannot connect, check the local firewall policy and whether school Wi-Fi isolates client devices. Restrict any inbound TCP 8086 rule to the trusted phone/network. The API requires Supabase JWTs for financial endpoints. Stop both foreground processes with Ctrl+C; the package does not start WSL.
 
-Android stores the API URL at build time. If the PC's IP changes, rebuild the APK with the new `-ApiHost` and create a new package version. Keep the PC web on `127.0.0.1:5173`, which matches the current Supabase Auth redirect allowlist.
+Android stores both API URLs at build time. If either IP changes, rebuild the APK with updated hosts and create a new package version. After moving between networks while the app is open, retry a read or reopen the app to trigger a new health check; write requests are never automatically repeated after a connection error. Keep the PC web on `127.0.0.1:5173`, which matches the current Supabase Auth redirect allowlist.
 
 ## Release boundaries
 

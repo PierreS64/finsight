@@ -310,6 +310,11 @@
 - Verification: Java 17 `mvnw verify -Pcoverage` passed 85 tests with 0 failures/errors and 2 environment-dependent skips. Web lint/build and 21 browser behavior tests passed; mobile TypeScript/lint and 6 session, configuration, and forecast tests passed. Node's exact-money checks passed for both clients. The Jenkins pipeline now merges web, mobile, and money LCOV reports before Sonar analysis, and GitHub CI runs the new frontend tests.
 - The local Sonar Quality Gate **passed** on commit `36f2f3b`: new-code coverage 80.9% (required 80%), new duplicated lines 0.0% (maximum 3%), 0 new violations, and 0 open issues. Browser locale formatting removes the duplicated web/mobile money grouping logic without using floating point. The gate threshold and coverage scope were not relaxed. Overall frontend coverage remains lower than new-code coverage, especially on mobile; the current gate result is not a claim that every legacy screen has automated tests.
 
+## Two-network LAN preview (2026-11-10)
+
+- RC3 embeds the home PC address `192.168.1.67` and the current school Wi-Fi address `172.17.160.151`. Android probes the public API health endpoint and uses the reachable address for authenticated API requests, OCR uploads and receipt downloads. A failed read can reselect the address; failed writes are not automatically retried. Android versionCode is 2 so it can update the signed RC2 installation.
+- Mobile TypeScript, lint and nine tests passed; web lint/build passed; backend Maven verify passed 85 tests with 0 failures/errors and 2 skips. The signed Android release build completed and installed as `com.finsight.app` version 1.0.1 on the owner's physical phone. From that phone's school Wi-Fi, `172.17.160.151:8086/actuator/health` returned HTTP 200 with `UP`. Signed-in application acceptance on that network is pending the owner's on-device check. School Wi-Fi currently uses a Windows Public profile; no firewall rule was changed. If DHCP changes either address, the APK must be rebuilt.
+
 ## Decisions
 
 See `docs/decisions/0001-initial-architecture.md`. Spring Initializr currently rejects Spring Boot 3.x generation, so backend POM and Maven Wrapper were created directly.
