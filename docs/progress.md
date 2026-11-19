@@ -1,5 +1,10 @@
 # Progress — 2026-10-21
 
+## Documentation milestone — 2026-11-19
+
+- Added a Vietnamese, single-page A4 UML activity diagram for receipt OCR with the three requested swimlanes. It records owner-scoped duplicate detection, image validation, OCR suggestions without creating a transaction, manual entry on failure, explicit duplicate confirmation, and receipt upload after transaction creation.
+- Verified the generated PDF is one A4 page and visually reviewed its rendered PNG. This is documentation only; no runtime behavior or tests were changed.
+
 ## Completed
 
 - Cleaned 13 unused local artifact paths (64.17 MiB) by moving them to the Windows Recycle Bin: the initial Expo Git scaffold backup, Expo cache, old web distribution, unused starter web assets, packaged backend JAR copies and five old UI-check screenshots. Source files, installed dependencies, running backend classes, configuration, reports and design references were retained. No tracked source files were deleted.
