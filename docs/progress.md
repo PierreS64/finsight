@@ -1,5 +1,10 @@
 # Progress — 2026-10-21
 
+## LAN RC4 address refresh — 2026-11-19
+
+- The school Wi-Fi address changed from `172.17.160.151` to `172.17.144.68`. The Windows API returned HTTP 200 on the new address. RC4 keeps the existing home address `192.168.1.67` as primary and embeds the new school address as fallback. Android versionName is 1.0.2 and versionCode is 3; the LAN package default version is `1.0.0-rc.4`.
+- Removed the two installed FinSight packages (`com.anonymous.finsight` and the older `com.finsight.app`) from the connected SDK 35 emulator, then installed the newly signed `com.finsight.app` release APK. The emulator now lists only that FinSight package. The release APK built successfully, passed `apksigner verify`, and opened without Metro. Chrome in the emulator loaded `http://172.17.144.68:8086/actuator/health` with `UP`. Authenticated dashboard access on RC4 and installation on a physical phone remain unverified because no phone was connected.
+
 ## Documentation milestone — 2026-11-19
 
 - Added a Vietnamese, single-page A4 UML activity diagram for receipt OCR with the three requested swimlanes. It records owner-scoped duplicate detection, image validation, OCR suggestions without creating a transaction, manual entry on failure, explicit duplicate confirmation, and receipt upload after transaction creation.
