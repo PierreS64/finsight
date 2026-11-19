@@ -1,5 +1,9 @@
 # Progress — 2026-10-21
 
+## Advanced Programming report figure — 2026-11-19
+
+- Added a corrected 1536×1024 FinSight context diagram for Chapter 1 at `docs/diagrams/finsight-context-figure-1-1.png`. It shows separate web and Android Supabase Auth connections, REST API with JWT, local Tesseract inside the FinSight boundary, JWKS associated with Supabase Auth, bidirectional database access, and optional external AI. This is a report illustration only; no runtime code or tests changed.
+
 ## LAN RC4 address refresh — 2026-11-19
 
 - The school Wi-Fi address changed from `172.17.160.151` to `172.17.144.68`. The Windows API returned HTTP 200 on the new address. RC4 keeps the existing home address `192.168.1.67` as primary and embeds the new school address as fallback. Android versionName is 1.0.2 and versionCode is 3; the LAN package default version is `1.0.0-rc.4`.
