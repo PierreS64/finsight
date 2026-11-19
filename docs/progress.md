@@ -4,6 +4,7 @@
 
 - The school Wi-Fi address changed from `172.17.160.151` to `172.17.144.68`. The Windows API returned HTTP 200 on the new address. RC4 keeps the existing home address `192.168.1.67` as primary and embeds the new school address as fallback. Android versionName is 1.0.2 and versionCode is 3; the LAN package default version is `1.0.0-rc.4`.
 - Removed the two installed FinSight packages (`com.anonymous.finsight` and the older `com.finsight.app`) from the connected SDK 35 emulator, then installed the newly signed `com.finsight.app` release APK. The emulator now lists only that FinSight package. The release APK built successfully, passed `apksigner verify`, and opened without Metro. Chrome in the emulator loaded `http://172.17.144.68:8086/actuator/health` with `UP`. Authenticated dashboard access on RC4 and installation on a physical phone remain unverified because no phone was connected.
+- Packaged `.secrets/releases/FinSight-1.0.0-rc.4-LAN.zip` from source commit `aef8352`: all 46 staged file hashes matched the manifest, and 47 ZIP file entries contained no credential-named files. The four prior local release directories and four ZIPs were moved to the Windows Recycle Bin after verifying their paths; RC4 and the separate signing material were retained. The connected device list contained only the emulator, so no physical-phone installation was removed.
 
 ## Documentation milestone — 2026-11-19
 
