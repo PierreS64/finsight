@@ -1,5 +1,16 @@
 # Progress — 2026-10-21
 
+## LAN RC4 address refresh — 2026-11-19
+
+- The school Wi-Fi address changed from `172.17.160.151` to `172.17.144.68`. The Windows API returned HTTP 200 on the new address. RC4 keeps the existing home address `192.168.1.67` as primary and embeds the new school address as fallback. Android versionName is 1.0.2 and versionCode is 3; the LAN package default version is `1.0.0-rc.4`.
+- Removed the two installed FinSight packages (`com.anonymous.finsight` and the older `com.finsight.app`) from the connected SDK 35 emulator, then installed the newly signed `com.finsight.app` release APK. The emulator now lists only that FinSight package. The release APK built successfully, passed `apksigner verify`, and opened without Metro. Chrome in the emulator loaded `http://172.17.144.68:8086/actuator/health` with `UP`. Authenticated dashboard access on RC4 and installation on a physical phone remain unverified because no phone was connected.
+- Packaged `.secrets/releases/FinSight-1.0.0-rc.4-LAN.zip` from source commit `aef8352`: all 46 staged file hashes matched the manifest, and 47 ZIP file entries contained no credential-named files. The four prior local release directories and four ZIPs were moved to the Windows Recycle Bin after verifying their paths; RC4 and the separate signing material were retained. The connected device list contained only the emulator, so no physical-phone installation was removed.
+
+## Documentation milestone — 2026-11-19
+
+- Added a Vietnamese, single-page A4 UML activity diagram for receipt OCR with the three requested swimlanes. It records owner-scoped duplicate detection, image validation, OCR suggestions without creating a transaction, manual entry on failure, explicit duplicate confirmation, and receipt upload after transaction creation.
+- Verified the generated PDF is one A4 page and visually reviewed its rendered PNG. This is documentation only; no runtime behavior or tests were changed.
+
 ## Completed
 
 - Cleaned 13 unused local artifact paths (64.17 MiB) by moving them to the Windows Recycle Bin: the initial Expo Git scaffold backup, Expo cache, old web distribution, unused starter web assets, packaged backend JAR copies and five old UI-check screenshots. Source files, installed dependencies, running backend classes, configuration, reports and design references were retained. No tracked source files were deleted.
