@@ -1,5 +1,11 @@
 # Progress — 2026-10-21
 
+## Advanced Programming Chapter 3 UML figures — 2026-11-20
+
+- Added nine editable PlantUML sources and matching SVG/220-DPI PNG exports under `docs/diagrams/chapter-3/` for Figures 3.1–3.9: Use Case, Component, Class, two Activity, three Sequence, and Deployment diagrams. All figures use UML notation and keep captions outside the image for placement below figures in Word.
+- Rendered with PlantUML 1.2026.10, passed `--check-syntax`, and visually reviewed each image. Simplified the Use Case and Activity layouts after the first render to remove long wrapping connectors and improve A4 readability. Figure 3.1 shows the human actor only; the external services appear in the Component, Sequence, and Deployment diagrams, so the draft text in section 3.2.1 needs the one-sentence adjustment documented in the diagram README.
+- Documentation and image assets only; no runtime behavior or application tests changed.
+
 ## Advanced Programming report figure — 2026-11-19
 
 - Added a corrected 1536×1024 FinSight context diagram for Chapter 1 at `docs/diagrams/finsight-context-figure-1-1.png`. It shows separate web and Android Supabase Auth connections, REST API with JWT, local Tesseract inside the FinSight boundary, JWKS associated with Supabase Auth, bidirectional database access, and optional external AI. This is a report illustration only; no runtime code or tests changed.

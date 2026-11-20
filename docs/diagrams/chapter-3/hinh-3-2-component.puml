@@ -1,0 +1,56 @@
+@startuml
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam dpi 220
+skinparam defaultFontName Arial
+skinparam shadowing false
+skinparam componentStyle rectangle
+skinparam ArrowColor #164568
+skinparam component {
+  BackgroundColor #EAF6F3
+  BorderColor #169B91
+  FontColor #123354
+}
+skinparam package {
+  BorderColor #164568
+  FontColor #123354
+}
+
+package "Ứng dụng người dùng" {
+  component "Web\nReact + TypeScript" as Web
+  component "Android\nReact Native + Expo" as Mobile
+}
+
+package "FinSight API - Spring Boot" {
+  component "Xác minh JWT\nvà quyền sở hữu" as Security
+  component "Tài khoản và\ngiao dịch" as Finance
+  component "Ngân sách, mục tiêu\nvà định kỳ" as Planning
+  component "Tổng quan và\nphân tích" as Analysis
+  component "OCR hóa đơn" as OcrService
+  component "Trợ lý AI\n(tùy chọn)" as Assistant
+}
+
+component "Supabase Auth" as Auth
+component "PostgreSQL" <<database>> as DB
+component "Tesseract OCR" as Tesseract
+component "Dịch vụ AI bên ngoài" as ExternalAI
+
+Web --> Auth : đăng nhập
+Mobile --> Auth : đăng nhập
+Web --> Security : API + JWT
+Mobile --> Security : API + JWT
+
+Security --> Finance
+Security --> Planning
+Security --> Analysis
+Security --> OcrService
+Security --> Assistant
+
+Finance --> DB
+Planning --> DB
+Analysis --> DB
+OcrService --> Tesseract
+OcrService --> DB : kiểm tra dữ liệu liên quan
+Assistant --> Analysis : nhận số liệu đã tính
+Assistant ..> ExternalAI : diễn giải nếu được bật
+@enduml
